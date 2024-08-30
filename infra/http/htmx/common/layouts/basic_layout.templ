@@ -1,0 +1,101 @@
+package layouts
+
+import (
+  "time"
+  "strconv"
+)
+
+templ Head(title string) {
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<title>{ title }</title>
+		<!-- htmx -->
+    <script src="https://unpkg.com/htmx.org@2.0.0" integrity="sha384-wS5l5IKJBvK6sPTKa2WZ1js3d947pvWXbPJ1OmWfEuxLgeHcEbjUUA5i9V5ZkpCw" crossorigin="anonymous"></script>
+    <!-- htmx - unminified for debugging -->
+    <!-- <script src="https://unpkg.com/htmx.org@2.0.0/dist/htmx.js" integrity="sha384-Xh+GLLi0SMFPwtHQjT72aPG19QvKB8grnyRbYBNIdHWc2NkCrz65jlU7YrzO6qRp" crossorigin="anonymous"></script> -->
+		<script src="https://unpkg.com/htmx.org/dist/ext/response-targets.js"></script>
+		<!-- daisyui -->
+		<link href="https://cdn.jsdelivr.net/npm/daisyui@4.6.2/dist/full.min.css" rel="stylesheet" type="text/css"/>
+		<!-- tailwindcss -->
+		<script src="https://cdn.tailwindcss.com"></script>
+		<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            clifford: '#da373d',
+          }
+        }
+      }
+    }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <!-- flatpickr -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <!-- alpinejs -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- duitku - payment gateway -->
+    <script src="https://app-sandbox.duitku.com/lib/js/duitku.js"></script>
+    <!-- brackets-viewer -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/brackets-viewer@1.6.2/dist/brackets-viewer.min.css" />
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brackets-viewer@1.6.2/dist/brackets-viewer.min.js"></script>
+	</head>
+}
+
+templ BasicLayout(title string) {
+	<html data-theme="dark" style="scroll-padding-top: 5rem; scroll-behavior: smooth;">
+		@Head(title)
+    <body hx-boost="true" hx-ext="response-targets" class="h-screen flex flex-col">
+      <div class="container max-w-[80rem] mx-auto grow">
+        { children... }
+      </div>
+      @BasicFooter()
+      @ScriptFeatherIcons()
+    </body>
+	</html>
+}
+
+templ LandingPageLayout(title string) {
+	<html data-theme="light" style="scroll-padding-top: 5rem; scroll-behavior: smooth;">
+		@Head(title)
+    <body hx-boost="true" hx-ext="response-targets" class="h-screen flex flex-col">
+      <div class="container max-w-[80rem] mx-auto grow">
+        { children... }
+      </div>
+      @BasicFooter()
+      @ScriptFeatherIcons()
+    </body>
+	</html>
+}
+
+templ BasicFooter() {
+  <div class="bg-neutral text-neutral-content w-full">
+    <footer class="footer p-10 max-w-[80rem] mx-auto">
+      <nav>
+        <p>© {strconv.Itoa(time.Now().Year())} - gilatennis.com</p>
+        <p>
+          <a target="_blank" href="https://icons8.com/icon/V5cGWnc9R4xj/google">Google</a> icon by <a target="_blank" href="https://icons8.com">Icons8</a>
+        </p>
+        <p>
+          <a target="_blank" href="https://icons8.com/icon/uLWV5A9vXIPu/facebook">Facebook</a> icon by <a target="_blank" href="https://icons8.com">Icons8</a>
+        </p>
+        <p class="text-xs font-thin">
+          photo by <a href="https://unsplash.com/@jlsfilms?utm_content=creditcopytext&utm_medium=referral&utm_source=unsplash">jorge salazar</a> on <a href="https://unsplash.com/photos/a-tennis-racket-and-a-tennis-ball-on-a-court-py_gfznkrrc?utm_content=creditcopytext&utm_medium=referral&utm_source=unsplash">unsplash</a>
+        </p>
+      </nav> 
+      <nav>
+        <h6 class="footer-title">Contact Us</h6>
+        <p>PT. Cerdas Makmur Maju</p>
+        <p>support@gilatennis.com</p>
+        <p>+62 8788 724 0444</p>
+        <p class="max-w-xs">
+          Jl. Mampang Prapatan Raya No. 73A Lantai 3, Tegal Parang, 
+          Kec. Mampang Prapatan, Kota Adm. Jakarta Selatan, Provinsi DKI Jakarta, Kode Pos 12790
+        </p>
+      </nav>
+    </footer>
+  </div>
+}
+

@@ -1,0 +1,103 @@
+package auth
+
+import (
+  "fmt"
+)
+
+templ PageLogin(model VModelFormLogin) {
+  @pageContainer("Login") {
+    @LoginForm(model, "")
+  }
+}
+
+func oauthHref(provider string, redirect string) string {
+  href := fmt.Sprintf("/auth/login/oauth/%s", provider)
+  if redirect != "" {
+    href = fmt.Sprintf("%s?redirect=%s", href, redirect)
+  }
+  return href
+}
+
+func registerHref(redirect string) string {
+  href := "/auth/register"
+  if redirect != "" {
+    href = fmt.Sprintf("%s?redirect=%s", href, redirect)
+  }
+  return href
+}
+
+func loginPostURL(redirect string) string {
+  if redirect != "" {
+    return fmt.Sprintf("/auth/login?redirect=%s", redirect)
+  } else {
+    return "/auth/login"
+  }
+}
+
+templ LoginForm(model VModelFormLogin, redirect string) {
+  @container() {
+    <div id="login-form"  class="card w-96 bg-base-100 shadow-xl">
+      <div class="card-body space-y-6">
+        <h1 class="card-title">Login</h1>
+        <form
+          method="POST"
+          hx-post={ loginPostURL(redirect) }
+          hx-select="#login-form"
+          hx-swap="outerHTML"
+          hx-target="#login-form"
+          hx-target-400="#login-form"
+          hx-target-5**="#login-form"
+          class="flex-col space-y-4"
+        >
+          <div class="flex-col space-y-4">
+            <input
+              type="text"
+              name="email"
+              value={ model.Email }
+              placeholder="Email"
+              class={"input input-bordered w-full max-w-xs", templ.KV("input-error", model.FormErrors.Email != "")}
+            />
+            if model.FormErrors.Email != "" {
+              <p class="text-error">{ model.FormErrors.Email }</p>
+            }
+          </div>
+
+          if model.ServerError != "" {
+            <p class="text-error">{ model.ServerError }</p>
+          }
+
+          <button class="btn btn-primary btn-wide w-full">
+            Continue with email
+          </button>
+        </form>
+
+        <p class="text-center">
+          Don't have an account? <a hx-boost="false" href={templ.SafeURL(registerHref(redirect))} class="link">Register</a>
+        </p>
+
+        <div class="divider"></div>
+        <div class="flex-col space-y-4">
+          <a class="btn btn-neutral btn-wide w-full" hx-boost="false" href={templ.SafeURL(oauthHref("google", redirect))}>
+            <img src="/static/icons8-google-48.png" class="w-4 h-4 mr-2" />
+            Continue with Google
+          </a>
+          <a class="btn btn-neutral btn-wide w-full" hx-boost="false" href={templ.SafeURL(oauthHref("facebook", redirect))}>
+            <img src="/static/icons8-facebook-48.png" class="w-4 h-4 mr-2" />
+            Continue with Facebook
+          </a>
+        </div>
+      </div>
+    </div>
+  }
+}
+
+templ loginSuccess(message string) {
+  @container() {
+    <div id="login-form" class="card w-96 bg-base-100 shadow-xl">
+      <div class="card-body space-y-8">
+        <p class="text-success">{ message }</p>
+      </div>
+    </div>
+  }
+}
+

@@ -1,0 +1,25 @@
+package common
+
+templ PageError(errCode int, message string) {
+  if errCode == 401 {
+    <div>
+      Unauthorized
+    </div>
+    <div>{message}</div>
+  }
+
+  if errCode == 404 {
+    <div>
+      Not Found
+    </div>
+    <div>{message}</div>
+  }
+
+  if errCode == 500 {
+    <div>
+      Internal Server Error
+    </div>
+    <div>{message}</div>
+  }
+}
+

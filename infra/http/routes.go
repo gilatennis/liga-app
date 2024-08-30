@@ -1,0 +1,75 @@
+package http
+
+import (
+	"liga-app/infra/http/middlewares"
+
+	"github.com/gin-gonic/gin"
+)
+
+func setupRoutes(r *gin.Engine, handlers *Handlers, middlewares *middlewares.Middlewares) {
+	// ------------------
+	// static files
+	// ------------------
+	r.Static("/static", "./static")
+	// r.LoadHTMLGlob("static/html/*")
+	// r.GET("/privacy-policy", func(c *gin.Context) {
+	// 	c.HTML(http.StatusOK, "privacy-policy.html", gin.H{})
+	// })
+	// r.GET("/terms-and-conditions", func(c *gin.Context) {
+	// 	c.HTML(http.StatusOK, "terms-and-conditions.html", gin.H{})
+	// })
+
+	setupHtxmRoutes(r, handlers, middlewares)
+	setupJsonRoutes(r, handlers, middlewares)
+}
+
+func setupHtxmRoutes(r *gin.Engine, handlers *Handlers, middlewares *middlewares.Middlewares) {
+	// ------------------
+	// routes serving htmx
+	// ------------------
+	r.GET("/", handlers.HTMXHandlers.IndexHandler.Index)
+
+	public := r.Group("/")
+
+	auth := public.Group("/auth")
+	{
+		auth.GET("/register", handlers.HTMXHandlers.AuthHandler.GetRegisterForm)
+		auth.POST("/register", handlers.HTMXHandlers.AuthHandler.SubmitRegisterForm)
+		auth.GET("/register/magic-link", handlers.HTMXHandlers.AuthHandler.CompleteMagicLinkRegistration)
+		auth.GET("/login", handlers.HTMXHandlers.AuthHandler.GetLoginForm)
+		auth.POST("/login", handlers.HTMXHandlers.AuthHandler.SubmitLoginForm)
+		auth.GET("/login/magic-link", handlers.HTMXHandlers.AuthHandler.LoginWithMagicLink)
+		auth.GET("/login/oauth/:provider", handlers.HTMXHandlers.AuthHandler.LoginWithOAuth)
+		auth.GET("/login/oauth/:provider/callback", handlers.HTMXHandlers.AuthHandler.LoginWithOAuthCallback)
+		auth.GET("/logout", handlers.HTMXHandlers.AuthHandler.LogOut)
+	}
+
+	dashboard := r.Group("/dashboard")
+	dashboard.Use(middlewares.SessionMiddleware)
+	{
+		dashboard.GET("/", handlers.HTMXHandlers.DashboardHandler.Index)
+	}
+}
+
+/*
+func setupCustomValidators() {
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		_ = v.RegisterValidation("validOrderBy", httpCommon.ValidOrderBy)
+	}
+}
+*/
+
+func setupJsonRoutes(r *gin.Engine, handlers *Handlers, middlewares *middlewares.Middlewares) {
+	// ------------------
+	// routes serving json
+	// ------------------
+	api := r.Group("/api")
+	v1 := api.Group("/v1")
+
+	// setupCustomValidators()
+
+	apiDuitku := v1.Group("/duitku")
+	{
+		apiDuitku.POST("/callback", handlers.JSONHandlers.DuitkuHandler.Callback)
+	}
+}

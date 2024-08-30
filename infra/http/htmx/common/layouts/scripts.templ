@@ -1,0 +1,14 @@
+package layouts
+
+templ ScriptFeatherIcons() {
+  <script>
+    feather.replace()
+    // INFO: for cases such as datatable swapped for new data via AJAX.
+    // If the table has icons, feather.replace() must be called again.
+    document.body.addEventListener("htmx:afterRequest", function() {
+      feather.replace()
+    })
+  </script>
+}
+
+

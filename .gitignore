@@ -1,0 +1,11 @@
+config/config.local.yml
+logs/*
+bin/*
+
+*_templ.go
+tmp/*
+
+.env
+
+.DS_Store
+
