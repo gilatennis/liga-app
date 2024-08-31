@@ -34,6 +34,12 @@ func (h *Handler) Index(c *gin.Context) {
 		c.Redirect(http.StatusTemporaryRedirect, "/dashboard/complete-user-info")
 		return
 	}
+
+	vmodel := &VModelPageDashboardIndex{
+		User: user,
+	}
+	page := PageDashboardIndex(vmodel)
+	h.RenderView(c, page)
 }
 
 func (h *Handler) isUserInfoComplete(user *entities.User) bool {
