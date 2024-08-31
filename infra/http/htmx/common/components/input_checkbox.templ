@@ -1,0 +1,54 @@
+package components
+
+import (
+  // "fmt"
+	//"github.com/k0kubun/pp"
+)
+
+type InputCheckboxParams struct {
+  Label string
+  Name string
+  Options []InputCheckboxOption
+  Readonly bool
+  Error string
+}
+
+type InputCheckboxOption struct {
+  Label string
+  Value string
+  IsChecked bool
+  JS_XModel string
+}
+
+func IsChecked(options []string, value string) bool {
+  isChecked := false
+  for _, op := range options {
+    if op == value {
+      isChecked = true
+    }
+  }
+
+  return isChecked
+}
+
+templ InputCheckbox(params InputCheckboxParams) {
+  <div class="form-control pt-2">
+    <legend>{params.Label}</legend>
+    <div class="flex gap-2 mt-2">
+      for _, option := range params.Options {
+        <label class="label cursor-pointer flex gap-2">
+          <span class="label-text">{option.Label}</span> 
+          <input
+            type="checkbox"
+            name={params.Name}
+            value={option.Value}
+            disabled?={params.Readonly}
+            checked?={option.IsChecked}
+            class="checkbox"
+            x-model={option.JS_XModel}
+          />
+        </label>
+      }
+    </div>
+  </div>
+}

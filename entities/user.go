@@ -7,6 +7,7 @@ type User struct {
 	Email       string
 	Name        string
 	Phone       string
+	Province    string
 	Gender      enums.GENDER
 	LoginMethod enums.LOGIN_METHOD
 }

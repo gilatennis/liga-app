@@ -15,21 +15,11 @@ templ Head(title string) {
     <!-- htmx - unminified for debugging -->
     <!-- <script src="https://unpkg.com/htmx.org@2.0.0/dist/htmx.js" integrity="sha384-Xh+GLLi0SMFPwtHQjT72aPG19QvKB8grnyRbYBNIdHWc2NkCrz65jlU7YrzO6qRp" crossorigin="anonymous"></script> -->
 		<script src="https://unpkg.com/htmx.org/dist/ext/response-targets.js"></script>
-		<!-- daisyui -->
-		<link href="https://cdn.jsdelivr.net/npm/daisyui@4.6.2/dist/full.min.css" rel="stylesheet" type="text/css"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com"></link>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin></link>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet"></link>
 		<!-- tailwindcss -->
-		<script src="https://cdn.tailwindcss.com"></script>
-		<script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            clifford: '#da373d',
-          }
-        }
-      }
-    }
-    </script>
+    <link rel="stylesheet" href="/static/css/output.css"></link>
     <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
     <!-- flatpickr -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
@@ -45,7 +35,7 @@ templ Head(title string) {
 }
 
 templ BasicLayout(title string) {
-	<html data-theme="dark" style="scroll-padding-top: 5rem; scroll-behavior: smooth;">
+	<html data-theme="light" style="scroll-padding-top: 5rem; scroll-behavior: smooth;">
 		@Head(title)
     <body hx-boost="true" hx-ext="response-targets" class="h-screen flex flex-col">
       <div class="container max-w-[80rem] mx-auto grow">
@@ -71,7 +61,7 @@ templ LandingPageLayout(title string) {
 }
 
 templ BasicFooter() {
-  <div class="bg-neutral text-neutral-content w-full">
+  <div class="bg-primary text-neutral-content w-full">
     <footer class="footer p-10 max-w-[80rem] mx-auto">
       <nav>
         <p>© {strconv.Itoa(time.Now().Year())} - gilatennis.com</p>

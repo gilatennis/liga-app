@@ -47,7 +47,9 @@ func setupHtxmRoutes(r *gin.Engine, handlers *Handlers, middlewares *middlewares
 	dashboard := r.Group("/dashboard")
 	dashboard.Use(middlewares.SessionMiddleware)
 	{
-		dashboard.GET("/", handlers.HTMXHandlers.DashboardHandler.Index)
+		dashboard.GET("", handlers.HTMXHandlers.DashboardHandler.Index)
+		dashboard.GET("/complete-user-info", handlers.HTMXHandlers.DashboardHandler.GetCompleteUserInfoPage)
+		dashboard.POST("/complete-user-info", handlers.HTMXHandlers.DashboardHandler.PostSubmitUserInfoForm)
 	}
 }
 

@@ -1,0 +1,28 @@
+package components
+
+type InputToggleParams struct {
+  Label string
+  Name string
+  Value string
+  Checked bool
+  Readonly bool
+  Error string
+}
+
+templ InputToggle(params InputToggleParams) {
+  <div class="form-control">
+    <label for={params.Name} class="label"> <span class="label-text">{params.Label}</span>
+    </label>
+    <input
+      name={params.Name}
+      type="checkbox"
+      class="toggle"
+      value={params.Value}
+      checked?={params.Checked}
+      readonly?={params.Readonly}
+    />
+    if params.Error != "" {
+      <p class="text-error mt-1">{ params.Error }</p>
+    }
+  </div>
+}

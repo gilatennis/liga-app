@@ -1,0 +1,192 @@
+package components
+
+import (
+  "strconv"
+  // "fmt"
+)
+
+type IVModelTabler interface {
+  GetTotalPage() int
+  GetPage() int
+  GetLimit() int
+  FetchDataURL(page int, limit int) string
+  GetColumns() []string
+  GetRows() []IVModelTableRower
+  GetTableID() string
+  GetNoRowsMessage() string
+  GetTotalCount() int
+}
+
+type IVModelTableRower interface {
+  GetRowValues() []VModelTableRowValue
+}
+
+type VModelTableRowValue struct {
+  Type RowValueType
+  Value string
+  Action *VModelTableRowValueAction
+}
+
+type RowValueType string
+const (
+  ROW_VALUE_TYPE_DATA RowValueType   = "DATA"
+  ROW_VALUE_TYPE_ACTION RowValueType = "ACTION"
+)
+
+type VModelTableRowValueAction struct {
+  Text string
+  URL string
+  Method string
+}
+
+func NewListVModelTableRowValue_Data(data []string) []VModelTableRowValue {
+  rowValues := []VModelTableRowValue{}
+  for _, d := range data {
+    rv := VModelTableRowValue{Type: ROW_VALUE_TYPE_DATA, Value: d}
+    rowValues = append(rowValues, rv)
+  }
+
+  return rowValues
+}
+
+type HXParams struct {
+  HXTrigger string
+  HXInclude string
+  Poll bool
+}
+
+func hxTrigger(p *HXParams) string {
+  if p != nil {
+    return p.HXTrigger
+  }
+  return ""
+}
+
+func hxInclude(p *HXParams) string {
+  if p != nil {
+    return p.HXInclude
+  }
+  return ""
+}
+
+templ Table(vmodel IVModelTabler, hxParams *HXParams) {
+  <div
+    id={vmodel.GetTableID()}
+    hx-get={vmodel.FetchDataURL(1, vmodel.GetLimit())}
+    class="mt-4"
+    if hxTrigger(hxParams) != "" {
+      hx-trigger={hxTrigger(hxParams)}
+    }
+    if hxInclude(hxParams) != "" {
+      hx-include={hxInclude(hxParams)}
+    }
+    hx-swap="outerHTML"
+  >
+    <div>
+      <label class="label">
+        <span class="label-text">Total Data: {strconv.Itoa(vmodel.GetTotalCount())}</span>
+      </label>
+    </div>
+    <table class="table">
+      <thead>
+        <tr>
+          for _, col := range vmodel.GetColumns() {
+            <th>{col}</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        if len(vmodel.GetRows()) == 0 {
+          <tr>
+            <td colspan={strconv.Itoa(len(vmodel.GetColumns()))} class="text-center py-8">
+              {vmodel.GetNoRowsMessage()}
+            </td>
+          </tr>
+        }
+        for _, row := range vmodel.GetRows() {
+          <tr>
+            for _, val := range row.GetRowValues() {
+              if val.Type == ROW_VALUE_TYPE_DATA {
+                <td class="">{val.Value}</td>
+              }
+              if val.Type == ROW_VALUE_TYPE_ACTION {
+                <td class="min-w-[50px]">
+                  if val.Action.Method == "GET" {
+                    <a
+                      hx-boost="false"
+                      class="btn btn-primary btn-sm w-full"
+                      href={templ.URL(val.Action.URL)}
+                    >
+                      {val.Action.Text}
+                    </a>
+                  }
+                  if val.Action.Method == "POST" {
+                    <button
+                      type="button"
+                      class="btn btn-primary btn-sm w-full"
+                      hx-post={val.Action.URL}
+                      hx-target={"#"+vmodel.GetTableID()}
+                      hx-include={hxInclude(hxParams)}
+                    >
+                      {val.Action.Text}
+                      <i data-feather="plus" width="14" height="14" stroke-width="2"></i>
+                    </button>
+                  }
+                  if val.Action.Method == "PUT" {
+                    <button
+                      type="button"
+                      class="btn btn-primary btn-sm w-full"
+                      hx-put={val.Action.URL}
+                      hx-target={"#"+vmodel.GetTableID()}
+                      hx-include={hxInclude(hxParams)}
+                    >
+                      {val.Action.Text}
+                      <i data-feather="edit" width="14" height="14" stroke-width="2"></i>
+                    </button>
+                  }
+                  if val.Action.Method == "DELETE" {
+                    <button
+                      type="button"
+                      class="btn btn-error btn-sm w-full"
+                      hx-delete={val.Action.URL}
+                      hx-target={"#"+vmodel.GetTableID()}
+                      hx-include={hxInclude(hxParams)}
+                    >
+                      {val.Action.Text}
+                      <i data-feather="trash" width="14" height="14" stroke-width="2"></i>
+                    </button>
+                  }
+                </td>
+              }
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+    <div>
+      <div class="join flex justify-end p-3">
+        if vmodel.GetTotalPage() > 0 {
+          for i := 1; i <= vmodel.GetTotalPage(); i++ {
+            <a
+              class={"join-item btn btn-xs", templ.KV("btn-active", i == vmodel.GetPage())}
+              hx-get={vmodel.FetchDataURL(i, vmodel.GetLimit())}
+              hx-target={"#"+vmodel.GetTableID()}
+              hx-include={hxInclude(hxParams)}
+            >
+              {strconv.Itoa(i)}
+            </a>
+          }
+        }
+      </div>
+    </div>
+    if hxParams.Poll {
+      <div
+        hx-get={vmodel.FetchDataURL(vmodel.GetPage(), vmodel.GetLimit())}
+        hx-target={"#"+vmodel.GetTableID()}
+        hx-include={hxInclude(hxParams)}
+        hx-trigger="every 3s"
+      >
+      </div>
+    }
+  </div>
+}

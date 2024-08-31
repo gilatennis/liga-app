@@ -11,8 +11,10 @@ import (
 	"liga-app/third_party/mailtrap"
 
 	domainAuth "liga-app/domain/auth"
+	domainUserInfo "liga-app/domain/user_info"
 	dbAuth "liga-app/infra/mysql/auth"
 	dbUser "liga-app/infra/mysql/user"
+	dbWilayah "liga-app/infra/mysql/wilayah"
 
 	// "liga-app/mixins"
 
@@ -56,6 +58,7 @@ func setupHandlers(config *config.Config, db *gorm.DB, logger *zerolog.Logger) (
 
 	authStore := dbAuth.NewStore(db)
 	userStore := dbUser.NewStore(db)
+	wilayahStore := dbWilayah.NewStore(db)
 
 	authService := domainAuth.NewService(
 		config,
@@ -63,11 +66,12 @@ func setupHandlers(config *config.Config, db *gorm.DB, logger *zerolog.Logger) (
 		userStore,
 		mail,
 	)
+	userInfoService := domainUserInfo.NewService(wilayahStore, userStore)
 
 	HTMXHandlers := HTMXHandlers{
 		AuthHandler:      auth.NewHandler(config, authService),
 		IndexHandler:     index.NewHandler(),
-		DashboardHandler: dashboard.NewHandler(),
+		DashboardHandler: dashboard.NewHandler(userInfoService),
 	}
 
 	JSONHandlers := JSONHandlers{

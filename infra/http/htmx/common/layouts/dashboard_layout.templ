@@ -1,0 +1,160 @@
+package layouts
+
+import (
+  "time"
+  "strconv"
+	"liga-app/entities"
+)
+
+templ DashboardLayout(title string, user *entities.User) {
+  <html data-theme="dark">
+    @Head(title)
+    <!--
+      tabindex="0" is required so that :focus can work on ios. (makes dropdown menu dismissable) 
+      https://github.com/saadeghi/daisyui/issues/824
+    -->
+    <body 
+      tabindex="0" 
+      hx-boost="true" 
+      hx-ext="response-targets" 
+      class="h-screen flex flex-col"
+    >
+      @Navbar()
+      @DashboardDrawer(user) {
+        { children... }
+      }
+      @DashboardFooter()
+      @Scripts()
+      @ScriptFeatherIcons()
+    </body>
+  </html>
+}
+
+templ Navbar() {
+  <div class="navbar bg-base-100">
+    <div class="flex flex-1">
+      <label for="my-drawer"  tabindex="0" role="button" class="btn btn-ghost drawer-button lg:hidden">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" /></svg>
+      </label>
+      <a class="btn btn-ghost text-xl">GilaTennis</a>
+    </div>
+    <div class="flex-none gap-2">
+      <!--
+      <div class="form-control">
+        <input type="text" placeholder="Search" class="input input-bordered w-24 md:w-auto" />
+      </div>
+      -->
+      <div class="dropdown dropdown-end">
+        <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
+          <div class="w-10 rounded-full">
+            <img alt="Tailwind CSS Navbar component" src="https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg" />
+          </div>
+        </div>
+        <ul tabindex="0" class="mt-3 z-[1] p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52">
+          <!--
+          <li>
+            <a class="justify-between">
+              Profile
+              <span class="badge">New</span>
+            </a>
+          </li>
+          <li><a>Settings</a></li>
+          -->
+          <li><a href="/auth/logout">Logout</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+}
+
+templ DashboardDrawer(user *entities.User) {
+  <div class="drawer lg:drawer-open">
+    <input id="my-drawer" type="checkbox" class="drawer-toggle" />
+    <div class="drawer-content flex-grow overflow-auto mb-8">
+      <div id="alert" class="w-[350px] m-4 alert hidden transition-all fixed top-20 right-0">
+        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        <span id="alert-message">Hello</span>
+      </div>
+      <!-- Page content here -->
+      { children...}
+    </div>
+    <!-- INFO: do not add bg-base-200 or any color to drawer-side. for some reason, the drawer will be full screen on mobile view -->
+    <div class="drawer-side">
+      <label for="my-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+      <div class="bg-base-200 min-h-full">
+        <!-- Sidebar content here -->
+        <div class="px-8 pt-8 w-80 bg-base-200 text-base-content flex items-center space-x-2">
+          <i data-feather="user" width="18" height="18" stroke-width="2"></i>
+          <p class="font-bold text-sm">{user.Email}</p>
+        </div>
+        <ul class="menu p-4 w-80 bg-base-200 text-base-content">
+          <li><a hx-boost="true" href="/dashboard">Beranda</a></li>
+          <li><a hx-boost="true" href="/dashboard/invites">Undangan</a></li>
+        </ul>
+
+        <!-- Tournament Dashboard Menus -->
+        <div class="px-8 pt-4 w-80 bg-base-200 text-base-content">
+          <p class="text-md font-bold">Dasbor Turnamen</p>
+        </div>
+        <ul class="menu p-4 w-80 bg-base-200 text-base-content">
+          <li><a hx-boost="true" href="/dashboard/tournaments">List Turnamen</a></li>
+          <li><a hx-boost="true" href="/dashboard/tournaments/create">Buat Turnamen</a></li>
+        </ul>
+
+        <!-- Umpire Dashboard Menus -->
+        <div class="px-8 pt-4 w-80 bg-base-200 text-base-content">
+          <p class="text-md font-bold">Dasbor Umpire</p>
+        </div>
+        <ul class="menu p-4 w-80 bg-base-200 text-base-content">
+          <li><a hx-boost="true" href="/dashboard/umpire-dashboard">Beranda</a></li>
+          <li><a hx-boost="true" href="/dashboard/umpire-dashboard/matches">List Pertandingan</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+}
+
+templ DashboardFooter() {
+  <footer class="footer sticky top-[100vh] p-10 bg-neutral text-neutral-content">
+    <nav>
+      <p>© {strconv.Itoa(time.Now().Year())} - gilatennis.com</p>
+    </nav> 
+  </footer>
+}
+
+templ Scripts() {
+  <script>
+    /**
+     * @typedef {Object} AlertEvent
+     * @property {Object} detail
+     * @property {string} detail.type
+     * @property {string} detail.message
+     */
+    function alertHandler(event) {
+      const hiddenClass = "w-[350px] m-4 alert transition-all hidden fixed top-20 right-0"
+      const showClass = "w-[350px] m-4 alert transition-all fixed top-20 right-0"
+      const { type, message, redirect } = event.detail
+
+      const alert = document.getElementById("alert")
+      const alertMessage = document.getElementById("alert-message")
+
+      if (type == "success") {
+        alert.className = showClass + " alert-success"
+        alertMessage.innerText = message
+      }
+
+      setTimeout(() => {
+        alert.className = hiddenClass
+      }, 2000)
+
+      if (redirect) {
+        setTimeout(() => {
+          window.location.replace(redirect);
+        }, 1500)
+      }
+    }
+
+    document.body.addEventListener("alert", alertHandler)
+  </script>
+}
+

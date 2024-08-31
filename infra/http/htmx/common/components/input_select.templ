@@ -1,0 +1,47 @@
+package components
+
+type InputSelectOption struct {
+  Value string
+  Text string
+}
+
+type InputSelectParams struct {
+  Label string
+  Name string
+  ID string
+  Options []InputSelectOption
+  SelectedValue string
+  Error string
+  // DEPRECATED: need to change to standard <script> tags
+  // https://templ.guide/syntax-and-usage/script-templates#script-templates
+  JS_OnChange templ.ComponentScript 
+  // Alpine JS on event handler
+  XOnChange string
+}
+
+templ InputSelect(params InputSelectParams) {
+  <div class="form-control">
+    <label for={params.Name} class="label">
+      <span class="label-text">{params.Label}</span>
+    </label>
+    <select
+      id={params.ID}
+      name={params.Name}
+      class="select select-bordered w-full"
+      onchange={params.JS_OnChange}
+      x-on:change={params.XOnChange}
+    >
+      for _, option := range params.Options {
+        <option
+          value={option.Value}
+          selected?={option.Value == params.SelectedValue}
+        >
+          {option.Text}
+        </option>
+      }
+    </select>
+    if params.Error != "" {
+      <p class="text-error mt-1">{ params.Error }</p>
+    }
+  </div>
+}

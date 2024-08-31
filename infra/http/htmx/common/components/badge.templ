@@ -1,0 +1,21 @@
+package components
+
+type BadgeParams struct {
+  Type BadgeType
+  Text string
+}
+
+type BadgeType string
+
+const (
+  BadgeType_Info = "badge-info"
+  BadgeType_Success = "badge-success"
+  BadgeType_Warning = "badge-warning"
+  BadgeType_Error = "badge-error"
+)
+
+templ Badge(params BadgeParams) {
+  <div class={"badge gap-2", string(params.Type)}>
+    {params.Text}
+  </div>
+}

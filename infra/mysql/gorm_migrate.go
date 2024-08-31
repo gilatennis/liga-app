@@ -12,6 +12,7 @@ func GormMigrate(db *gorm.DB) error {
 		&entities.User{},
 		&entities.MagicLinkLogin{},
 		&entities.MagicLinkRegistration{},
+		&entities.Wilayah{},
 	)
 
 	if errMigrate != nil {

@@ -1,0 +1,73 @@
+package dashboard
+
+import "liga-app/infra/http/htmx/common/layouts"
+import "liga-app/infra/http/htmx/common/components"
+
+templ PageCompleteUserInfo(vmodel *VModelPageUserInfo) {
+  @layouts.BasicLayout("Informasi User") {
+    @container(){
+      @ViewFormCompleteUserInfo(vmodel.VModelFormUserInfo)
+    }
+  }
+}
+
+templ container() {
+  <div class="h-full flex items-center justify-center pb-[10vh]">
+    { children... }
+  </div>
+}
+
+templ ViewFormCompleteUserInfo(vmodel *VModelFormUserInfo) {
+  <div id="login-form"  class="card w-96 bg-base-100 shadow-xl">
+    <div class="card-body space-y-6">
+      <h1 class="card-title">Informasi User</h1>
+      <form
+        method="POST"
+        hx-post="/dashboard/complete-user-info"
+        hx-swap="outerHTML"
+        hx-target="#login-form"
+        hx-target-400="#login-form"
+        hx-target-5**="#login-form"
+        class="flex-col space-y-4"
+      >
+        @components.InputText(components.InputTextParams{
+          Label: "Nama",
+          Name: "name",
+          Value: vmodel.Name,
+          Error: vmodel.base.FormErrors["name"],
+        })
+        @components.InputText(components.InputTextParams{
+          Label: "No. WA",
+          Name: "phone",
+          Value: vmodel.Phone,
+          Error: vmodel.base.FormErrors["phone"],
+        })
+        @components.InputSelect(components.InputSelectParams{
+          Label: "Gender",
+          Name: "gender",
+          Options: []components.InputSelectOption{
+            {Value: "", Text: "-"},
+            {Value: "MALE", Text: "Pria"},
+            {Value: "FEMALE", Text: "Wanita"},
+          },
+          SelectedValue: vmodel.Gender,
+          Error: vmodel.base.FormErrors["gender"],
+        })
+        @components.InputSelect(components.InputSelectParams{
+          Label: "Asal Daerah",
+          Name: "province",
+          Options: vmodel.ProvinceOptions,
+          SelectedValue: vmodel.Province,
+          Error: vmodel.base.FormErrors["province"],
+        })
+
+        <div class="pt-8">
+          if vmodel.base.ServerError != "" {
+            <p class="text-error mt-1">{ vmodel.base.ServerError }</p>
+          }
+          <button class="btn btn-primary w-full">Submit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

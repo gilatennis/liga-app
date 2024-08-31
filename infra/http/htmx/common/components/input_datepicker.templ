@@ -1,0 +1,30 @@
+package components
+
+type InputDatePickerParams struct {
+  Label string
+  Name string
+  Type string
+  Value string
+  Readonly bool
+  Placeholder string
+  Error string
+}
+
+templ InputDatePicker(params InputDatePickerParams) {
+  <div class="form-control">
+    <label for={params.Name} class="label">
+      <span class="label-text">{params.Label}</span>
+    </label>
+    <input
+      name={params.Name}
+      type={params.Type}
+      value={params.Value}
+      placeholder={params.Placeholder}
+      class="input input-bordered w-full flatpickr placeholder:text-slate-700"
+      readonly?={params.Readonly}
+    />
+    if params.Error != "" {
+      <p class="text-error mt-1">{ params.Error }</p>
+    }
+  </div>
+}

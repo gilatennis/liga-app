@@ -38,6 +38,10 @@ templ LoginForm(model VModelFormLogin, redirect string) {
   @container() {
     <div id="login-form"  class="card w-96 bg-base-100 shadow-xl">
       <div class="card-body space-y-6">
+        <div class="pb-4 flex justify-center space-x-2">
+          <span><h1 class="text-4xl text-primary">Liga</h1></span>
+          <h1 class="text-4xl text-primary font-bold">Gilatennis</h1>
+        </div>
         <h1 class="card-title">Login</h1>
         <form
           method="POST"
@@ -77,12 +81,12 @@ templ LoginForm(model VModelFormLogin, redirect string) {
 
         <div class="divider"></div>
         <div class="flex-col space-y-4">
-          <a class="btn btn-neutral btn-wide w-full" hx-boost="false" href={templ.SafeURL(oauthHref("google", redirect))}>
-            <img src="/static/icons8-google-48.png" class="w-4 h-4 mr-2" />
+          <a class="btn btn-outline btn-primary btn-wide w-full" hx-boost="false" href={templ.SafeURL(oauthHref("google", redirect))}>
+            <img src="/static/icons/icons8-google-48.png" class="w-4 h-4 mr-2" />
             Continue with Google
           </a>
-          <a class="btn btn-neutral btn-wide w-full" hx-boost="false" href={templ.SafeURL(oauthHref("facebook", redirect))}>
-            <img src="/static/icons8-facebook-48.png" class="w-4 h-4 mr-2" />
+          <a class="btn btn-outline btn-primary btn-wide w-full" hx-boost="false" href={templ.SafeURL(oauthHref("facebook", redirect))}>
+            <img src="/static/icons/icons8-facebook-48.png" class="w-4 h-4 mr-2" />
             Continue with Facebook
           </a>
         </div>

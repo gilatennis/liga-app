@@ -1,0 +1,27 @@
+package common
+
+templ ScriptDatePicker() {
+  <script>
+    setTimeout(function() {
+      flatpickr(".flatpickr", {
+        altInput: true,
+        altFormat: "F j, Y",
+        dateFormat: "Z",
+      });
+    }, 500)
+  </script>
+}
+
+templ ScriptDateTimePicker() {
+  <script>
+    // INFO: wait 500 ms so elements are loaded, before initializing flatpickr
+    setTimeout(function() {
+      flatpickr(".flatpickr", {
+        altInput: true,
+        enableTime: true,
+        altFormat: "F j, Y h:i K",
+        dateFormat: "Z",
+      });
+    }, 500)
+  </script>
+}

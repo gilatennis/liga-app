@@ -1,0 +1,42 @@
+package components
+
+import "strconv"
+
+type InputTextAreaParams struct {
+  Label string
+  Name string
+  Type string
+  Value string
+  Readonly bool
+  Placeholder string
+  Error string
+  Rows int
+}
+
+var TEXTAREA_DEFAULT_ROWS int = 10
+
+func textAreaRows(params InputTextAreaParams) string {
+  if params.Rows == 0 {
+    return strconv.Itoa(TEXTAREA_DEFAULT_ROWS)
+  }
+  return strconv.Itoa(params.Rows)
+}
+
+templ InputTextArea(params InputTextAreaParams) {
+  <div class="form-control">
+    <label for={params.Name} class="label"> <span class="label-text">{params.Label}</span>
+    </label>
+    <textarea
+      name={params.Name}
+      type={params.Type}
+      placeholder={params.Placeholder}
+      class="input input-bordered w-full placeholder:text-slate-700"
+      readonly?={params.Readonly}
+      rows={textAreaRows(params)}
+      style="height:auto;"
+    >{params.Value}</textarea>
+    if params.Error != "" {
+      <p class="text-error mt-1">{ params.Error }</p>
+    }
+  </div>
+}
