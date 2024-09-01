@@ -1,0 +1,68 @@
+package league
+
+import "github.com/google/uuid"
+
+import (
+  "liga-app/infra/http/htmx/common/layouts"
+  "liga-app/entities"
+  "strconv"
+  )
+
+templ PageLeagueList(vmodel *VModelPageLeagueList) {
+  @layouts.DashboardLayout("Daftar Liga", vmodel.User, layouts.FOOTER_MENU_LEAGUE) {
+    <div>
+      <h1 class="text-primary text-3xl">Leagues</h1>
+    </div>
+    @ViewLeagueList(vmodel.Leagues, vmodel.LeaguesNextPage)
+  }
+}
+
+templ ViewLeagueList(leagues []entities.League, nextPage int) {
+  <div class="card-group-match-list grid grid-cols-2 gap-4">
+    for _, l := range leagues {
+      <a hx-boost="false" href={hrefLeagueDetail(l.UUID)}>
+        <div class="card min-h-[320px] w-auto shadow-xl">
+          <div class="card-body px-2 items-center space-y-2">
+            <div class="flex flex-row space-x-2">
+              <div class="badge badge-sm badge-primary">Season {strconv.Itoa(l.Season)}</div>
+              <div class="badge badge-sm badge-secondary">{string(l.Level)}</div>
+            </div>
+            <div class="text-center text-3xl">
+              {l.Name}
+            </div>
+            <div class="flex flex-row items-center space-x-2">
+              <i data-feather="map-pin" width="16" height="16"></i>
+              <p>{l.Wilayah.Name}</p>
+            </div>
+            <div class="flex flex-col items-center">
+              <h2 class="text-6xl">0</h2>
+              <h2 class="text-xl">Pemain</h2>
+            </div>
+          </div>
+        </div>
+      </a>
+    }
+  </div>
+
+  if nextPage > 0 {
+    <div id="load-more-replace" class="mt-8 flex flex-row justify-center"> 
+      <button
+        class="btn btn-primary btn-wide"
+        hx-get={urlLoadMore(nextPage)}
+        hx-target="#load-more-replace"
+        hx-swap="outerHTML"
+        hx-include=""
+      >
+        Load More
+      </button>
+    </div>
+  }
+}
+
+func hrefLeagueDetail(leagueUUID uuid.UUID) templ.SafeURL {
+  return templ.URL("")
+}
+
+func urlLoadMore(nextPage int) string {
+  return ""
+}

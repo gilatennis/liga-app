@@ -3,26 +3,27 @@ package dashboard
 import "liga-app/infra/http/htmx/common/layouts"
 
 templ PageDashboardIndex(vmodel *VModelPageDashboardIndex) {
-  @layouts.DashboardLayout("Dashboard", vmodel.User) {
-    <div class="max-w-md m-auto py-4 px-4 min-h-full">
-      // Rating & Match Stats ----
-      <div class="grid grid-cols-2 min-h-56 gap-4">
-        <div class="card bg-base-100 shadow-xl h-full">
-          <div class="card-body">
-            <div class="text-center">
-              <h2 class="text-xl">Player Rating</h2>
-            </div>
-            <div class="text-center">
-              <h2 class="text-lg">-</h2>
-            </div>
+  @layouts.DashboardLayout("Dashboard", vmodel.User, layouts.FOOTER_MENU_HOME) {
+    // Rating & Match Stats ----
+    <div class="grid grid-cols-2 min-h-56 gap-4">
+      <div class="card bg-base-100 shadow-xl h-full">
+        <div class="card-body">
+          <div class="text-center">
+            <h2 class="text-xl">Player Rating</h2>
           </div>
+          <div class="h-full flex flex-col justify-center items-center">
+            <h2 class="text-lg text-center">-</h2>
+          </div>
+          <p class="text-xs">Lakukan pendaftaran ke liga untuk mendapatkan rating..</p>
         </div>
+      </div>
 
-        <div class="card bg-base-100 shadow-xl h-full">
-          <div class="card-body">
-            <div class="text-center">
-              <h2 class="text-xl">Match Stats</h2>
-            </div>
+      <div class="card bg-base-100 shadow-xl h-full">
+        <div class="card-body">
+          <div class="text-center">
+            <h2 class="text-xl">Match Stats</h2>
+          </div>
+          <div class="h-full flex flex-col justify-center">
             <div class="text-center">
               <h2 class="text-sm">Played</h2>
               <h2 class="text-lg">0</h2>
@@ -40,17 +41,17 @@ templ PageDashboardIndex(vmodel *VModelPageDashboardIndex) {
           </div>
         </div>
       </div>
-      // -----------------------
+    </div>
+    // -----------------------
 
 
-      <div class="mt-12 space-y-6">
-        <div>
-          <h1 class="text-primary text-3xl">Your Leagues</h1>
-        </div>
-        <div class="text-center space-y-4">
-          <p>You are not registered to a league yet..</p>
-          <a hx-boost="false" href="/dashboard/leagues" class="btn btn-primary btn-wide">Join a league</a>
-        </div>
+    <div class="mt-12 space-y-6">
+      <div>
+        <h1 class="text-primary text-3xl">Your Leagues</h1>
+      </div>
+      <div class="text-center space-y-4">
+        <p>Kamu belum terdaftar ke liga..</p>
+        <a hx-boost="false" href="/dashboard/leagues" class="btn btn-primary btn-wide">Daftar Liga Sekarang</a>
       </div>
     </div>
   }

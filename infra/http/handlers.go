@@ -5,14 +5,17 @@ import (
 	"liga-app/config"
 	"liga-app/infra/http/htmx/auth"
 	"liga-app/infra/http/htmx/dashboard"
+	dashLeague "liga-app/infra/http/htmx/dashboard/league"
 	"liga-app/infra/http/htmx/index"
 	"liga-app/infra/http/json/duitku"
 	"liga-app/infra/minio"
 	"liga-app/third_party/mailtrap"
 
 	domainAuth "liga-app/domain/auth"
+	domainLeague "liga-app/domain/league"
 	domainUserInfo "liga-app/domain/user_info"
 	dbAuth "liga-app/infra/mysql/auth"
+	dbLeague "liga-app/infra/mysql/league"
 	dbUser "liga-app/infra/mysql/user"
 	dbWilayah "liga-app/infra/mysql/wilayah"
 
@@ -28,9 +31,10 @@ type Handlers struct {
 }
 
 type HTMXHandlers struct {
-	IndexHandler     *index.Handler
-	AuthHandler      *auth.Handler
-	DashboardHandler *dashboard.Handler
+	IndexHandler           *index.Handler
+	AuthHandler            *auth.Handler
+	DashboardHandler       *dashboard.Handler
+	DashboardLeagueHandler *dashLeague.Handler
 }
 
 type JSONHandlers struct {
@@ -59,6 +63,7 @@ func setupHandlers(config *config.Config, db *gorm.DB, logger *zerolog.Logger) (
 	authStore := dbAuth.NewStore(db)
 	userStore := dbUser.NewStore(db)
 	wilayahStore := dbWilayah.NewStore(db)
+	leagueStore := dbLeague.NewStore(db)
 
 	authService := domainAuth.NewService(
 		config,
@@ -67,11 +72,13 @@ func setupHandlers(config *config.Config, db *gorm.DB, logger *zerolog.Logger) (
 		mail,
 	)
 	userInfoService := domainUserInfo.NewService(wilayahStore, userStore)
+	leagueService := domainLeague.NewService(leagueStore)
 
 	HTMXHandlers := HTMXHandlers{
-		AuthHandler:      auth.NewHandler(config, authService),
-		IndexHandler:     index.NewHandler(),
-		DashboardHandler: dashboard.NewHandler(userInfoService),
+		AuthHandler:            auth.NewHandler(config, authService),
+		IndexHandler:           index.NewHandler(),
+		DashboardHandler:       dashboard.NewHandler(userInfoService),
+		DashboardLeagueHandler: dashLeague.NewHandler(leagueService),
 	}
 
 	JSONHandlers := JSONHandlers{

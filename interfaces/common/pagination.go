@@ -38,3 +38,10 @@ func NewPagination(page, limit int, orderBy []OrderBy) *Pagination {
 func (p *Pagination) SetTotalPageByTotalItems(total int) {
 	p.TotalPage = int(math.Ceil(float64(total) / float64(p.Limit)))
 }
+
+func (p *Pagination) GetNextPage() int {
+	if p.Page < p.TotalPage {
+		return p.Page + 1
+	}
+	return 0
+}

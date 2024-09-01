@@ -6,7 +6,15 @@ import (
 	"liga-app/entities"
 )
 
-templ DashboardLayout(title string, user *entities.User) {
+type FOOTER_MENU string
+
+const (
+  FOOTER_MENU_HOME FOOTER_MENU = "home"
+  FOOTER_MENU_PROFILE FOOTER_MENU = "profile"
+  FOOTER_MENU_LEAGUE FOOTER_MENU = "league"
+)
+
+templ DashboardLayout(title string, user *entities.User, activeFooterMenu FOOTER_MENU) {
   <html data-theme="dark">
     @Head(title)
     <!--
@@ -21,9 +29,11 @@ templ DashboardLayout(title string, user *entities.User) {
     >
       @Navbar(user)
       @DashboardDrawer(user) {
-        { children... }
+        @ContainerMobile(){
+          { children... }
+        }
       }
-      @DashboardFooterMenu("home")
+      @DashboardFooterMenu(activeFooterMenu)
       @Scripts()
       @ScriptFeatherIcons()
     </body>
@@ -64,9 +74,7 @@ templ Navbar(user *entities.User) {
 }
 
 templ DashboardDrawer(user *entities.User) {
-  // z index need to be more than footer
-  // dropdown > drawer > footer
-  <div class="drawer z-20">
+  <div class="drawer">
     <input id="my-drawer" type="checkbox" class="drawer-toggle" />
     <div class="drawer-content min-h-full flex-grow overflow-auto mb-8">
       <div id="alert" class="w-[350px] m-4 alert hidden transition-all fixed top-20 right-0">
@@ -76,8 +84,10 @@ templ DashboardDrawer(user *entities.User) {
       <!-- Page content here -->
       { children...}
     </div>
+    // z index need to be more than footer
+    // dropdown > drawer > footer
     <!-- INFO: do not add bg-base-200 or any color to drawer-side. for some reason, the drawer will be full screen on mobile view -->
-    <div class="drawer-side">
+    <div class="drawer-side z-20">
       <label for="my-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
       <div class="bg-base-200 min-h-full">
         <!-- Sidebar content here -->
@@ -102,41 +112,65 @@ templ DashboardDrawer(user *entities.User) {
   </div>
 }
 
-templ DashboardFooterMenu(activeMenu string) {
+templ DashboardFooterMenu(activeMenu FOOTER_MENU) {
   // z index need to be less than drawer
   // dropdown > drawer > footer
-  <footer class="fixed w-full z-10 pt-4 pb-3 bottom-0 flex justify-center space-x-12 shadow-[-3px_-8px_30px_0px_rgba(0,0,0,0.45)]">
-    @ButtonMenuDashboardFooter("user", "Profile", activeMenu == "profile")
-    @ButtonMenuDashboardFooter("home", "Home", activeMenu == "home")
-    @ButtonMenuDashboardFooter("layout", "League", activeMenu == "league")
+  <footer class="fixed w-full z-10 bg-white pt-4 pb-3 bottom-0 flex justify-center space-x-12 shadow-[-3px_-8px_20px_0px_rgba(0,0,0,0.25)]">
+    @ButtonMenuDashboardFooter(ButtonMenuDashboardFooterParams{
+      Icon: "user",
+      Text: "Profile",
+      IsActive: activeMenu == FOOTER_MENU_PROFILE,
+      Href: "/dashboard/profile",
+    })
+    @ButtonMenuDashboardFooter(ButtonMenuDashboardFooterParams{
+      Icon: "home",
+      Text: "Home",
+      IsActive: activeMenu == FOOTER_MENU_HOME,
+      Href: "/dashboard",
+    })
+    @ButtonMenuDashboardFooter(ButtonMenuDashboardFooterParams{
+      Icon: "layout",
+      Text: "League",
+      IsActive: activeMenu == FOOTER_MENU_LEAGUE,
+      Href: "/dashboard/leagues",
+    })
   </footer>
 }
 
-templ ButtonMenuDashboardFooter(icon string, text string, isActive bool) {
-  <div class="space-y-2">
-    <div class="avatar placeholder btn btn-circle">
-      if isActive {
-        <div class="ring-primary bg-primary ring-offset-base-100 w-14 rounded-full ring">
-          <span class="text-3xl text-primary-content">
-            <i data-feather={icon} class="w-10 h-10"></i>
-          </span>
-        </div>
-      } else {
-        <div class="ring-primary ring-offset-base-100 w-14 rounded-full ring">
-          <span class="text-3xl text-primary">
-            <i data-feather={icon} class="w-10 h-10"></i>
-          </span>
-        </div>
-      }
+type ButtonMenuDashboardFooterParams struct {
+  Icon string
+  Text string
+  IsActive bool
+  Href string
+}
+
+templ ButtonMenuDashboardFooter(params ButtonMenuDashboardFooterParams) {
+  <a href={templ.URL(params.Href)}>
+    <div class="space-y-2">
+      <div class="avatar placeholder btn btn-circle">
+        if params.IsActive {
+          <div class="ring-primary bg-primary ring-offset-base-100 w-14 rounded-full ring">
+            <span class="text-3xl text-primary-content">
+              <i data-feather={params.Icon} class="w-10 h-10"></i>
+            </span>
+          </div>
+        } else {
+          <div class="ring-primary ring-offset-base-100 w-14 rounded-full ring">
+            <span class="text-3xl text-primary">
+              <i data-feather={params.Icon} class="w-10 h-10"></i>
+            </span>
+          </div>
+        }
+      </div>
+      <h3
+        if params.IsActive {
+          class="text-center font-bold"
+        } else {
+          class="text-center"
+        }
+      >{params.Text}</h3>
     </div>
-    <h3
-      if isActive {
-        class="text-center font-bold"
-      } else {
-        class="text-center"
-      }
-    >{text}</h3>
-  </div>
+  </a>
 }
 
 templ DashboardFooter() {

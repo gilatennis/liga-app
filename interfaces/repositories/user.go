@@ -4,17 +4,22 @@ import (
 	"context"
 	"liga-app/entities"
 	"liga-app/interfaces/common"
-	"liga-app/interfaces/services"
 
 	"github.com/google/uuid"
 )
+
+type GetUserListFilter struct {
+	Name        *string
+	Email       *string
+	LoginMethod *string
+}
 
 type IUserRepository interface {
 	CreateUser(ctx context.Context, t *entities.User) (*uuid.UUID, error)
 	GetUsers(
 		ctx context.Context,
 		p *common.Pagination,
-		f *services.GetUserListFilter,
+		f *GetUserListFilter,
 	) ([]entities.User, int64, error)
 	GetUserByUUID(ctx context.Context, tUUID uuid.UUID) (*entities.User, error)
 	UpdateUser(ctx context.Context, t *entities.User) (*uuid.UUID, error)

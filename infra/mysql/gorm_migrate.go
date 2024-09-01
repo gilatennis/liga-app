@@ -13,6 +13,7 @@ func GormMigrate(db *gorm.DB) error {
 		&entities.MagicLinkLogin{},
 		&entities.MagicLinkRegistration{},
 		&entities.Wilayah{},
+		&entities.League{},
 	)
 
 	if errMigrate != nil {

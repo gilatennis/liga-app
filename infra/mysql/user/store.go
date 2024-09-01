@@ -7,7 +7,7 @@ import (
 	domainErrors "liga-app/domain/errors"
 	"liga-app/entities"
 	"liga-app/interfaces/common"
-	"liga-app/interfaces/services"
+	"liga-app/interfaces/repositories"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -35,7 +35,7 @@ func (s *Store) CreateUser(ctx context.Context, t *entities.User) (*uuid.UUID, e
 func (s *Store) GetUsers(
 	ctx context.Context,
 	p *common.Pagination,
-	f *services.GetUserListFilter,
+	f *repositories.GetUserListFilter,
 ) ([]entities.User, int64, error) {
 	dbHandle := s.db.WithContext(ctx).
 		Offset(p.Offset).
