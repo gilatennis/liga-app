@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"liga-app/entities"
 	"liga-app/interfaces"
 
@@ -8,7 +9,7 @@ import (
 )
 
 type IGormRepo interface {
-	Save(entity interfaces.IEntity, user *entities.User) (*uuid.UUID, error)
-	Delete(entity interfaces.IEntity, user *entities.User) (*uuid.UUID, error)
+	Save(ctx context.Context, entity interfaces.IEntity, user *entities.User) (*uuid.UUID, error)
+	Delete(ctx context.Context, entity interfaces.IEntity, user *entities.User) (*uuid.UUID, error)
 	// Get(entity interfaces.IEntity)
 }

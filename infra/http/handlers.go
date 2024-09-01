@@ -9,6 +9,7 @@ import (
 	"liga-app/infra/http/htmx/index"
 	"liga-app/infra/http/json/duitku"
 	"liga-app/infra/minio"
+	"liga-app/infra/mysql"
 	"liga-app/third_party/mailtrap"
 
 	domainAuth "liga-app/domain/auth"
@@ -16,8 +17,11 @@ import (
 	domainUserInfo "liga-app/domain/user_info"
 	dbAuth "liga-app/infra/mysql/auth"
 	dbLeague "liga-app/infra/mysql/league"
+	dbLeagueReg "liga-app/infra/mysql/league_registration"
 	dbUser "liga-app/infra/mysql/user"
 	dbWilayah "liga-app/infra/mysql/wilayah"
+
+	thirdPartyDuitku "liga-app/third_party/duitku"
 
 	// "liga-app/mixins"
 
@@ -41,14 +45,16 @@ type JSONHandlers struct {
 	DuitkuHandler *duitku.Handler
 }
 
-func setupHandlers(config *config.Config, db *gorm.DB, logger *zerolog.Logger) (*Handlers, error) {
-	mail := mailtrap.NewMailTrap(config)
-	minioClient, err := minio.NewClient(config)
+func setupHandlers(cfg *config.Config, db *gorm.DB, logger *zerolog.Logger) (*Handlers, error) {
+	mail := mailtrap.NewMailTrap(cfg)
+	minioClient, err := minio.NewClient(cfg)
 	if err != nil {
 		return nil, fmt.Errorf("http.server.setupHandlers(): failed to create new minio client: %w", err)
 	}
 	_ = mail
 	_ = minioClient
+
+	duitkuAPI := thirdPartyDuitku.NewAPI(cfg)
 
 	// fileUploader := mixins.NewFileUploader(minioClient)
 
@@ -60,29 +66,38 @@ func setupHandlers(config *config.Config, db *gorm.DB, logger *zerolog.Logger) (
 		accessControlStore := accessControlDB.NewStore(db)
 	*/
 
+	gormStore := mysql.NewGormStore(db)
 	authStore := dbAuth.NewStore(db)
 	userStore := dbUser.NewStore(db)
 	wilayahStore := dbWilayah.NewStore(db)
 	leagueStore := dbLeague.NewStore(db)
+	leagueRegStore := dbLeagueReg.NewStore(db)
 
 	authService := domainAuth.NewService(
-		config,
+		cfg,
 		authStore,
 		userStore,
 		mail,
 	)
 	userInfoService := domainUserInfo.NewService(wilayahStore, userStore)
-	leagueService := domainLeague.NewService(leagueStore)
+	leagueService := domainLeague.NewService(
+		cfg,
+		gormStore,
+		leagueStore,
+		leagueRegStore,
+		wilayahStore,
+		duitkuAPI,
+	)
 
 	HTMXHandlers := HTMXHandlers{
-		AuthHandler:            auth.NewHandler(config, authService),
+		AuthHandler:            auth.NewHandler(cfg, authService),
 		IndexHandler:           index.NewHandler(),
 		DashboardHandler:       dashboard.NewHandler(userInfoService),
 		DashboardLeagueHandler: dashLeague.NewHandler(leagueService),
 	}
 
 	JSONHandlers := JSONHandlers{
-		DuitkuHandler: duitku.NewHandler(),
+		DuitkuHandler: duitku.NewHandler(leagueService),
 	}
 
 	return &Handlers{

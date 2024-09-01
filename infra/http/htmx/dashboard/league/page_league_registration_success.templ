@@ -1,0 +1,33 @@
+package league
+
+import (
+  "liga-app/infra/http/htmx/common/layouts"
+  // "liga-app/infra/http/htmx/common/utils"
+  // "liga-app/enums"
+  // "fmt"
+)
+
+templ PageLeagueRegistrationSuccess(vmodel *VModelPageLeagueRegistrationSuccess) {
+  @layouts.DashboardLayout("Daftar Liga", vmodel.User, layouts.FOOTER_MENU_LEAGUE) {
+    <div class="space-y-8 h-full flex items-center justify-center">
+      <div class="card w-full shadow-xl">
+        <div class="space-y-8 p-4">
+          <div class="text-center space-y-4">
+            <div class="flex justify-center">
+              <i class="h-24 w-24" color="green" data-feather="check-circle"></i>
+            </div>
+            <div>
+              <h1 class="text-lg">Pendaftaran liga</h1>
+              <h2 class="text-xl">{vmodel.League.Name}</h2>
+              <h1 class="text-lg">Berhasil</h1>
+            </div>
+          </div>
+          <div class="text-center">
+            <a href={hrefLeagueDetail(vmodel.League.UUID)} class="btn btn-primary w-full">OK</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+}
+

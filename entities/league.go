@@ -23,4 +23,5 @@ type League struct {
 	LeagueStartAt         *time.Time
 	LeagueEndAt           *time.Time
 	Season                int
+	RegistrationFee       float64
 }

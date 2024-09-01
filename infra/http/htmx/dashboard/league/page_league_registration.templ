@@ -1,0 +1,55 @@
+package league
+
+import (
+  "liga-app/infra/http/htmx/common/layouts"
+  "liga-app/infra/http/htmx/common/utils"
+  "liga-app/enums"
+  "fmt"
+	"github.com/google/uuid"
+)
+
+templ PageLeagueRegistration(vmodel *VModelPageLeagueRegistration) {
+  @layouts.DashboardLayout("Daftar Liga", vmodel.User, layouts.FOOTER_MENU_LEAGUE) {
+    <div class="space-y-8">
+      @ViewLeagueDetail(vmodel.League)
+      <div class="card w-auto shadow-xl">
+        <div class="p-4 space-y-4">
+          <div class="space-y-2">
+            <h3 class="text-lg">Biaya Pendaftaran</h3>
+            <h2 class="text-2xl">Rp. {utils.DisplayPrice(vmodel.League.RegistrationFee)}</h2>
+          </div>
+
+          if vmodel.League.ParticipationCategory == enums.CATEGORY_PARTICIPATION_DOUBLES {
+            <div role="alert" class="alert flex flex-row items-start">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                class="stroke-info h-6 w-6 shrink-0">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <div class="text-left space-y-2">
+                <div>Biaya pendaftaran sudah termasuk biaya partner doubles.</div>
+                <div>Pengaturan partner doubles dapat dilakukan setelah pendaftaran berhasil.</div>
+              </div>
+            </div>
+          }
+
+          <div class="flex flex-col space-y-2">
+            <button hx-post={urlPostLeagueRegistration(vmodel.League.UUID)} class="btn btn-primary w-full">Lanjut ke pembayaran</button>
+            <a href={hrefLeagueDetail(vmodel.League.UUID)} class="btn btn-outline btn-secondary w-full">Kembali</a>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  }
+}
+
+func urlPostLeagueRegistration(leagueUUID uuid.UUID) string {
+  return fmt.Sprintf("/dashboard/leagues/%s/registration", leagueUUID)
+}

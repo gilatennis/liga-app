@@ -23,6 +23,8 @@ func (s *Store) Get(ctx context.Context, p *common.Pagination, f *repositories.L
 	var count int64
 	err := s.db.WithContext(ctx).
 		Preload("Wilayah").
+		Offset(p.Offset).
+		Limit(p.Limit).
 		Find(&leagues).
 		Count(&count).
 		Error
@@ -34,7 +36,16 @@ func (s *Store) Get(ctx context.Context, p *common.Pagination, f *repositories.L
 }
 
 func (s *Store) GetByUUID(ctx context.Context, leagueUUID uuid.UUID) (*entities.League, error) {
-	return nil, nil
+	league := entities.League{}
+	err := s.db.Where("uuid = ?", leagueUUID).
+		Preload("Wilayah").
+		First(&league).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &league, nil
 }
 
 func (s *Store) Create(ctx context.Context, e *entities.League) (*uuid.UUID, error) {

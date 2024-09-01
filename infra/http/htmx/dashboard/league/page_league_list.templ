@@ -6,7 +6,8 @@ import (
   "liga-app/infra/http/htmx/common/layouts"
   "liga-app/entities"
   "strconv"
-  )
+  "fmt"
+)
 
 templ PageLeagueList(vmodel *VModelPageLeagueList) {
   @layouts.DashboardLayout("Daftar Liga", vmodel.User, layouts.FOOTER_MENU_LEAGUE) {
@@ -60,7 +61,7 @@ templ ViewLeagueList(leagues []entities.League, nextPage int) {
 }
 
 func hrefLeagueDetail(leagueUUID uuid.UUID) templ.SafeURL {
-  return templ.URL("")
+  return templ.URL(fmt.Sprintf("/dashboard/leagues/%s", leagueUUID))
 }
 
 func urlLoadMore(nextPage int) string {

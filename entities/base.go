@@ -35,3 +35,7 @@ func (w *Base) SetUpdatedBy(user *User) {
 func (w *Base) SetDeletedBy(user *User) {
 	w.DeletedBy = &user.UUID
 }
+
+func (w *Base) GetUUID() *uuid.UUID {
+	return &w.UUID
+}
