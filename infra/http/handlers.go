@@ -6,6 +6,7 @@ import (
 	"liga-app/infra/http/htmx/auth"
 	"liga-app/infra/http/htmx/dashboard"
 	dashLeague "liga-app/infra/http/htmx/dashboard/league"
+	dashLeagueTeam "liga-app/infra/http/htmx/dashboard/league/team"
 	"liga-app/infra/http/htmx/index"
 	"liga-app/infra/http/json/duitku"
 	"liga-app/infra/minio"
@@ -14,10 +15,12 @@ import (
 
 	domainAuth "liga-app/domain/auth"
 	domainLeague "liga-app/domain/league"
+	domainTeam "liga-app/domain/team"
 	domainUserInfo "liga-app/domain/user_info"
 	dbAuth "liga-app/infra/mysql/auth"
 	dbLeague "liga-app/infra/mysql/league"
 	dbLeagueReg "liga-app/infra/mysql/league_registration"
+	dbTeam "liga-app/infra/mysql/team"
 	dbUser "liga-app/infra/mysql/user"
 	dbWilayah "liga-app/infra/mysql/wilayah"
 
@@ -35,10 +38,11 @@ type Handlers struct {
 }
 
 type HTMXHandlers struct {
-	IndexHandler           *index.Handler
-	AuthHandler            *auth.Handler
-	DashboardHandler       *dashboard.Handler
-	DashboardLeagueHandler *dashLeague.Handler
+	IndexHandler               *index.Handler
+	AuthHandler                *auth.Handler
+	DashboardHandler           *dashboard.Handler
+	DashboardLeagueHandler     *dashLeague.Handler
+	DashboardLeagueTeamHandler *dashLeagueTeam.Handler
 }
 
 type JSONHandlers struct {
@@ -72,6 +76,7 @@ func setupHandlers(cfg *config.Config, db *gorm.DB, logger *zerolog.Logger) (*Ha
 	wilayahStore := dbWilayah.NewStore(db)
 	leagueStore := dbLeague.NewStore(db)
 	leagueRegStore := dbLeagueReg.NewStore(db)
+	teamStore := dbTeam.NewStore(db)
 
 	authService := domainAuth.NewService(
 		cfg,
@@ -88,12 +93,14 @@ func setupHandlers(cfg *config.Config, db *gorm.DB, logger *zerolog.Logger) (*Ha
 		wilayahStore,
 		duitkuAPI,
 	)
+	teamService := domainTeam.NewService(teamStore)
 
 	HTMXHandlers := HTMXHandlers{
-		AuthHandler:            auth.NewHandler(cfg, authService),
-		IndexHandler:           index.NewHandler(),
-		DashboardHandler:       dashboard.NewHandler(userInfoService),
-		DashboardLeagueHandler: dashLeague.NewHandler(leagueService),
+		AuthHandler:                auth.NewHandler(cfg, authService),
+		IndexHandler:               index.NewHandler(),
+		DashboardHandler:           dashboard.NewHandler(userInfoService),
+		DashboardLeagueHandler:     dashLeague.NewHandler(leagueService, teamService),
+		DashboardLeagueTeamHandler: dashLeagueTeam.NewHandler(leagueService, teamService),
 	}
 
 	JSONHandlers := JSONHandlers{

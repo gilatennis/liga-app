@@ -54,9 +54,15 @@ func setupHtxmRoutes(r *gin.Engine, handlers *Handlers, middlewares *middlewares
 		leagues := dashboard.Group("/leagues")
 		leagues.GET("", handlers.HTMXHandlers.DashboardLeagueHandler.GetLeagueListPage)
 		leagues.GET("/:league_uuid", handlers.HTMXHandlers.DashboardLeagueHandler.GetLeagueDetailPage)
+
+		// league registration
 		leagues.GET("/:league_uuid/registration", handlers.HTMXHandlers.DashboardLeagueHandler.GetLeagueRegistrationPage)
 		leagues.POST("/:league_uuid/registration", handlers.HTMXHandlers.DashboardLeagueHandler.PostLeagueRegistration)
 		leagues.GET("/:league_uuid/registration/success", handlers.HTMXHandlers.DashboardLeagueHandler.GetLeagueRegistrationSuccessPage)
+
+		// league team
+		leagues.GET("/:league_uuid/teams/:team_uuid", handlers.HTMXHandlers.DashboardLeagueTeamHandler.GetTeamDetailPage)
+		leagues.GET("/:league_uuid/teams/:team_uuid/invites/send", handlers.HTMXHandlers.DashboardLeagueTeamHandler.GetSendInvitePage)
 	}
 }
 

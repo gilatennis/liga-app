@@ -41,7 +41,7 @@ templ DashboardLayout(title string, user *entities.User, activeFooterMenu FOOTER
 }
 
 templ Navbar(user *entities.User) {
-  <div class="navbar bg-base-100">
+  <div class="navbar fixed w-full z-10 bg-white shadow-[-1px_13px_20px_0px_rgba(0,0,0,0.25)]">
     <div class="flex flex-1">
       <label for="my-drawer"  tabindex="0" role="button" class="btn btn-ghost drawer-button">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" /></svg>

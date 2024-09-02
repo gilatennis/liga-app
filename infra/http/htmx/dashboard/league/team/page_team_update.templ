@@ -1,0 +1,67 @@
+package team
+
+import (
+  "liga-app/infra/http/htmx/common/layouts"
+  "liga-app/infra/http/htmx/common/components"
+  "liga-app/infra/http/htmx/dashboard/league"
+  "liga-app/entities"
+)
+
+templ PageTeamUpdate(vmodel *VModelPageTeamUpdate) {
+  @layouts.DashboardLayout("Tim", vmodel.User, layouts.FOOTER_MENU_LEAGUE) {
+    <div class="space-y-8">
+      @league.ViewLeagueDetail(vmodel.League)
+    </div>
+  }
+}
+
+templ ViewTeamUpdate(team *entities.Team, vmodelForm *VModelFormTeam) {
+  <div class="card w-auto shadow-xl">
+    <div class="p-4 flex flex-col gap-2">
+      <h1 class="text-2xl mb-8">Informasi Tim</h1>
+      @ViewFormTeam(vmodelForm)
+    </div>
+  </div>
+}
+
+templ ViewFormTeam(vmodel *VModelFormTeam) {
+  <form
+    id="form-team"
+    class="flex-col space-y-4"
+    method="PUT"
+    hx-put="/dashboard"
+    hx-swap="outerHTML"
+    hx-target="#form-team"
+    hx-target-400="#form-team"
+    hx-target-5**="#form-team"
+  >
+    <div class="form-control flex flex-col items-center">
+      <div class="avatar placeholder">
+        <div class="bg-primary text-neutral-content w-24 rounded-full">
+          <span class="text-3xl">{string(vmodel.Name[0])}</span>
+        </div>
+      </div>
+      <label for="avatar" class="label"> <span class="label-text">Avatar</span>
+      </label>
+    </div>
+
+    @components.InputText(components.InputTextParams{
+      Label: "Nama Tim",
+      Value: vmodel.Name,
+    })
+
+    <div class="pt-4">
+      if vmodel.base.ServerError != "" {
+        <p class="text-error mt-1">{ vmodel.base.ServerError }</p>
+      }
+      <button class="btn btn-primary w-full">Update Data Tim</button>
+    </div>
+  </form>
+}
+
+templ ViewPlayers() {
+  <div class="card w-auto shadow-xl">
+    <div class="p-4 flex flex-col gap-2">
+    </div>
+  </div>
+}

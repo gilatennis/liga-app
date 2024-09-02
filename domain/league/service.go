@@ -174,7 +174,7 @@ func (s *Service) CompleteLeagueRegistrationPayment(
 	leagueReg.PaymentID = paymentID
 	leagueReg.PaymentStatus = enums.PAYMENT_STATUS_PAID
 
-	updatedUUID, err := s.leagueRegRepo.Update(ctx, leagueReg)
+	updatedUUID, err := s.leagueRegRepo.CompleteRegistration(ctx, leagueReg)
 	if err != nil {
 		return nil, err
 	}

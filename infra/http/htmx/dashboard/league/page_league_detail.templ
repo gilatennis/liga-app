@@ -4,6 +4,7 @@ import (
   "liga-app/infra/http/htmx/common/layouts"
 	"github.com/google/uuid"
   "fmt"
+  "strconv"
 )
 
 templ PageLeagueDetail(vmodel *VModelPageLeagueDetail) {
@@ -11,26 +12,48 @@ templ PageLeagueDetail(vmodel *VModelPageLeagueDetail) {
     <div class="space-y-8">
       @ViewLeagueDetail(vmodel.League)
       <!-- Join Button -->
-      <div>
-        <a href={hrefLeagueRegistration(vmodel.League.UUID)} class="btn btn-primary w-full btn-lg">Daftar ke liga ini!</a>
-      </div>
-
-      <div class="grid grid-cols-2 gap-2">
-        <div class="card w-auto btn h-full shadow-xl">
-          <div class="grid grid-row-2 gap-4 p-4">
-            <div class="flex justify-center text-primary">
-              <i data-feather="users" width="32" height="32"></i>
-            </div>
-            <h3 class="text-center">List Pemain</h3>
-          </div>
+      if vmodel.Team == nil {
+        <div>
+          <a href={hrefLeagueRegistration(vmodel.League.UUID)} class="btn btn-primary w-full btn-lg">Daftar ke liga ini!</a>
         </div>
-        <div class="card w-auto btn h-full shadow-xl">
-          <div class="grid grid-row-2 gap-4 p-2">
-            <div class="flex justify-center text-primary">
-              <i data-feather="list" width="32" height="32"></i>
+      } else {
+        <div class="grid grid-cols-1">
+          @ComponentCardButton() {
+            <a class="w-full" href={hrefTeamDetail(vmodel.League.UUID, vmodel.Team.UUID)}>
+              <div class="flex items-center space-x-4 justify-start w-full py-4">
+                <div class="avatar placeholder">
+                  <div class="bg-primary text-neutral-content w-10 rounded-full">
+                    <span class="text-3xl">{string(vmodel.Team.Name[0])}</span>
+                  </div>
+                </div>
+                <div class="w-full text-left">
+                  <h3 class="text-2xl">Tim {vmodel.Team.Name}</h3>
+                  <h3>{strconv.Itoa(len(vmodel.Team.Players))} Pemain</h3>
+                </div>
+              </div>
+            </a>
+          }
+        </div>
+      }
+
+      <div>
+        <div class="grid grid-cols-2 gap-2">
+          @ComponentCardButton() {
+            <div class="grid grid-row-2 gap-4 p-4">
+              <div class="flex justify-center text-primary">
+                <i data-feather="users" width="32" height="32"></i>
+              </div>
+              <h3 class="text-center">List Pemain</h3>
             </div>
-            <h3 class="text-center">List Pertandingan</h3>
-          </div>
+          }
+          @ComponentCardButton() {
+            <div class="grid grid-row-2 gap-4 p-4">
+              <div class="flex justify-center text-primary">
+                <i data-feather="list" width="32" height="32"></i>
+              </div>
+              <h3 class="text-center">List Pertandingan</h3>
+            </div>
+          }
         </div>
       </div>
     </div>
@@ -38,6 +61,16 @@ templ PageLeagueDetail(vmodel *VModelPageLeagueDetail) {
   }
 }
 
+templ ComponentCardButton() {
+  <div class="card w-auto btn h-full shadow-xl">
+    {children...}
+  </div>
+}
+
 func hrefLeagueRegistration(leagueUUID uuid.UUID) templ.SafeURL {
   return templ.URL(fmt.Sprintf("/dashboard/leagues/%s/registration", leagueUUID))
+}
+
+func hrefTeamDetail(leagueUUID uuid.UUID, teamUUID uuid.UUID) templ.SafeURL {
+  return templ.URL(fmt.Sprintf("/dashboard/leagues/%s/teams/%s", leagueUUID, teamUUID))
 }

@@ -15,6 +15,10 @@ func GormMigrate(db *gorm.DB) error {
 		&entities.Wilayah{},
 		&entities.League{},
 		&entities.LeagueRegistration{},
+		&entities.Team{},
+		&entities.TeamPlayer{},
+		&entities.LeaguePlayer{},
+		&entities.LeagueTeam{},
 	)
 
 	if errMigrate != nil {

@@ -1,0 +1,92 @@
+package team
+
+import (
+  "liga-app/infra/http/htmx/common/layouts"
+  "liga-app/infra/http/htmx/dashboard/league"
+  "liga-app/entities"
+  "strconv"
+	"github.com/google/uuid"
+  "fmt"
+)
+
+templ PageTeamDetail(vmodel *VModelPageTeamDetail) {
+  @layouts.DashboardLayout("Tim", vmodel.User, layouts.FOOTER_MENU_LEAGUE) {
+    <div class="space-y-4">
+      @league.ViewLeagueDetail(vmodel.League)
+      @ViewTeamDetail(vmodel.League, vmodel.Team)
+      @ViewTeamMembers(vmodel)
+    </div>
+  }
+}
+
+templ ViewTeamDetail(league *entities.League, team *entities.Team) {
+  <div class="card w-auto shadow-xl">
+    <div class="p-4 flex flex-col">
+      <div class="flex items-center space-x-4 justify-start w-full">
+        <div class="avatar placeholder">
+          <div class="bg-primary text-neutral-content w-10 rounded-full">
+            <span class="text-3xl">{string(team.Name[0])}</span>
+          </div>
+        </div>
+        <div class="w-full text-left">
+          <h3 class="text-2xl">Tim {team.Name}</h3>
+          <h3>{strconv.Itoa(len(team.Players))} Pemain</h3>
+        </div>
+        <a href={hrefTeamUpdate(league.UUID, team.UUID)} class="btn btn-secondary btn-circle btn-sm">
+          <i data-feather="edit" width="16" height="16"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+}
+
+func hrefTeamUpdate(leagueUUID uuid.UUID, teamUUID uuid.UUID) templ.SafeURL {
+  return templ.URL(fmt.Sprintf("/dashboard/leagues/%s/teams/%s/update", leagueUUID, teamUUID))
+}
+
+templ ViewTeamMembers(vmodel *VModelPageTeamDetail) {
+  <div class="card w-auto shadow-xl">
+    <div class="p-4 flex flex-col space-y-8">
+      <h1 class="text-2xl">Anggota</h1>
+      <a href={hrefSendInvite(vmodel.League.UUID, vmodel.Team.UUID)} class="btn btn-primary w-full btn-sm">
+        <i data-feather="user-plus" width="16" height="16"></i>
+        Undang Anggota
+      </a>
+
+      @ViewListPlayers(vmodel.Team.Players, vmodel.User.UUID == vmodel.Team.Captain.UUID)
+    </div>
+  </div>
+}
+
+func hrefSendInvite(leagueUUID uuid.UUID, teamUUID uuid.UUID) templ.SafeURL {
+  return templ.URL(fmt.Sprintf("/dashboard/leagues/%s/teams/%s/invites/send", leagueUUID, teamUUID))
+}
+
+templ ViewListPlayers(players []entities.User, isCaptain bool) {
+  <div id="view-list-players">
+    <div role="tablist" class="tabs tabs-lifted">
+      <a role="tab" class="tab tab-active">Daftar Pemain</a>
+      if isCaptain {
+        <a role="tab" class="tab">Daftar Undangan</a>
+      }
+    </div>
+    <div class="space-y-2 mt-4">
+      for _, p := range players {
+        @ComponentPlayer(p)
+      }
+    </div>
+  </div>
+}
+
+templ ComponentPlayer(player entities.User) {
+  <div class="flex items-center space-x-4 p-4 justify-start w-full border-y-2">
+    <div class="avatar placeholder">
+      <div class="bg-primary text-neutral-content w-7 rounded-full">
+        <span class="text-xl">{string(player.Name[0])}</span>
+      </div>
+    </div>
+    <div class="w-full text-left">
+      <h3 class="text-lg">{player.Name}</h3>
+    </div>
+  </div>
+}

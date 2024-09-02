@@ -1,0 +1,83 @@
+package team
+
+import (
+  "liga-app/infra/http/htmx/common/layouts"
+  "liga-app/infra/http/htmx/dashboard/league"
+	"liga-app/infra/http/htmx/common/components"
+)
+
+templ PageSendInvite(vmodel *VModelPageSendInvite) {
+  @layouts.DashboardLayout("Kirim Undangan", vmodel.User, layouts.FOOTER_MENU_LEAGUE) {
+    <div class="space-y-8">
+      @league.ViewLeagueDetail(vmodel.League)
+      @ViewSendInvite(vmodel)
+    </div>
+  }
+}
+
+templ ViewSendInvite(vmodel *VModelPageSendInvite) {
+  <div class="card w-auto shadow-xl">
+    <div class="p-4 flex flex-col gap-2">
+      <h1 class="text-2xl mb-6">Undang Anggota</h1>
+      // @ViewFormSendInviteViaEmail(vmodel.VModelFormInviteViaEmail)
+      @ViewCopyInviteLink("test")
+      <a class="btn btn-primary w-full btn-sm mt-4" href="javascript:history.back()">Kembali</a>
+    </div>
+  </div>
+}
+
+templ ViewFormSendInviteViaEmail(vmodel *VModelFormInviteViaEmail) {
+  <form
+    id="form-send-invite-via-email"
+    class="flex-col space-y-4"
+    method="PUT"
+    hx-put="/dashboard"
+    hx-swap="outerHTML"
+    hx-target="#form-send-invite-via-email"
+    hx-target-400="#form-send-invite-via-email"
+    hx-target-5**="#form-send-invite-via-email"
+  >
+    @components.InputText(components.InputTextParams{
+      Label: "Kirim undangan via email",
+      Name: "email",
+    })
+
+    <div>
+      if vmodel.base.ServerError != "" {
+        <p class="text-error mt-1">{ vmodel.base.ServerError }</p>
+      }
+      <button class="btn btn-sm btn-primary w-full">Kirim Undangan</button>
+    </div>
+  </form>
+}
+
+templ ViewCopyInviteLink(inviteLink string) {
+  <div class="form-control">
+    <label for="invite-link" class="label"> <span class="label-text">
+      Kirim link berikut kepada mereka
+    </span>
+    </label>
+    <div class="flex flex-row items-center space-x-2">
+      <input
+        id="input-text-invite-link"
+        name="invite-link"
+        value={inviteLink}
+        class="input input-bordered w-full placeholder:text-slate-700"
+        readonly?={true}
+      />
+      <button onclick="copyInviteLink()" id="btn-copy-invite-link" class="btn btn-secondary btn-circle btn-sm">
+        <i data-feather="copy" width="16" height="16"></i>
+      </button>
+    </div>
+  </div>
+  <script>
+    function copyInviteLink() {
+      const inputTextInviteLink = document.getElementById("input-text-invite-link");
+      inputTextInviteLink.select();
+      inputTextInviteLink.setSelectionRange(0, 99999); // For mobile devices
+      navigator.clipboard.writeText(inputTextInviteLink.value);
+
+      alert("invite link copied");
+    }
+  </script>
+}

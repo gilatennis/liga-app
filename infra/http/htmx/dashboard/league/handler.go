@@ -12,11 +12,16 @@ import (
 type Handler struct {
 	common.BaseHandler
 	leagueService iService.ILeagueService
+	teamService   iService.ITeamService
 }
 
-func NewHandler(leagueService iService.ILeagueService) *Handler {
+func NewHandler(
+	leagueService iService.ILeagueService,
+	teamService iService.ITeamService,
+) *Handler {
 	return &Handler{
 		leagueService: leagueService,
+		teamService:   teamService,
 	}
 }
 
@@ -64,9 +69,16 @@ func (h *Handler) GetLeagueDetailPage(c *gin.Context) {
 		return
 	}
 
+	team, err := h.teamService.GetUserTeamInLeague(c, user.UUID, leagueUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
 	vmodel := &VModelPageLeagueDetail{
 		User:   user,
 		League: league,
+		Team:   team,
 	}
 
 	page := PageLeagueDetail(vmodel)
