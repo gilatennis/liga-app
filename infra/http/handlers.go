@@ -93,7 +93,7 @@ func setupHandlers(cfg *config.Config, db *gorm.DB, logger *zerolog.Logger) (*Ha
 		wilayahStore,
 		duitkuAPI,
 	)
-	teamService := domainTeam.NewService(teamStore)
+	teamService := domainTeam.NewService(cfg, teamStore)
 
 	HTMXHandlers := HTMXHandlers{
 		AuthHandler:                auth.NewHandler(cfg, authService),

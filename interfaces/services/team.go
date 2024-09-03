@@ -10,4 +10,5 @@ import (
 type ITeamService interface {
 	GetUserTeamInLeague(ctx context.Context, userUUID uuid.UUID, leagueUUID uuid.UUID) (*entities.Team, error)
 	GetByUUID(ctx context.Context, teamUUID uuid.UUID) (*entities.Team, error)
+	GetLeagueTeamInviteLink(ctx context.Context, leagueUUID uuid.UUID, teamUUID uuid.UUID) string
 }

@@ -2,6 +2,8 @@ package team
 
 import (
 	"context"
+	"fmt"
+	"liga-app/config"
 	"liga-app/entities"
 	iCommon "liga-app/interfaces/common"
 	iRepo "liga-app/interfaces/repositories"
@@ -11,11 +13,18 @@ import (
 )
 
 type Service struct {
+	cfg      *config.Config
 	teamRepo iRepo.ITeamRepository
 }
 
-func NewService(teamRepo iRepo.ITeamRepository) *Service {
-	return &Service{teamRepo: teamRepo}
+func NewService(
+	cfg *config.Config,
+	teamRepo iRepo.ITeamRepository,
+) *Service {
+	return &Service{
+		cfg:      cfg,
+		teamRepo: teamRepo,
+	}
 }
 
 func (s *Service) GetByUUID(ctx context.Context, teamUUID uuid.UUID) (*entities.Team, error) {
@@ -41,4 +50,9 @@ func (s *Service) GetUserTeamInLeague(ctx context.Context, userUUID uuid.UUID, l
 	}
 
 	return &teams[0], nil
+}
+
+func (s *Service) GetLeagueTeamInviteLink(ctx context.Context, leagueUUID uuid.UUID, teamUUID uuid.UUID) string {
+	inviteLink := fmt.Sprintf("%s/invite?league_uuid=%s&team_uuid=%s", s.cfg.App.BaseURL, leagueUUID, teamUUID)
+	return inviteLink
 }

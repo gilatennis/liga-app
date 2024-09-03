@@ -90,10 +90,13 @@ func (h *Handler) GetSendInvitePage(c *gin.Context) {
 		return
 	}
 
+	inviteLink := h.teamService.GetLeagueTeamInviteLink(c, leagueUUID, teamUUID)
+
 	vmodel := &VModelPageSendInvite{
 		User:                     user,
 		League:                   league,
 		Team:                     team,
+		InviteLink:               inviteLink,
 		VModelFormInviteViaEmail: &VModelFormInviteViaEmail{},
 	}
 	page := PageSendInvite(vmodel)
