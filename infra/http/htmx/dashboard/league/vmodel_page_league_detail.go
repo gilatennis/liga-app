@@ -3,7 +3,10 @@ package league
 import "liga-app/entities"
 
 type VModelPageLeagueDetail struct {
-	User   *entities.User
-	League *entities.League
-	Team   *entities.Team
+	User                     *entities.User
+	League                   *entities.League
+	Team                     *entities.Team
+	IsRatingRequired         bool
+	PlayersWithRatingTooHigh []entities.User
+	PlayersWithRatingTooLow  []entities.User
 }

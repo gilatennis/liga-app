@@ -24,4 +24,29 @@ type League struct {
 	LeagueEndAt           *time.Time
 	Season                int
 	RegistrationFee       float64
+	LinkWARatingAdmin     string
+}
+
+func (l *League) IsNTRPRatingTooHigh(rating float32) bool {
+	if l.Level == enums.CATEGORY_LEVEL_BEGINNER {
+		return rating > 3
+	}
+
+	if l.Level == enums.CATEGORY_LEVEL_INTERMEDIATE {
+		return rating > 4
+	}
+
+	return false
+}
+
+func (l *League) IsNTRPRatingTooLow(rating float32) bool {
+	if l.Level == enums.CATEGORY_LEVEL_ADVANCED {
+		return rating < 4.5
+	}
+
+	if l.Level == enums.CATEGORY_LEVEL_INTERMEDIATE {
+		return rating < 3.5
+	}
+
+	return false
 }

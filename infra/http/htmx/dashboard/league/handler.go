@@ -1,6 +1,7 @@
 package league
 
 import (
+	"liga-app/entities"
 	"liga-app/infra/http/htmx/common"
 	iCommon "liga-app/interfaces/common"
 	iService "liga-app/interfaces/services"
@@ -75,10 +76,41 @@ func (h *Handler) GetLeagueDetailPage(c *gin.Context) {
 		return
 	}
 
+	isRatingRequired := false
+	numPlayersHasRating := 0
+
+	playersWithRatingTooHigh := []entities.User{}
+	playersWithRatingTooLow := []entities.User{}
+
+	if team != nil {
+		for _, p := range team.Players {
+			for _, r := range p.Ratings {
+				if r.Season == league.Season {
+					numPlayersHasRating += 1
+
+					if league.IsNTRPRatingTooHigh(r.NTRPRating) {
+						playersWithRatingTooHigh = append(playersWithRatingTooHigh, p)
+					}
+
+					if league.IsNTRPRatingTooLow(r.NTRPRating) {
+						playersWithRatingTooLow = append(playersWithRatingTooLow, p)
+					}
+				}
+			}
+		}
+
+		if len(team.Players) > numPlayersHasRating {
+			isRatingRequired = true
+		}
+	}
+
 	vmodel := &VModelPageLeagueDetail{
-		User:   user,
-		League: league,
-		Team:   team,
+		User:                     user,
+		League:                   league,
+		Team:                     team,
+		IsRatingRequired:         isRatingRequired,
+		PlayersWithRatingTooHigh: playersWithRatingTooHigh,
+		PlayersWithRatingTooLow:  playersWithRatingTooLow,
 	}
 
 	page := PageLeagueDetail(vmodel)

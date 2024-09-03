@@ -9,7 +9,6 @@ import (
 	iRepo "liga-app/interfaces/repositories"
 
 	"github.com/google/uuid"
-	"github.com/k0kubun/pp"
 )
 
 type Service struct {
@@ -43,7 +42,6 @@ func (s *Service) GetUserTeamInLeague(ctx context.Context, userUUID uuid.UUID, l
 	if err != nil {
 		return nil, err
 	}
-	pp.Println("teams", teams)
 
 	if len(teams) == 0 {
 		return nil, nil

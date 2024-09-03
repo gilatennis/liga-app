@@ -24,6 +24,7 @@ func (s *Store) Get(ctx context.Context, p *common.Pagination, f *repositories.T
 	db := s.db.WithContext(ctx).
 		Preload("Captain").
 		Preload("Players").
+		Preload("Players.Ratings").
 		Offset(p.Offset).
 		Limit(p.Limit).
 		Joins("JOIN league_teams ON league_teams.team_uuid = teams.uuid").
@@ -57,6 +58,7 @@ func (s *Store) GetByUUID(ctx context.Context, teamUUID uuid.UUID) (*entities.Te
 		Where("uuid = ?", teamUUID).
 		Preload("Captain").
 		Preload("Players").
+		Preload("Players.Ratings").
 		First(&team).Error
 	if err != nil {
 		return nil, err

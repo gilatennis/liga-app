@@ -11,10 +11,10 @@ type Base struct {
 	UUID      uuid.UUID `gorm:"type:char(36);primary_key"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	CreatedBy uuid.UUID  `gorm:"type:char(36)"`
-	UpdatedBy uuid.UUID  `gorm:"type:char(36)"`
-	DeletedAt *time.Time `gorm:"index"`
-	DeletedBy *uuid.UUID `gorm:"type:char(36)"`
+	CreatedBy uuid.UUID      `gorm:"type:char(36)"`
+	UpdatedBy uuid.UUID      `gorm:"type:char(36)"`
+	DeletedAt gorm.DeletedAt `gorm:"index"`
+	DeletedBy *uuid.UUID     `gorm:"type:char(36)"`
 }
 
 func (w *Base) BeforeCreate(tx *gorm.DB) (err error) {
