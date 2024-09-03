@@ -1,0 +1,43 @@
+package invite
+
+import (
+  "liga-app/infra/http/htmx/common/layouts"
+)
+
+templ PageAcceptInvite(vmodel *VModelPageAcceptInvite) {
+  @layouts.DashboardLayout("Terima undangan tim", vmodel.User, layouts.FOOTER_MENU_HOME) {
+    <div class="space-y-8">
+      <div class="card w-auto shadow-xl">
+        <div class="p-4 space-y-8">
+          <h1 class="text-2xl">Terima Undangan</h1>
+          <div>
+            <h2 class="text-xl">Tim {vmodel.Team.Name}</h2>
+            <h3 class="text-lg">Kapten: {vmodel.Team.Captain.Name}</h3>
+          </div>
+
+          <div>
+            Apakah anda yakin untuk masuk ke tim ini?
+          </div>
+
+          <div class="space-y-2">
+            <div>
+              <input hidden name="league_uuid" value={vmodel.League.UUID.String()} />
+              <input hidden name="team_uuid" value={vmodel.Team.UUID.String()} />
+              <button
+                hx-post="/invite/accept"
+                hx-swap="none"
+                hx-include="[name='league_uuid'], [name='team_uuid']"
+                class="btn btn-primary btn-sm w-full"
+              >
+                Ya
+              </button>
+            </div>
+            <div>
+              <a href="/dashboard" class="btn btn-secondary btn-sm w-full">Tidak</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+}

@@ -77,10 +77,8 @@ templ DashboardDrawer(user *entities.User) {
   <div class="drawer">
     <input id="my-drawer" type="checkbox" class="drawer-toggle" />
     <div class="drawer-content min-h-full flex-grow overflow-auto mb-8">
-      <div id="alert" class="w-[350px] m-4 alert hidden transition-all fixed top-20 right-0">
-        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-        <span id="alert-message">Hello</span>
-      </div>
+      @AlertSuccess()
+      @AlertError()
       <!-- Page content here -->
       { children...}
     </div>
@@ -108,6 +106,42 @@ templ DashboardDrawer(user *entities.User) {
         </ul>
         -->
       </div>
+    </div>
+  </div>
+}
+
+templ AlertSuccess() {
+  <div id="alert-success" class="w-[350px] hidden z-20 m-4 alert alert-success transition-all fixed top-20 right-0 ">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      class="stroke-current shrink-0 h-6 w-6"
+      fill="none"
+      viewBox="0 0 24 24">
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    <div id="alert-success-message" class="text-left space-y-2">
+    </div>
+  </div>
+}
+
+templ AlertError() {
+  <div id="alert-error" class="w-[350px] hidden z-20 m-4 alert alert-error transition-all fixed top-20 right-0 ">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      class="h-6 w-6 shrink-0 stroke-current"
+      fill="none"
+      viewBox="0 0 24 24">
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    <div id="alert-error-message" class="text-left space-y-2">
     </div>
   </div>
 }
@@ -190,21 +224,33 @@ templ Scripts() {
      * @property {string} detail.message
      */
     function alertHandler(event) {
-      const hiddenClass = "w-[350px] m-4 alert transition-all hidden fixed top-20 right-0"
-      const showClass = "w-[350px] m-4 alert transition-all fixed top-20 right-0"
       const { type, message, redirect } = event.detail
 
-      const alert = document.getElementById("alert")
-      const alertMessage = document.getElementById("alert-message")
-
       if (type == "success") {
-        alert.className = showClass + " alert-success"
+        const hiddenClass = "w-[350px] m-4 alert alert-success transition-all hidden fixed top-20 right-0"
+        const showClass = "w-[350px] m-4 alert alert-success transition-all fixed z-20 flex flex-row items-start top-20 right-0"
+        const alert = document.getElementById("alert-success")
+        const alertMessage = document.getElementById("alert-success-message")
+        alert.className = showClass
         alertMessage.innerText = message
+
+        setTimeout(() => {
+          alert.className = hiddenClass
+        }, 2000)
       }
 
-      setTimeout(() => {
-        alert.className = hiddenClass
-      }, 2000)
+      if (type == "error") {
+        const hiddenClass = "w-[350px] m-4 alert alert-error transition-all hidden fixed top-20 right-0"
+        const showClass = "w-[350px] m-4 alert alert-error transition-all fixed z-20 flex flex-row items-start top-20 right-0"
+        const alert = document.getElementById("alert-error")
+        const alertMessage = document.getElementById("alert-error-message")
+        alert.className = showClass
+        alertMessage.innerText = message
+
+        setTimeout(() => {
+          alert.className = hiddenClass
+        }, 2000)
+      }
 
       if (redirect) {
         setTimeout(() => {

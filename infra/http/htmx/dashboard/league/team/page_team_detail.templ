@@ -13,28 +13,30 @@ templ PageTeamDetail(vmodel *VModelPageTeamDetail) {
   @layouts.DashboardLayout("Tim", vmodel.User, layouts.FOOTER_MENU_LEAGUE) {
     <div class="space-y-4">
       @league.ViewLeagueDetail(vmodel.League)
-      @ViewTeamDetail(vmodel.League, vmodel.Team)
+      @ViewTeamDetail(vmodel)
       @ViewTeamMembers(vmodel)
     </div>
   }
 }
 
-templ ViewTeamDetail(league *entities.League, team *entities.Team) {
+templ ViewTeamDetail(vmodel *VModelPageTeamDetail) {
   <div class="card w-auto shadow-xl">
     <div class="p-4 flex flex-col">
       <div class="flex items-center space-x-4 justify-start w-full">
         <div class="avatar placeholder">
           <div class="bg-primary text-neutral-content w-10 rounded-full">
-            <span class="text-3xl">{string(team.Name[0])}</span>
+            <span class="text-3xl">{string(vmodel.Team.Name[0])}</span>
           </div>
         </div>
         <div class="w-full text-left">
-          <h3 class="text-2xl">Tim {team.Name}</h3>
-          <h3>{strconv.Itoa(len(team.Players))} Pemain</h3>
+          <h3 class="text-2xl">Tim {vmodel.Team.Name}</h3>
+          <h3>{strconv.Itoa(len(vmodel.Team.Players))} Pemain</h3>
         </div>
-        <a href={hrefTeamUpdate(league.UUID, team.UUID)} class="btn btn-secondary btn-circle btn-sm">
-          <i data-feather="edit" width="16" height="16"></i>
-        </a>
+        if vmodel.User.UUID == vmodel.Team.Captain.UUID {
+          <a href={hrefTeamUpdate(vmodel.League.UUID, vmodel.Team.UUID)} class="btn btn-secondary btn-circle btn-sm">
+            <i data-feather="edit" width="16" height="16"></i>
+          </a>
+        }
       </div>
     </div>
   </div>
@@ -46,12 +48,15 @@ func hrefTeamUpdate(leagueUUID uuid.UUID, teamUUID uuid.UUID) templ.SafeURL {
 
 templ ViewTeamMembers(vmodel *VModelPageTeamDetail) {
   <div class="card w-auto shadow-xl">
-    <div class="p-4 flex flex-col space-y-8">
+    <div class="p-4 flex flex-col space-y-4">
       <h1 class="text-2xl">Anggota</h1>
-      <a href={hrefSendInvite(vmodel.League.UUID, vmodel.Team.UUID)} class="btn btn-primary w-full btn-sm">
-        <i data-feather="user-plus" width="16" height="16"></i>
-        Undang Anggota
-      </a>
+
+      if vmodel.User.UUID == vmodel.Team.Captain.UUID {
+        <a href={hrefSendInvite(vmodel.League.UUID, vmodel.Team.UUID)} class="btn btn-primary w-full btn-sm">
+          <i data-feather="user-plus" width="16" height="16"></i>
+          Undang Anggota
+        </a>
+      }
 
       @ViewListPlayers(vmodel.Team.Players, vmodel.User.UUID == vmodel.Team.Captain.UUID)
     </div>
@@ -64,22 +69,24 @@ func hrefSendInvite(leagueUUID uuid.UUID, teamUUID uuid.UUID) templ.SafeURL {
 
 templ ViewListPlayers(players []entities.User, isCaptain bool) {
   <div id="view-list-players">
+    /*
     <div role="tablist" class="tabs tabs-lifted">
       <a role="tab" class="tab tab-active">Daftar Pemain</a>
       if isCaptain {
         <a role="tab" class="tab">Daftar Undangan</a>
       }
     </div>
-    <div class="space-y-2 mt-4">
+    */
+    <div class="mt-4 border-t-2">
       for _, p := range players {
-        @ComponentPlayer(p)
+        @ComponentPlayer(p, isCaptain)
       }
     </div>
   </div>
 }
 
-templ ComponentPlayer(player entities.User) {
-  <div class="flex items-center space-x-4 p-4 justify-start w-full border-y-2">
+templ ComponentPlayer(player entities.User, isCaptain bool) {
+  <div class="flex items-center space-x-4 p-4 justify-start w-full border-b-2">
     <div class="avatar placeholder">
       <div class="bg-primary text-neutral-content w-7 rounded-full">
         <span class="text-xl">{string(player.Name[0])}</span>

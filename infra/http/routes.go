@@ -44,6 +44,13 @@ func setupHtxmRoutes(r *gin.Engine, handlers *Handlers, middlewares *middlewares
 		auth.GET("/logout", handlers.HTMXHandlers.AuthHandler.LogOut)
 	}
 
+	invite := public.Group("/invite")
+	{
+		invite.GET("", handlers.HTMXHandlers.InviteHandler.HandleInviteLink)
+		invite.GET("/accept", middlewares.SessionMiddleware, handlers.HTMXHandlers.InviteHandler.GetAcceptInvitePage)
+		invite.POST("/accept", middlewares.SessionMiddleware, handlers.HTMXHandlers.InviteHandler.PostAcceptInvite)
+	}
+
 	dashboard := r.Group("/dashboard")
 	dashboard.Use(middlewares.SessionMiddleware)
 	{

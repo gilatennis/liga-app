@@ -8,12 +8,14 @@ import (
 	dashLeague "liga-app/infra/http/htmx/dashboard/league"
 	dashLeagueTeam "liga-app/infra/http/htmx/dashboard/league/team"
 	"liga-app/infra/http/htmx/index"
+	"liga-app/infra/http/htmx/invite"
 	"liga-app/infra/http/json/duitku"
 	"liga-app/infra/minio"
 	"liga-app/infra/mysql"
 	"liga-app/third_party/mailtrap"
 
 	domainAuth "liga-app/domain/auth"
+	domainInvite "liga-app/domain/invite"
 	domainLeague "liga-app/domain/league"
 	domainTeam "liga-app/domain/team"
 	domainUserInfo "liga-app/domain/user_info"
@@ -40,6 +42,7 @@ type Handlers struct {
 type HTMXHandlers struct {
 	IndexHandler               *index.Handler
 	AuthHandler                *auth.Handler
+	InviteHandler              *invite.Handler
 	DashboardHandler           *dashboard.Handler
 	DashboardLeagueHandler     *dashLeague.Handler
 	DashboardLeagueTeamHandler *dashLeagueTeam.Handler
@@ -94,10 +97,12 @@ func setupHandlers(cfg *config.Config, db *gorm.DB, logger *zerolog.Logger) (*Ha
 		duitkuAPI,
 	)
 	teamService := domainTeam.NewService(cfg, teamStore)
+	inviteService := domainInvite.NewService(leagueRegStore, leagueStore, teamStore)
 
 	HTMXHandlers := HTMXHandlers{
 		AuthHandler:                auth.NewHandler(cfg, authService),
 		IndexHandler:               index.NewHandler(),
+		InviteHandler:              invite.NewHandler(inviteService, leagueService, teamService),
 		DashboardHandler:           dashboard.NewHandler(userInfoService),
 		DashboardLeagueHandler:     dashLeague.NewHandler(leagueService, teamService),
 		DashboardLeagueTeamHandler: dashLeagueTeam.NewHandler(leagueService, teamService),

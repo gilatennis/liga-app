@@ -57,6 +57,25 @@ func (h *BaseHandler) GetURLUUIDParams(c *gin.Context, params []string) ([]uuid.
 	return values, nil
 }
 
+func (h *BaseHandler) GetQueryUUIDParams(c *gin.Context, params []string) ([]uuid.UUID, error) {
+	var values []uuid.UUID
+	for _, param := range params {
+		value := c.Query(param)
+		if value == "" {
+			err := fmt.Errorf("GetQueryUUIDParams: param %s not found", param)
+			return nil, err
+		}
+		valUUID, err := uuid.Parse(value)
+		if err != nil {
+			err = fmt.Errorf("GetQueryUUIDParams: uuid.Parse error: %w", err)
+			return nil, err
+		}
+		values = append(values, valUUID)
+	}
+
+	return values, nil
+}
+
 func (b *BaseHandler) RenderErrorPage(c *gin.Context, status int, message string) {
 	page := PageError(status, message)
 	r := renderer.New(c, status, page)
@@ -119,5 +138,18 @@ func (h *BaseHandler) ResponseSuccessRedirect(c *gin.Context, message, location 
 
 	c.Header("HX-Trigger", string(jsonAlertMessage))
 
+	return nil
+}
+
+func (h *BaseHandler) ResponseAlertError(c *gin.Context, message string) error {
+	alert := NewAlertPayload(AlertTypeError, message)
+
+	jsonAlertMessage, err := alert.ToJSON()
+	if err != nil {
+		err = fmt.Errorf("htmx.common.base_handler.RenderResponseCreatedPage() : %w", err)
+		return err
+	}
+
+	c.Header("HX-Trigger-After-Settle", string(jsonAlertMessage))
 	return nil
 }

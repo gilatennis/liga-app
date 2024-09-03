@@ -98,3 +98,32 @@ func (s *Store) CompleteRegistration(ctx context.Context, leagueReg *entities.Le
 
 	return &leagueReg.UUID, nil
 }
+
+func (s *Store) JoinExistingTeamInLeague(ctx context.Context, userUUID, leagueUUID, teamUUID uuid.UUID) error {
+	tx := s.db.WithContext(ctx).Begin()
+
+	teamPlayer := entities.TeamPlayer{
+		TeamUUID:   teamUUID,
+		PlayerUUID: userUUID,
+	}
+	err := tx.Omit(clause.Associations).Save(&teamPlayer).Error
+	if err != nil {
+		return err
+	}
+
+	leaguePlayer := entities.LeaguePlayer{
+		LeagueUUID: leagueUUID,
+		PlayerUUID: userUUID,
+	}
+	err = tx.Omit(clause.Associations).Save(&leaguePlayer).Error
+	if err != nil {
+		return err
+	}
+
+	err = tx.Commit().Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
