@@ -1,0 +1,70 @@
+#######################
+# --- PROD --------- #
+#######################
+
+app:
+  name: liga-gilatennis
+  base_url: https://liga.gilatennis.com
+  web_app_base_url: https://liga.gilatennis.com
+
+http:
+  port: 8081
+
+vault:
+  mount_path: liga-app/prod
+
+db:
+  name: liga_gilatennis_prod
+  # host: localhost
+  host: gilatennis.com
+  port: 3306
+  user: $DB_USER
+  password: $DB_PASSWORD
+  tls: false
+
+redis:
+  address: ":6379"
+  password: $REDIS_PASSWORD
+  secret: $REDIS_SECRET
+
+session:
+  max_age: 108000
+
+log:
+  dir: logs
+
+jwt:
+  secret: $JWT_SECRET
+  timeout: 1440
+  max_refresh: 1440
+
+email:
+  email_sender: support@gilatennis.com
+  # template_uuid_tournament_registration_success: 1c8801f3-4a79-46af-a0e3-9869839fda37
+  # template_uuid_coaching_registration_success: 2b36229b-be29-49cf-bd06-4f3000de3ff1
+
+mailtrap:
+  api_url: send.api.mailtrap.io
+  token: $MAILTRAP_TOKEN
+
+minio:
+  url: minio-api.gilatennis.com
+  access_key: $MINIO_ACCESS_KEY
+  secret_key: $MINIO_SECRET_KEY
+
+oauth:
+  google_client_id: 865287598747-4pa6tvoqmnjs1n9phr8ftoo0fh5q6apn.apps.googleusercontent.com
+  google_secret: $OAUTH_GOOGLE_SECRET
+  google_callback_url: https://liga.gilatennis.com/auth/login/oauth/google/callback
+
+  facebook_app_id: 1533261570735840
+  facebook_secret: $OAUTH_FACEBOOK_SECRET
+  facebook_callback_url: https://liga.gilatennis.com/auth/login/oauth/facebook/callback
+  facebook_config_id: 1450275522233994
+
+duitku:
+  api_url: https://api-prod.duitku.com
+  api_key: $DUITKU_API_KEY
+  merchant_code: D14653
+
+
