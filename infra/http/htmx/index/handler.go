@@ -1,37 +1,22 @@
 package index
 
 import (
-	"net/http"
+	"liga-app/infra/http/htmx/common"
 
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
-type Handler struct{}
+type Handler struct {
+	common.BaseHandler
+}
 
 func NewHandler() *Handler {
 	return &Handler{}
 }
 
 func (h *Handler) Index(c *gin.Context) {
-	isLoggedIn := true
+	vmodel := &VModelPageIndex{}
+	page := PageIndex(vmodel)
 
-	session := sessions.Default(c)
-	userUUIDAny := session.Get("user_uuid")
-	userUUIDStr, ok := session.Get("user_uuid").(string)
-
-	if userUUIDAny == nil || !ok {
-		isLoggedIn = false
-	}
-
-	_ = userUUIDStr
-
-	if !isLoggedIn {
-		c.Redirect(http.StatusFound, "/auth/login")
-		return
-	} else {
-		c.Redirect(http.StatusFound, "/dashboard")
-	}
-
-	c.Status(200)
+	h.RenderView(c, page)
 }

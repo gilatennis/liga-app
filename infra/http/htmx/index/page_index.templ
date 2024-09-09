@@ -1,0 +1,396 @@
+package index
+
+import (
+  "liga-app/infra/http/htmx/common/layouts"
+  "fmt"
+  "net/url"
+)
+
+type Feature struct {
+  Icon string
+  Title string
+  Body string
+}
+
+type FAQ struct {
+  Title string
+  Body []string
+}
+
+var features = []Feature{
+  {
+    Icon: "users",
+    Title: "Untuk Semua Level",
+    Body: "Kami menerima pemain dari berbagai tingkat keterampilan. Setiap pemain ditempatkan pada liga sesuai dengan level skill",
+  },
+  {
+    Icon: "clipboard",
+    Title: "Asesmen Skill Gratis",
+    Body: " Setiap pemain/tim yang mendaftar pada liga akan dikunjungi untuk menerima penilaian rating yang sesuai dengan level mereka.",
+  },
+  {
+    Icon: "chevrons-up",
+    Title: "Sesi Pelatihan Gratis",
+    Body: "Sebagai bagian dari asesmen skill, setiap pemain/tim yang mendaftar akan mendapatkan sesi pelatihan gratis untuk membantu meningkatkan permainan mereka.",
+  },
+  {
+    Icon: "moon",
+    Title: "Main Kapan Saja",
+    Body: "Anda dapat bermain kapan saja sesuai dengan jadwal yang Anda dan lawan tentukan sendiri. Fleksibilitas penuh untuk menyesuaikan pertandingan dengan waktu luang Anda.",
+  },
+  {
+    Icon: "smile",
+    Title: "Lapangan Gratis (Limited Availability)",
+    Body: "Kami menyediakan 1 lapangan indoor setiap hari minggu 08.00 - 22.00 WIB untuk pemain / tim yang terdaftar di liga. Dengan sistem first come first serve",
+  },
+  {
+    Icon: "help-circle",
+    Title: "Konsultasi dengan Head Coach",
+    Body: "Head Coach (Roy Ardian) akan melakukan kunjungan ke lapangan yang disediakan panitia setiap hari minggu. Peserta dapat melakukan konsultasi pada saat ini.",
+  },
+}
+
+var faqs = []FAQ {
+  {
+    Title: "Mengapa ikut liga gilatennis?",
+    Body: []string {
+      "Gilatennis menyelenggarakan liga tenis ini sebagai bentuk kontribusi untuk membantu mengembangkan kemampuan bermain tenis di Indonesia, dengan menciptakan lingkungan yang mendukung pembelajaran, kompetisi, dan kesenangan di setiap pertandingan.",
+      " ",
+      "Beberapa benefit lainya antara lain: ",
+      "- Kita mensubsidi lapangan untuk pertandingan setiap hari minggu jam 08.00 - 22.00",
+      "- Diberikan 1 sesi pelatihan gratis oleh Roy Darwis (head coach) bagi pendaftar",
+      "- Hadiah menarik beserta medali dan piala bergilir",
+      "- Babak semifinal dan final, akan disediakan lapangan, bola, dan wasit oleh panitia.",
+    },
+  },
+  {
+    Title: "Hadiah apa bagi pemenang?",
+    Body: []string {
+      "Medali, dan perlengkapan tennis. Khusus untuk kategori beregu, akan ada piala bergilir",
+    },
+  },
+  {
+    Title: "Kategori apa saja yang bisa diikuti?",
+    Body: []string{
+      "- Singles Putra - Beginner",
+      "- Singles Putri - Beginner",
+      "- Doubles Putra - Beginner",
+      "- Doubles Putri - Beginner",
+      "- Doubles Mixed - Beginner",
+      "- Beregu Putra - Beginner",
+      "- Beregu Putri - Beginner",
+    },
+  },
+  {
+    Title: "Berapa biaya pendaftaran?",
+    Body: []string{
+      "Singles: Rp.200,000",
+      "Doubles: R̶p̶.̶5̶0̶0̶,̶0̶0̶0̶ Diskon 20% -> Rp.400,000",
+      "Beregu: R̶p̶.̶2̶,̶0̶0̶0̶,̶0̶0̶0̶ Diskon 25% -> Rp.1,500,000",
+    },
+  },
+  {
+    Title: "Bagaimana memastikan bahwa level partisipan sesuai dengan level yang disyaratkan (beginner)",
+    Body: []string{
+      "Head Coach gilatennis (Roy Darwis) akan mengunjungi langsung untuk memberikan asesmen.",
+      "Jika level pemain ditetapkan lebih tinggi dari beginner, akan diberikan refund.",
+      "",
+    },
+  },
+  {
+    Title: "Partai apa yang ada dalam kategori beregu?",
+    Body: []string {
+      "2 Doubles, 1 Singles",
+    },
+  },
+  {
+    Title: "Untuk kategori beregu, berapa jumlah pemain dalam 1 regu?",
+    Body: []string{
+      "Minimal 6 orang",
+      "Maksimal 9 orang",
+    },
+  },
+  {
+    Title: "Berapa jumlah peserta pada sebuah kategori?",
+    Body: []string{
+      "Untuk kategori doubles dan beregu, minimal 6 tim, tidak ada jumlah maksimal.",
+      "Untuk kategori singles minimal 6 orang, tidak ada jumlah maksimal.",
+    },
+  },
+  {
+    Title: "Apa yang terjadi jika jumlah pendaftar kurang dari jumlah minimal peserta?",
+    Body: []string{
+      "Uang pendaftaran akan di refund.",
+    },
+  },
+  {
+    Title: "Mengapa hanya ada kategori beginner?",
+    Body: []string{
+      "Untuk season 1 kami hanya menyediakan untuk level beginner. Ke depan, kami akan menambahkan kategori.",
+    },
+  },
+  {
+    Title: "Hal-hal yang perlu diperhatikan",
+    Body: []string{
+      "- Partisipan harus menyiapkan bola sendiri",
+      "- Panitia tidak menyediakan Ball Boy",
+      "- Jika ingin menggunakan lapangan yang disediakan oleh panitia, sebaiknya mendaftar lebih awal, mengingat kapasitas terbatas",
+    },
+  },
+}
+
+var coachingExperience = []string{
+  "TENNIS COACHING USPTR VAN DER MEER Short Course Certificate. 1989",
+  "Asisten Pelatih - Sekolah tennis Tintus aribowo. 1990 - 1993",
+  "Pelatih - Sekolah tennis Roy and Donny Darwis. 1990 - 1993",
+  "Pelatih - PT Suara Pembaruan. 1989 - 1993",
+  "Pelatih / Pemain - PT Jasa Marga. 1993 - 2019",
+  "Pelatih - Sportama. 2022",
+}
+var playerExperience = []string{
+  "Juara Double Porwil Sumatra. 1985",
+  "Tim Tennis PON Sumbar. 1985",
+  "Juara Ganda Campuran Piala Gubernur DKI",
+  "Juara Ganda  Campuran Porda Jabar",
+  "Juara beregu BUMN Tim PT Jasa Marga",
+  "Juara Ganda KU 45 BAVETI BANDUNG 2018",
+  // "Owner Gilatennis Event Organizer",
+}
+
+templ PageIndex(vmodel *VModelPageIndex) {
+  @layouts.LandingPageLayout("Gilatennis") {
+    <!-- NavBar -->
+    <div class="navbar bg-base-100">
+      <div class="flex-1">
+        <a class="btn btn-ghost text-xl">
+          <span><h1 class="text-xl text-primary">Liga</h1></span>
+          <h1 class="text-xl text-primary font-bold">Gilatennis</h1>
+        </a>
+      </div>
+      <div class="flex-none">
+        <ul class="menu menu-horizontal px-1">
+          <li><a class="text-primary" href="#">Home</a></li>
+          <li><a class="text-primary" href="/auth/register">Register</a></li>
+          <li><a class="text-primary" href="/auth/login">Login</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Hero -->
+    <div
+      class="hero min-h-screen md:min-h-[50vh]"
+      style="background-image: url(/static/images/tennis-coaching-1.webp);"
+    >
+      <div class="hero-overlay bg-opacity-80"></div>
+      <div class="hero-content text-primary-content text-center">
+        <div class="max-w-[1028px]">
+          <h1 class="mb-5 text-4xl md:text-6xl font-bold">Rasakan Keseruan dan Tantangan di Liga Gilatennis</h1>
+          <p class="mb-5 text-xl max-w-[980px]">
+            Asah keterampilan tenis Anda melalui pertandingan seru dan bergabunglah dengan komunitas yang hidup.
+            Terbuka untuk pemain di semua level!
+          </p>
+
+          <div class="space-y-4 mt-8">
+            <div>
+              <button class="btn btn-primary btn-wide">Daftar Sekarang!</button>
+            </div>
+            <div class="space-y-2">
+              <p>Ada Pertanyaan?</p>
+              <div class="flex items-center justify-center space-x-2 ">
+                <a href="#faq" class="btn btn-secondary btn-sm">
+                  <i data-feather="help-circle" class="w-4 h-4"></i>
+                  F.A.Q
+                </a>
+                <a
+                  href="https://docs.google.com/document/d/1JtWR3H2a4qdSDpHsa0aga5AiQyxlBhFDTPtT3TKanlA/edit?usp=sharing"
+                  target="_blank"
+                  class="btn btn-secondary btn-sm"
+                >
+                  <i data-feather="book-open" class="w-4 h-4"></i>
+                  Buku Aturan
+                </a>
+                <a href={hrefWAContactUs()} target="_blank" class="btn btn-secondary btn-sm">
+                  <img src="/static/icons/whatsapp.png" class="w-4 h-4" />
+                  Kontak Kami
+                </a>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Section - Season 1 -->
+    <div class="px-8 md:px-16 py-24">
+      <div class="mb-16">
+        <h1 class="text-4xl font-bold mb-2">Tennis Untuk Semua</h1>
+      </div>
+      <!-- Mobile Screen -->
+      <div class="md:hidden grid grid-cols-1 gap-4">
+        for _, f := range features {
+          @CardFeature(f)
+        }
+      </div>
+      <!-- Medium Screen and Up -->
+      <div class="hidden md:grid md:grid-cols-3 md:mb-8 gap-4">
+        for _, f := range features[:3] {
+          @CardFeature(f)
+        }
+      </div>
+      <div class="hidden md:grid md:grid-cols-3 gap-4 m-auto">
+        for _, f := range features[3:] {
+          @CardFeature(f)
+        }
+      </div>
+    </div>
+    <div
+      class="hero min-h-screen md:min-h-[50vh]"
+      style="background-image: url(/static/images/flyer-liga-gilatennis.png);"
+    >
+      <div class="hero-overlay bg-opacity-80"></div>
+      <div class="hero-content text-primary-content text-center">
+        <div class="max-w-[1028px]">
+          <h1 class="mb-5 text-4xl md:text-6xl font-bold">Season 1 Dimulai Sekarang!</h1>
+          <p class="mb-5 text-xl max-w-[980px]">
+            Season 1 liga gilatennis dimulai 3 Oktober 2024 - 28 Februari 2024.
+            Pendaftaran dibuka sekarang.
+          </p>
+
+          <div class="space-y-4 mt-8">
+            <div>
+              <button class="btn btn-primary btn-wide">Daftar Sekarang!</button>
+            </div>
+            <div class="space-y-2">
+              <p>Ada Pertanyaan?</p>
+              <div class="flex items-center justify-center space-x-2 ">
+                <a href="#faq" class="btn btn-secondary btn-sm">
+                  <i data-feather="help-circle" class="w-4 h-4"></i>
+                  F.A.Q
+                </a>
+                <a
+                  href="https://docs.google.com/document/d/1JtWR3H2a4qdSDpHsa0aga5AiQyxlBhFDTPtT3TKanlA/edit?usp=sharing"
+                  class="btn btn-secondary btn-sm"
+                  target="_blank"
+                >
+                  <i data-feather="book-open" class="w-4 h-4"></i>
+                  Buku Aturan
+                </a>
+                <a href={hrefWAContactUs()} target="_blank" class="btn btn-secondary btn-sm">
+                  <img src="/static/icons/whatsapp.png" class="w-4 h-4" />
+                  Kontak Kami
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- F.A.Q -->
+    <div id="faq" class="px-8 md:px-16 py-24 bg-base-200">
+      <div class="mb-16">
+        <h1 class="text-4xl font-bold mb-2">F.A.Q</h1>
+      </div>
+      <div>
+        <div class="join join-vertical w-full">
+          for i, f := range faqs {
+            <div class="collapse collapse-arrow join-item border-base-300 border">
+              <input
+                type="radio"
+                name="my-accordion-4"
+                if i == 0 {
+                  checked="checked"
+                }
+              />
+              <div class="collapse-title text-xl font-medium">{f.Title}</div>
+              <div class="collapse-content">
+                for _, b := range f.Body {
+                  if b == " " {
+                    <br></br>
+                  } else {
+                    <p>{b}</p>
+                  }
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+
+    <!-- About Us -->
+    <div class="px-8 md:px-16 py-24">
+      <div class="mb-16">
+        <h1 class="text-4xl font-bold mb-2">Tentang Kami</h1>
+      </div>
+      <div class="md:flex md:flex-row md:space-x-16">
+        <div class="mb-8 md:mb-0 flex-[2]">
+          <img class="w-full md:w-auto" src="/static/images/head-coach.jpeg"/>
+        </div>
+        <div class="flex flex-row flex-[3] space-x-4 mb-8 md:mb-0">
+          <div class="mt-[2px]"><i data-feather="info"></i></div>
+          <div>
+            <h3 class="text-lg font-bold mb-2">Roy Darwis</h3>
+            <p class="text-neutral">
+              Head Coach and Owner Gilatennis. Mantan top 10 pemain ganda Indonesia tahun 1986-1990
+            </p>
+            <div class="my-8">
+              <p>
+                Roy Darwis, pemilik dan pelatih kepala komunitas Gilatennis,
+                adalah mantan pemain tenis ganda yang pernah menempati peringkat 10 besar di Indonesia.
+                Dengan pengalaman yang luas sebagai pemain profesional, pelatih, dan penyelenggara turnamen tenis, Roy membawa keahlian dan dedikasi untuk
+                membantu pemain dari berbagai tingkat kemampuan meningkatkan performa mereka.
+                Komitmennya terhadap pengembangan olahraga ini tidak hanya terbatas pada lapangan,
+                tetapi juga dalam menciptakan komunitas tenis yang kompetitif, menyenangkan, dan inklusif
+              </p>
+            </div>
+            <div class="my-8">
+              <h3 class="font-bold mb-2">Coaching Experience</h3>
+              <ul class="space-y-1 list-disc ml-6">
+                for _, text := range coachingExperience {
+                  <li class="text-neutral">{text}</li>
+                }
+              </ul>
+            </div>
+            <div class="my-6">
+              <h3 class="font-bold mb-2">Player Experience</h3>
+              <ul class="space-y-1 list-disc ml-6">
+                for _, text := range playerExperience {
+                  <li class="text-neutral">{text}</li>
+                }
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  }
+}
+
+
+
+templ CardFeature(f Feature) {
+<div class="card bg-base-100 w-auto shadow-xl">
+  <figure class="pt-8">
+    <i data-feather={f.Icon} class="w-20 h-20 text-primary"></i>
+  </figure>
+  <div class="card-body">
+    <h2 class="card-title">
+      {f.Title}
+    </h2>
+    <p>{f.Body}</p>
+  </div>
+</div>
+}
+
+func hrefWAContactUs() templ.SafeURL {
+  phoneNumber := "628159239794"
+  text := "Halo, saya ingin bertanya mengenai Liga Gilatennis"
+  params := url.Values{}
+  params.Add("text", text)
+  return templ.URL(fmt.Sprintf("https://wa.me/%s?%s", phoneNumber, params.Encode()))
+}
+

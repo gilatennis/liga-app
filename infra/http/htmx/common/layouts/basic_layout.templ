@@ -47,19 +47,6 @@ templ BasicLayout(title string) {
 	</html>
 }
 
-templ LandingPageLayout(title string) {
-	<html data-theme="light" style="scroll-padding-top: 5rem; scroll-behavior: smooth;">
-		@Head(title)
-    <body hx-boost="true" hx-ext="response-targets" class="h-screen flex flex-col">
-      <div class="container max-w-[80rem] mx-auto grow">
-        { children... }
-      </div>
-      @BasicFooter()
-      @ScriptFeatherIcons()
-    </body>
-	</html>
-}
-
 templ BasicFooter() {
   <div class="bg-primary text-neutral-content w-full">
     <footer class="footer p-10 max-w-[80rem] mx-auto">
