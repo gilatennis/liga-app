@@ -36,16 +36,16 @@ templ ViewLeagueDetail(league *entities.League) {
         <div class="space-y-2">
           <div class="text-lg">0 Pemain</div>
           <div>
-            <button class="btn btn-sm btn-outline btn-primary w-full">
+            <a href={templ.URL(league.LinkRuleBook)} target="_blank" class="btn btn-sm btn-outline btn-primary w-full">
               <i data-feather="book-open" width="14" height="14"></i>
               Rule Book
-            </button>
+            </a>
           </div>
           <div>
-            <button class="btn btn-sm btn-outline btn-secondary w-full">
+            <a href={templ.URL(league.LinkWAGroup)} target="_blank" class="btn btn-sm btn-outline btn-secondary w-full">
               <img src="/static/icons/whatsapp.png" class="w-4 h-4 mr-2" />
               WA Group
-            </button>
+            </a>
           </div>
         </div>
       </div>
