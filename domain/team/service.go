@@ -26,6 +26,15 @@ func NewService(
 	}
 }
 
+func (s *Service) Get(ctx context.Context, p *iCommon.Pagination, f *iRepo.TeamFilter) ([]entities.Team, int64, error) {
+	teams, count, err := s.teamRepo.Get(ctx, p, f)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return teams, count, nil
+}
+
 func (s *Service) GetByUUID(ctx context.Context, teamUUID uuid.UUID) (*entities.Team, error) {
 	team, err := s.teamRepo.GetByUUID(ctx, teamUUID)
 	if err != nil {

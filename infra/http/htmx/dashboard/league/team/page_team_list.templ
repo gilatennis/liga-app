@@ -1,0 +1,118 @@
+package team
+
+import (
+  "liga-app/infra/http/htmx/common/layouts"
+  "liga-app/infra/http/htmx/dashboard/league"
+  "liga-app/entities"
+  "liga-app/enums"
+  "strconv"
+	"github.com/google/uuid"
+  "fmt"
+)
+
+templ PageTeamList(vmodel *VModelPageTeamList) {
+  @layouts.DashboardLayout("Tim", vmodel.User, layouts.FOOTER_MENU_LEAGUE) {
+    <div class="space-y-8">
+      @league.ViewLeagueDetail(vmodel.League)
+      if vmodel.League.ParticipationCategory == enums.CATEGORY_PARTICIPATION_SINGLES {
+        @ScreenHeader("Daftar Pemain")
+        @ViewPlayerList(vmodel.League.UUID, vmodel.Teams, 0)
+      } else {
+        @ScreenHeader("Daftar Tim")
+        @ViewTeamList(vmodel.League.UUID, vmodel.Teams, 0)
+      }
+    </div>
+  }
+}
+
+templ ScreenHeader(screenTitle string) {
+  <div class="flex items-center space-x-4">
+    <a href="javascript:history.back()" class="btn btn-secondary btn-circle btn-sm">
+      <i data-feather="chevron-left" class="w-6 h-6"></i>
+    </a>
+    <h1 class="text-2xl">{screenTitle}</h1>
+  </div>
+}
+
+// For Doubles or Teams category render team
+templ ViewTeamList(leagueUUID uuid.UUID, teams []entities.Team, nextPage int) {
+  for _, t := range teams {
+    <div class="collapse shadow-xl collapse-arrow">
+      <input type="checkbox" />
+      <div class="collapse-title">
+        <div class="flex items-center space-x-4 justify-start w-full">
+          <div class="avatar placeholder">
+            <div class="bg-primary text-neutral-content w-10 rounded-full">
+              <span class="text-3xl">{string(t.Name[0])}</span>
+            </div>
+          </div>
+          <div class="w-full text-left">
+            <h3 class="text-2xl">Tim {t.Name}</h3>
+            <h3>{strconv.Itoa(len(t.Players))} Pemain</h3>
+          </div>
+        </div>
+      </div>
+      <div class="collapse-content">
+        for _, p := range t.Players {
+          @ComponentPlayer(p, false)
+        }
+      </div>
+    </div>
+  }
+
+  if nextPage > 0 {
+    <div id="load-more-replace" class="mt-8 flex flex-row justify-center"> 
+      <button
+        class="btn btn-primary btn-wide"
+        hx-get={urlLoadMoreTeams_ViewTeamList(leagueUUID, nextPage)}
+        hx-target="#load-more-replace"
+        hx-swap="outerHTML"
+        hx-include=""
+      >
+        Load More
+      </button>
+    </div>
+  }
+}
+
+func urlLoadMoreTeams_ViewTeamList(leagueUUID uuid.UUID, nextPage int) string {
+  return fmt.Sprintf("/dashboard/leagues/%s/teams/view?page=%d&view=teams", leagueUUID, nextPage)
+}
+
+
+// For Singles Category render team.player
+templ ViewPlayerList(leagueUUID uuid.UUID, teams []entities.Team, nextPage int) {
+  for _, t := range teams {
+    <div class="card w-auto shadow-xl">
+      <div class="flex items-center space-x-4 justify-start w-full py-4 px-4">
+        <div class="avatar placeholder">
+          <div class="bg-primary text-neutral-content w-10 rounded-full">
+            <span class="text-3xl">{string(t.Players[0].Name[0])}</span>
+          </div>
+        </div>
+        <div class="w-full text-left">
+          <h3 class="text-2xl">{t.Players[0].Name}</h3>
+        </div>
+      </div>
+    </div>
+  }
+
+  if nextPage > 0 {
+    <div id="load-more-replace" class="mt-8 flex flex-row justify-center"> 
+      <button
+        class="btn btn-primary btn-wide"
+        hx-get={urlLoadMoreTeams_ViewPlayerList(leagueUUID, nextPage)}
+        hx-target="#load-more-replace"
+        hx-swap="outerHTML"
+        hx-include=""
+      >
+        Load More
+      </button>
+    </div>
+  }
+}
+
+
+func urlLoadMoreTeams_ViewPlayerList(leagueUUID uuid.UUID, nextPage int) string {
+  return fmt.Sprintf("/dashboard/leagues/%s/teams/view?page=%d&view=players", leagueUUID, nextPage)
+}
