@@ -21,15 +21,63 @@ func NewStore(db *gorm.DB) *Store {
 func (s *Store) Get(ctx context.Context, p *common.Pagination, f *repositories.LeagueFilter) ([]entities.League, int64, error) {
 	leagues := []entities.League{}
 	var count int64
-	err := s.db.WithContext(ctx).
+
+	dbHandle := s.db.WithContext(ctx).
 		Preload("Wilayah").
 		Offset(p.Offset).
-		Limit(p.Limit).
+		Limit(p.Limit)
+
+	if f != nil {
+		if f.UserUUID != nil {
+			dbHandle = dbHandle.
+				Joins("JOIN league_players ON league_players.league_uuid = leagues.uuid").
+				Where("league_players.player_uuid = ?", f.UserUUID)
+		}
+	}
+
+	err := dbHandle.
 		Find(&leagues).
 		Count(&count).
 		Error
 	if err != nil {
 		return nil, 0, err
+	}
+
+	leagueUUIDs := []uuid.UUID{}
+	for _, l := range leagues {
+		_l := l
+		leagueUUIDs = append(leagueUUIDs, _l.UUID)
+	}
+
+	type Temp struct {
+		LeagueUUID  uuid.UUID
+		TeamCount   int64
+		PlayerCount int64
+	}
+	temps := []Temp{}
+
+	err = s.db.WithContext(ctx).
+		Raw(`
+      select
+        l.uuid AS league_uuid,
+        COUNT(lt.uuid) AS team_count,
+        COUNT(lp.uuid) AS player_count
+      from leagues l
+        left join league_teams lt on l.uuid = lt.league_uuid 
+        left join league_players lp on l.uuid = lp.league_uuid
+      WHERE l.uuid IN ?
+      GROUP BY l.uuid
+    `, leagueUUIDs).
+		Scan(&temps).
+		Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	for i, l := range leagues {
+		l.TeamCount = temps[i].TeamCount
+		l.PlayerCount = temps[i].PlayerCount
+		leagues[i] = l
 	}
 
 	return leagues, count, nil
@@ -44,6 +92,33 @@ func (s *Store) GetByUUID(ctx context.Context, leagueUUID uuid.UUID) (*entities.
 	if err != nil {
 		return nil, err
 	}
+
+	type Temp struct {
+		LeagueUUID  uuid.UUID
+		TeamCount   int64
+		PlayerCount int64
+	}
+	temp := Temp{}
+	err = s.db.WithContext(ctx).
+		Raw(`
+      select
+        l.uuid AS league_uuid,
+        COUNT(lt.uuid) AS team_count,
+        COUNT(lp.uuid) AS player_count
+      from leagues l
+        left join league_teams lt on l.uuid = lt.league_uuid 
+        left join league_players lp on l.uuid = lp.league_uuid
+      WHERE l.uuid = ?
+      GROUP BY l.uuid
+    `, league.UUID).
+		Scan(&temp).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	league.TeamCount = temp.TeamCount
+	league.PlayerCount = temp.PlayerCount
 
 	return &league, nil
 }

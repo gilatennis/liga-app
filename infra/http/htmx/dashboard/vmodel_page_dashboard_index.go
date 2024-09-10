@@ -3,5 +3,6 @@ package dashboard
 import "liga-app/entities"
 
 type VModelPageDashboardIndex struct {
-	User *entities.User
+	User    *entities.User
+	Leagues []entities.League
 }

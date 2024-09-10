@@ -1,12 +1,12 @@
 package league
 
-import "github.com/google/uuid"
-
 import (
   "liga-app/infra/http/htmx/common/layouts"
   "liga-app/entities"
+  "liga-app/enums"
   "strconv"
   "fmt"
+  "github.com/google/uuid"
 )
 
 templ PageLeagueList(vmodel *VModelPageLeagueList) {
@@ -36,8 +36,13 @@ templ ViewLeagueList(leagues []entities.League, nextPage int) {
               <p>{l.Wilayah.Name}</p>
             </div>
             <div class="flex flex-col items-center">
-              <h2 class="text-6xl">0</h2>
-              <h2 class="text-xl">Pemain</h2>
+              if l.ParticipationCategory == enums.CATEGORY_PARTICIPATION_SINGLES {
+                <h2 class="text-6xl">{strconv.Itoa(int(l.PlayerCount))}</h2>
+                <h2 class="text-xl">Pemain</h2>
+              } else {
+                <h2 class="text-6xl">{strconv.Itoa(int(l.TeamCount))}</h2>
+                <h2 class="text-xl">Tim</h2>
+              }
             </div>
           </div>
         </div>

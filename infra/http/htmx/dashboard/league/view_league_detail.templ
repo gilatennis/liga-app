@@ -2,6 +2,7 @@ package league
 
 import (
   "liga-app/entities"
+  "liga-app/enums"
   "strconv"
   "time"
   "liga-app/infra/http/htmx/common/utils"
@@ -34,7 +35,11 @@ templ ViewLeagueDetail(league *entities.League) {
 
         // Right
         <div class="space-y-2">
-          <div class="text-lg">0 Pemain</div>
+          if league.ParticipationCategory == enums.CATEGORY_PARTICIPATION_SINGLES {
+            <div class="text-lg">{strconv.Itoa(int(league.PlayerCount))} Pemain</div>
+          } else {
+            <div class="text-lg">{strconv.Itoa(int(league.TeamCount))} Tim</div>
+          }
           <div>
             <a href={templ.URL(league.LinkRuleBook)} target="_blank" class="btn btn-sm btn-outline btn-primary w-full">
               <i data-feather="book-open" width="14" height="14"></i>

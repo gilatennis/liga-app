@@ -103,7 +103,7 @@ func setupHandlers(cfg *config.Config, db *gorm.DB, logger *zerolog.Logger) (*Ha
 		AuthHandler:                auth.NewHandler(cfg, authService),
 		IndexHandler:               index.NewHandler(),
 		InviteHandler:              invite.NewHandler(inviteService, leagueService, teamService),
-		DashboardHandler:           dashboard.NewHandler(userInfoService),
+		DashboardHandler:           dashboard.NewHandler(userInfoService, leagueService),
 		DashboardLeagueHandler:     dashLeague.NewHandler(leagueService, teamService),
 		DashboardLeagueTeamHandler: dashLeagueTeam.NewHandler(leagueService, teamService),
 	}

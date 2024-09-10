@@ -11,6 +11,7 @@ import (
 type LeagueFilter struct {
 	CityID     *string
 	ProvinceID *string
+	UserUUID   *uuid.UUID
 }
 
 type ILeagueRepository interface {

@@ -25,6 +25,8 @@ type League struct {
 	Season                int
 	RegistrationFee       float64
 	LinkWARatingAdmin     string
+	PlayerCount           int64 `gorm:"-:all"`
+	TeamCount             int64 `gorm:"-:all"`
 }
 
 func (l *League) IsNTRPRatingTooHigh(rating float32) bool {

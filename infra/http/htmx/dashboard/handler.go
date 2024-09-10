@@ -7,6 +7,8 @@ import (
 	"liga-app/infra/http/htmx/common/components"
 	"net/http"
 
+	iCommon "liga-app/interfaces/common"
+	iRepo "liga-app/interfaces/repositories"
 	iService "liga-app/interfaces/services"
 
 	"github.com/gin-gonic/gin"
@@ -15,11 +17,13 @@ import (
 type Handler struct {
 	common.BaseHandler
 	userInfoService iService.IUserInfoService
+	leagueService   iService.ILeagueService
 }
 
-func NewHandler(userInfoService iService.IUserInfoService) *Handler {
+func NewHandler(userInfoService iService.IUserInfoService, leagueService iService.ILeagueService) *Handler {
 	return &Handler{
 		userInfoService: userInfoService,
+		leagueService:   leagueService,
 	}
 }
 
@@ -35,8 +39,17 @@ func (h *Handler) Index(c *gin.Context) {
 		return
 	}
 
+	p := iCommon.NewPagination(1, 6, []iCommon.OrderBy{{Column: "created_at", Direction: "desc"}})
+	f := &iRepo.LeagueFilter{UserUUID: &user.UUID}
+	leagues, _, err := h.leagueService.Get(c, p, f)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
 	vmodel := &VModelPageDashboardIndex{
-		User: user,
+		User:    user,
+		Leagues: leagues,
 	}
 	page := PageDashboardIndex(vmodel)
 	h.RenderView(c, page)
