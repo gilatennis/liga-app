@@ -1,21 +1,31 @@
 package index
 
 import (
+	"liga-app/entities"
 	"liga-app/infra/http/htmx/common"
+	iService "liga-app/interfaces/services"
 
 	"github.com/gin-gonic/gin"
 )
 
 type Handler struct {
 	common.BaseHandler
+	ruleBookService iService.IRuleBookService
 }
 
-func NewHandler() *Handler {
-	return &Handler{}
+func NewHandler(ruleBookService iService.IRuleBookService) *Handler {
+	return &Handler{ruleBookService: ruleBookService}
 }
 
 func (h *Handler) Index(c *gin.Context) {
-	vmodel := &VModelPageIndex{}
+	ruleBook, err := h.ruleBookService.GetByName(c, "main-rulebook")
+	if err != nil {
+		ruleBook = &entities.RuleBook{Link: ""}
+	}
+
+	vmodel := &VModelPageIndex{
+		RuleBook: ruleBook,
+	}
 	page := PageIndex(vmodel)
 
 	h.RenderView(c, page)

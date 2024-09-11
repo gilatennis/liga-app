@@ -1,3 +1,7 @@
 package index
 
-type VModelPageIndex struct{}
+import "liga-app/entities"
+
+type VModelPageIndex struct {
+	RuleBook *entities.RuleBook
+}
