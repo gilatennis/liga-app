@@ -1,9 +1,29 @@
 package layouts
 
 
+templ LandingPageHead(title string) {
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="description" content="Liga Gilatennis Indonesia" />
+		<title>{ title }</title>
+		<!-- htmx -->
+    <script src="https://unpkg.com/htmx.org@2.0.0" integrity="sha384-wS5l5IKJBvK6sPTKa2WZ1js3d947pvWXbPJ1OmWfEuxLgeHcEbjUUA5i9V5ZkpCw" crossorigin="anonymous"></script>
+    <!-- htmx - unminified for debugging -->
+    <!-- <script src="https://unpkg.com/htmx.org@2.0.0/dist/htmx.js" integrity="sha384-Xh+GLLi0SMFPwtHQjT72aPG19QvKB8grnyRbYBNIdHWc2NkCrz65jlU7YrzO6qRp" crossorigin="anonymous"></script> -->
+		<script src="https://unpkg.com/htmx.org/dist/ext/response-targets.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com"></link>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin></link>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet"></link>
+		<!-- tailwindcss -->
+    <link rel="stylesheet" href="/static/css/output.css"></link>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+	</head>
+}
+
 templ LandingPageLayout(title string) {
 	<html data-theme="light" style="scroll-padding-top: 5rem; scroll-behavior: smooth;">
-		@Head(title)
+		@LandingPageHead(title)
     <body hx-boost="true" hx-ext="response-targets" class="h-screen flex flex-col">
       <div class="container max-w-[80rem] mx-auto grow">
         { children... }
