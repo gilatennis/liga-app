@@ -2,8 +2,8 @@ package index
 
 import (
   "liga-app/infra/http/htmx/common/layouts"
-  "fmt"
-  "net/url"
+  // "fmt"
+  // "net/url"
 )
 
 type Feature struct {
@@ -20,7 +20,7 @@ type FAQ struct {
 var features = []Feature{
   {
     Icon: "users",
-    Title: "Untuk Semua Level",
+    Title: "Untuk Semua Level (Season 1 Khusus Beginners)",
     Body: "Kami menerima pemain dari berbagai tingkat keterampilan. Setiap pemain ditempatkan pada liga sesuai dengan level skill",
   },
   {
@@ -391,10 +391,14 @@ templ CardFeature(f Feature) {
 }
 
 func hrefWAContactUs() templ.SafeURL {
+  /*
   phoneNumber := "628159239794"
   text := "Halo, saya ingin bertanya mengenai Liga Gilatennis"
   params := url.Values{}
   params.Add("text", text)
   return templ.URL(fmt.Sprintf("https://wa.me/%s?%s", phoneNumber, params.Encode()))
+  */
+  linkWAGroupSeason1Beginners := "https://chat.whatsapp.com/JUup3ZHCEMd1eO2WifCsI5"
+  return templ.URL(linkWAGroupSeason1Beginners)
 }
 
