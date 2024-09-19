@@ -26,6 +26,9 @@ redis:
   address: ":6379"
   password: $REDIS_PASSWORD
   secret: $REDIS_SECRET
+  # -- For Local Environment --
+  # password: ""
+  # secret: "liga-gilatennis"
 
 session:
   max_age: 108000
@@ -56,6 +59,8 @@ oauth:
   google_client_id: 865287598747-4pa6tvoqmnjs1n9phr8ftoo0fh5q6apn.apps.googleusercontent.com
   google_secret: $OAUTH_GOOGLE_SECRET
   google_callback_url: https://liga.gilatennis.com/auth/login/oauth/google/callback
+  # -- For local environment --
+  # google_callback_url: https://secure-imp-becoming.ngrok-free.app/auth/login/oauth/google/callback
 
   facebook_app_id: 1533261570735840
   facebook_secret: $OAUTH_FACEBOOK_SECRET
