@@ -10,7 +10,7 @@ import (
 templ PageTeamUpdate(vmodel *VModelPageTeamUpdate) {
   @layouts.DashboardLayout("Tim", vmodel.User, layouts.FOOTER_MENU_LEAGUE) {
     <div class="space-y-8">
-      @league.ViewLeagueDetail(vmodel.League)
+      @league.ViewLeagueDetail(vmodel.League, false)
     </div>
   }
 }

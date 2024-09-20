@@ -8,7 +8,7 @@ import (
   "liga-app/infra/http/htmx/common/utils"
 )
 
-templ ViewLeagueDetail(league *entities.League) {
+templ ViewLeagueDetail(league *entities.League, showTeamCount bool) {
   <div class="card w-auto shadow-xl">
     <div class="p-4 flex flex-col gap-2">
       <div class="flex flex-row space-x-2">
@@ -35,10 +35,12 @@ templ ViewLeagueDetail(league *entities.League) {
 
         // Right
         <div class="space-y-2">
-          if league.ParticipationCategory == enums.CATEGORY_PARTICIPATION_SINGLES {
-            <div class="text-lg">{strconv.Itoa(int(league.PlayerCount))} Pemain</div>
-          } else {
-            <div class="text-lg">{strconv.Itoa(int(league.TeamCount))} Tim</div>
+          if showTeamCount {
+            if league.ParticipationCategory == enums.CATEGORY_PARTICIPATION_SINGLES {
+              <div class="text-lg">{strconv.Itoa(int(league.PlayerCount))} Pemain</div>
+            } else {
+              <div class="text-lg">{strconv.Itoa(int(league.TeamCount))} Tim</div>
+            }
           }
           <div>
             <a href={templ.URL(league.LinkRuleBook)} target="_blank" class="btn btn-sm btn-outline btn-primary w-full">

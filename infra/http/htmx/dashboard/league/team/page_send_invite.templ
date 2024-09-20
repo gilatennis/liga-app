@@ -9,7 +9,7 @@ import (
 templ PageSendInvite(vmodel *VModelPageSendInvite) {
   @layouts.DashboardLayout("Kirim Undangan", vmodel.User, layouts.FOOTER_MENU_LEAGUE) {
     <div class="space-y-8">
-      @league.ViewLeagueDetail(vmodel.League)
+      @league.ViewLeagueDetail(vmodel.League, false)
       @ViewSendInvite(vmodel)
     </div>
   }

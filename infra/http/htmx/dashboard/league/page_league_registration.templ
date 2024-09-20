@@ -11,7 +11,7 @@ import (
 templ PageLeagueRegistration(vmodel *VModelPageLeagueRegistration) {
   @layouts.DashboardLayout("Daftar Liga", vmodel.User, layouts.FOOTER_MENU_LEAGUE) {
     <div class="space-y-8">
-      @ViewLeagueDetail(vmodel.League)
+      @ViewLeagueDetail(vmodel.League, vmodel.ShowTeamCount)
       <div class="card w-auto shadow-xl">
         <div class="p-4 space-y-4">
           <div class="space-y-2">

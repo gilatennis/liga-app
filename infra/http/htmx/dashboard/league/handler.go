@@ -44,6 +44,7 @@ func (h *Handler) GetLeagueListPage(c *gin.Context) {
 		User:            user,
 		Leagues:         leagues,
 		LeaguesNextPage: p.GetNextPage(),
+		ShowPlayerCount: false,
 	}
 	page := PageLeagueList(vmodel)
 	h.RenderView(c, page)

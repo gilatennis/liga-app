@@ -12,7 +12,7 @@ import (
 templ PageTeamDetail(vmodel *VModelPageTeamDetail) {
   @layouts.DashboardLayout("Tim", vmodel.User, layouts.FOOTER_MENU_LEAGUE) {
     <div class="space-y-4">
-      @league.ViewLeagueDetail(vmodel.League)
+      @league.ViewLeagueDetail(vmodel.League, false)
       @ViewTeamDetail(vmodel)
       @ViewTeamMembers(vmodel)
     </div>
