@@ -2,12 +2,15 @@ package minio
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"liga-app/config"
 	"mime/multipart"
+	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
@@ -70,4 +73,28 @@ func (c *Client) FileExists(ctx context.Context, bucketName string, fileName str
 	}
 
 	return true, nil
+}
+
+func (c *Client) CreateFileName(ctx context.Context, file multipart.File) (string, error) {
+	buf := make([]byte, 512)
+	_, err := file.Read(buf)
+	if err != nil {
+		return "", fmt.Errorf("infra.minio.client.createFileName(): %w", err)
+	}
+
+	contentType := http.DetectContentType(buf)
+	if contentType != "image/jpeg" && contentType != "image/png" {
+		return "", fmt.Errorf(
+			"mixins.file_uploader.createFileName(): %w", errors.New("invalid file type"))
+	}
+
+	fileName := uuid.New().String()
+	switch contentType {
+	case "image/jpeg":
+		fileName += ".jpg"
+	case "image/png":
+		fileName += ".png"
+	}
+
+	return fileName, nil
 }

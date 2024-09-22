@@ -1,12 +1,12 @@
 package http
 
 import (
-	"fmt"
 	"liga-app/config"
 	"liga-app/infra/http/htmx/auth"
 	"liga-app/infra/http/htmx/dashboard"
 	dashLeague "liga-app/infra/http/htmx/dashboard/league"
 	dashLeagueTeam "liga-app/infra/http/htmx/dashboard/league/team"
+	dashProfile "liga-app/infra/http/htmx/dashboard/profile"
 	"liga-app/infra/http/htmx/index"
 	"liga-app/infra/http/htmx/invite"
 	"liga-app/infra/http/json/duitku"
@@ -47,24 +47,24 @@ type HTMXHandlers struct {
 	DashboardHandler           *dashboard.Handler
 	DashboardLeagueHandler     *dashLeague.Handler
 	DashboardLeagueTeamHandler *dashLeagueTeam.Handler
+	DashboardProfileHandler    *dashProfile.Handler
 }
 
 type JSONHandlers struct {
 	DuitkuHandler *duitku.Handler
 }
 
-func setupHandlers(cfg *config.Config, db *gorm.DB, logger *zerolog.Logger) (*Handlers, error) {
+func setupHandlers(
+	cfg *config.Config,
+	db *gorm.DB,
+	minioClient *minio.Client,
+	logger *zerolog.Logger,
+) (*Handlers, error) {
 	mail := mailtrap.NewMailTrap(cfg)
-	minioClient, err := minio.NewClient(cfg)
-	if err != nil {
-		return nil, fmt.Errorf("http.server.setupHandlers(): failed to create new minio client: %w", err)
-	}
 	_ = mail
-	_ = minioClient
+	_ = logger
 
 	duitkuAPI := thirdPartyDuitku.NewAPI(cfg)
-
-	// fileUploader := mixins.NewFileUploader(minioClient)
 
 	/*
 		accessControlProvider, err := casbin.NewProvider(db)
@@ -88,7 +88,12 @@ func setupHandlers(cfg *config.Config, db *gorm.DB, logger *zerolog.Logger) (*Ha
 		userStore,
 		mail,
 	)
-	userInfoService := domainUserInfo.NewService(wilayahStore, userStore)
+	userInfoService := domainUserInfo.NewService(
+		cfg,
+		wilayahStore,
+		userStore,
+		minioClient,
+	)
 	leagueService := domainLeague.NewService(
 		cfg,
 		gormStore,
@@ -108,6 +113,7 @@ func setupHandlers(cfg *config.Config, db *gorm.DB, logger *zerolog.Logger) (*Ha
 		DashboardHandler:           dashboard.NewHandler(userInfoService, leagueService),
 		DashboardLeagueHandler:     dashLeague.NewHandler(leagueService, teamService),
 		DashboardLeagueTeamHandler: dashLeagueTeam.NewHandler(leagueService, teamService),
+		DashboardProfileHandler:    dashProfile.NewHandler(userInfoService),
 	}
 
 	JSONHandlers := JSONHandlers{

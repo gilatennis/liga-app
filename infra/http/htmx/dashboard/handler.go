@@ -137,7 +137,7 @@ func (h *Handler) PostSubmitUserInfoForm(c *gin.Context) {
 	user.Province = vmodelForm.Province
 	user.Gender = enums.GENDER(vmodelForm.Gender)
 
-	_, err = h.userInfoService.SaveUserInfo(c, user)
+	_, err = h.userInfoService.SaveUserInfo(c, user, nil)
 	if err != nil {
 		vmodelForm.base.ServerError = err.Error()
 		view := ViewFormCompleteUserInfo(&vmodelForm)

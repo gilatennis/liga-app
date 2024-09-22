@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"liga-app/config"
 	"liga-app/infra/http/middlewares"
+	"liga-app/infra/minio"
 	"log"
 	"net/http"
 	"os"
@@ -30,12 +31,18 @@ type Server struct {
 	db     *gorm.DB
 }
 
-func NewServer(config *config.Config, logger *zerolog.Logger, db *gorm.DB) (*Server, error) {
-	h, err := setupHandlers(config, db, logger)
+func NewServer(cfg *config.Config, logger *zerolog.Logger, db *gorm.DB) (*Server, error) {
+	minioClient, err := minio.NewClient(cfg)
 	if err != nil {
-		return nil, fmt.Errorf("http.server.NewServer(): failed to setup handlers: %w", err)
+		return nil, fmt.Errorf("minio.NewClient(cfg): failed to create new minio client: %w", err)
 	}
-	m, err := middlewares.SetupMiddlewares(config, db)
+
+	h, err := setupHandlers(cfg, db, minioClient, logger)
+	if err != nil {
+		return nil, fmt.Errorf("setupHandlers(cfg, db, minioClient, logger): failed to setup handlers: %w", err)
+	}
+
+	m, err := middlewares.SetupMiddlewares(cfg, db, minioClient)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +58,7 @@ func NewServer(config *config.Config, logger *zerolog.Logger, db *gorm.DB) (*Ser
 	// OPTIONS method for ReactJS
 	corsConfig.AddAllowMethods("OPTIONS")
 
-	rs, err := redis.NewStore(10, "tcp", config.Redis.Address, config.Redis.Password, []byte(config.Redis.Secret))
+	rs, err := redis.NewStore(10, "tcp", cfg.Redis.Address, cfg.Redis.Password, []byte(cfg.Redis.Secret))
 	if err != nil {
 		return nil, fmt.Errorf("%s: failed to create new redis store: %w", logTag, err)
 	}
@@ -65,7 +72,7 @@ func NewServer(config *config.Config, logger *zerolog.Logger, db *gorm.DB) (*Ser
 	setupRoutes(router, h, m)
 
 	server := &http.Server{
-		Addr:    ":" + config.Http.Port,
+		Addr:    ":" + cfg.Http.Port,
 		Handler: router,
 	}
 

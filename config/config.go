@@ -71,6 +71,7 @@ type Config struct {
 		URL       string `yaml:"url"`
 		AccessKey string `yaml:"access_key"`
 		SecretKey string `yaml:"secret_key"`
+		Bucket    string `yaml:"bucket"`
 	} `yaml:"minio"`
 
 	OAuth struct {

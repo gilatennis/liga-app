@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"liga-app/config"
+	"liga-app/interfaces"
 
 	// jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
@@ -13,7 +14,7 @@ type Middlewares struct {
 	SessionMiddleware gin.HandlerFunc
 }
 
-func SetupMiddlewares(config *config.Config, db *gorm.DB) (*Middlewares, error) {
+func SetupMiddlewares(config *config.Config, db *gorm.DB, fileStorage interfaces.IFileStorage) (*Middlewares, error) {
 	/*
 		jwtMiddleware, err := NewJwtMiddleware(config, db)
 		if err != nil {
@@ -21,7 +22,7 @@ func SetupMiddlewares(config *config.Config, db *gorm.DB) (*Middlewares, error) 
 		}
 	*/
 
-	sessionMiddleware := NewSessionMiddleware(config, db)
+	sessionMiddleware := NewSessionMiddleware(config, db, fileStorage)
 
 	return &Middlewares{
 		// JwtMiddleware:     jwtMiddleware,

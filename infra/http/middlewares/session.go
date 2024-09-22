@@ -1,9 +1,11 @@
 package middlewares
 
 import (
+	"context"
 	"fmt"
 	"liga-app/config"
 	"liga-app/entities"
+	"liga-app/interfaces"
 	"net/http"
 
 	"github.com/gin-contrib/sessions"
@@ -12,7 +14,11 @@ import (
 	"gorm.io/gorm"
 )
 
-func NewSessionMiddleware(cfg *config.Config, db *gorm.DB) gin.HandlerFunc {
+func NewSessionMiddleware(
+	cfg *config.Config,
+	db *gorm.DB,
+	fileStorage interfaces.IFileStorage,
+) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		session := sessions.Default(c)
 		userUUIDAny := session.Get("user_uuid")
@@ -32,7 +38,7 @@ func NewSessionMiddleware(cfg *config.Config, db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		user, err := sessionGetUserByUUID(db, userUUID)
+		user, err := sessionGetUserByUUID(c, cfg, db, fileStorage, userUUID)
 		if err != nil {
 			err = fmt.Errorf("error getting user by user_uuid from session. user_uuid: %s, err: %w", userUUIDStr, err)
 			fmt.Println(err.Error())
@@ -47,11 +53,24 @@ func NewSessionMiddleware(cfg *config.Config, db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
-func sessionGetUserByUUID(db *gorm.DB, userUUID uuid.UUID) (*entities.User, error) {
+func sessionGetUserByUUID(
+	ctx context.Context,
+	cfg *config.Config,
+	db *gorm.DB,
+	fileStorage interfaces.IFileStorage,
+	userUUID uuid.UUID,
+) (*entities.User, error) {
 	var user entities.User
 	err := db.Where("uuid = ?", userUUID).First(&user).Error
 	if err != nil {
 		return nil, err
+	}
+
+	if user.ProfilePicture != "" {
+		user.ProfilePictureURL, err = fileStorage.GetFileURL(ctx, cfg.Minio.Bucket, user.ProfilePicture)
+		if err != nil {
+			fmt.Printf("fileStorage.GetFileURL for user.ProfilePicture=%s failed: %v \n", user.ProfilePicture, err)
+		}
 	}
 
 	return &user, nil

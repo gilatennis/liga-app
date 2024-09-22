@@ -54,6 +54,7 @@ minio:
   url: minio-api.gilatennis.com
   access_key: $MINIO_ACCESS_KEY
   secret_key: $MINIO_SECRET_KEY
+  bucket: liga-app
 
 oauth:
   google_client_id: 865287598747-4pa6tvoqmnjs1n9phr8ftoo0fh5q6apn.apps.googleusercontent.com
