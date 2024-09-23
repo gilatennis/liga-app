@@ -61,7 +61,10 @@ func sessionGetUserByUUID(
 	userUUID uuid.UUID,
 ) (*entities.User, error) {
 	var user entities.User
-	err := db.Where("uuid = ?", userUUID).First(&user).Error
+	err := db.Where("uuid = ?", userUUID).
+		Preload("Ratings").
+		First(&user).
+		Error
 	if err != nil {
 		return nil, err
 	}

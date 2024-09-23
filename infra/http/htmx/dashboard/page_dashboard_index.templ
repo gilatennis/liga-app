@@ -18,10 +18,16 @@ templ PageDashboardIndex(vmodel *VModelPageDashboardIndex) {
           <div class="text-center">
             <h2 class="text-xl">Player Rating</h2>
           </div>
-          <div class="h-full flex flex-col justify-center items-center">
-            <h2 class="text-lg text-center">-</h2>
-          </div>
-          <p class="text-xs">Lakukan pendaftaran ke liga untuk mendapatkan rating..</p>
+          if len(vmodel.User.Ratings) == 0 {
+            <div class="h-full flex flex-col justify-center items-center">
+              <h2 class="text-lg text-center">-</h2>
+            </div>
+            <p class="text-xs">Lakukan pendaftaran ke liga untuk mendapatkan rating..</p>
+          } else {
+            <div class="h-full flex flex-col justify-center items-center">
+              <h2 class="text-lg text-center">{vmodel.User.GetLatestRatingString()}</h2>
+            </div>
+          }
         </div>
       </div>
 
