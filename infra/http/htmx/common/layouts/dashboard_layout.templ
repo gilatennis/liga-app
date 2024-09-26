@@ -27,6 +27,11 @@ templ DashboardLayout(title string, user *entities.User, activeFooterMenu FOOTER
       hx-ext="response-targets" 
       class="h-screen flex flex-col"
     >
+      <!-- Google Tag Manager (noscript) -->
+      <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-M37PLKWT"
+      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+      <!-- End Google Tag Manager (noscript) -->
+
       @Navbar(user)
       @DashboardDrawer(user) {
         @ContainerMobile(){

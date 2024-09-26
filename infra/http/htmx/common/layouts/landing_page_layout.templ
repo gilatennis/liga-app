@@ -32,9 +32,16 @@ templ LandingPageLayout(title string) {
 	<html data-theme="light" style="scroll-padding-top: 5rem; scroll-behavior: smooth;">
 		@LandingPageHead(title)
     <body hx-boost="true" hx-ext="response-targets" class="h-screen flex flex-col">
+      <!-- Google Tag Manager (noscript) -->
+      <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-M37PLKWT"
+      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+      <!-- End Google Tag Manager (noscript) -->
+
+      <!-- Content -->
       <div class="container max-w-[80rem] mx-auto grow">
         { children... }
       </div>
+
       @BasicFooter()
       @ScriptFeatherIcons()
     </body>
