@@ -16,4 +16,5 @@ type TeamFilter struct {
 type ITeamRepository interface {
 	Get(ctx context.Context, p *common.Pagination, f *TeamFilter) ([]entities.Team, int64, error)
 	GetByUUID(ctx context.Context, teamUUID uuid.UUID) (*entities.Team, error)
+	Update(ctx context.Context, team *entities.Team) (*uuid.UUID, error)
 }

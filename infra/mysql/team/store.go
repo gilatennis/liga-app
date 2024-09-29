@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Store struct {
@@ -68,4 +69,15 @@ func (s *Store) GetByUUID(ctx context.Context, teamUUID uuid.UUID) (*entities.Te
 	}
 
 	return &team, nil
+}
+
+func (s *Store) Update(ctx context.Context, team *entities.Team) (*uuid.UUID, error) {
+	err := s.db.
+		Omit(clause.Associations).
+		Save(team).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &team.UUID, nil
 }

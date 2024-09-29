@@ -1,0 +1,10 @@
+package components
+
+templ PageHeader(pageTitle string) {
+  <div class="flex items-center space-x-4">
+    <a href="javascript:history.back()" class="btn btn-secondary btn-circle btn-sm">
+      <i data-feather="chevron-left" class="w-6 h-6"></i>
+    </a>
+    <h1 class="text-2xl">{pageTitle}</h1>
+  </div>
+}

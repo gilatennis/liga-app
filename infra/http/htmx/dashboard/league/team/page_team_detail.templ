@@ -7,12 +7,14 @@ import (
   "strconv"
 	"github.com/google/uuid"
   "fmt"
+	"liga-app/infra/http/htmx/common/components"
 )
 
 templ PageTeamDetail(vmodel *VModelPageTeamDetail) {
   @layouts.DashboardLayout("Tim", vmodel.User, layouts.FOOTER_MENU_LEAGUE) {
-    <div class="space-y-4">
+    <div class="space-y-8">
       @league.ViewLeagueDetail(vmodel.League, false)
+      @components.PageHeader("Detail Tim")
       @ViewTeamDetail(vmodel)
       @ViewTeamMembers(vmodel)
     </div>
@@ -23,11 +25,19 @@ templ ViewTeamDetail(vmodel *VModelPageTeamDetail) {
   <div class="card w-auto shadow-xl">
     <div class="p-4 flex flex-col">
       <div class="flex items-center space-x-4 justify-start w-full">
-        <div class="avatar placeholder">
-          <div class="bg-primary text-neutral-content w-10 rounded-full">
-            <span class="text-3xl">{string(vmodel.Team.Name[0])}</span>
+        if vmodel.Team.ProfilePictureURL == "" {
+          <div class="avatar placeholder">
+            <div class="bg-primary text-neutral-content w-10 rounded-full">
+              <span class="text-3xl">{string(vmodel.Team.Name[0])}</span>
+            </div>
           </div>
-        </div>
+        } else {
+          <div class="avatar">
+            <div class="w-10 rounded-full">
+              <img src={vmodel.Team.ProfilePictureURL} />
+            </div>
+          </div>
+        }
         <div class="w-full text-left">
           <h3 class="text-2xl">Tim {vmodel.Team.Name}</h3>
           <h3>{strconv.Itoa(len(vmodel.Team.Players))} Pemain</h3>
@@ -43,7 +53,7 @@ templ ViewTeamDetail(vmodel *VModelPageTeamDetail) {
 }
 
 func hrefTeamUpdate(leagueUUID uuid.UUID, teamUUID uuid.UUID) templ.SafeURL {
-  return templ.URL(fmt.Sprintf("/dashboard/leagues/%s/teams/%s/update", leagueUUID, teamUUID))
+  return templ.URL(fmt.Sprintf("/dashboard/leagues/%s/teams/%s/edit", leagueUUID, teamUUID))
 }
 
 templ ViewTeamMembers(vmodel *VModelPageTeamDetail) {

@@ -1,10 +1,12 @@
 package team
 
 import (
+	"fmt"
 	"liga-app/infra/http/htmx/common"
 	iCommon "liga-app/interfaces/common"
 	iRepo "liga-app/interfaces/repositories"
 	iService "liga-app/interfaces/services"
+	"mime/multipart"
 	"net/http"
 
 	"github.com/a-h/templ"
@@ -151,9 +153,6 @@ func (h *Handler) GetTeamDetailPage(c *gin.Context) {
 		User:   user,
 		League: league,
 		Team:   team,
-		VModelFormTeam: &VModelFormTeam{
-			Name: team.Name,
-		},
 	}
 	page := PageTeamDetail(vmodel)
 	h.RenderView(c, page)
@@ -197,4 +196,116 @@ func (h *Handler) GetSendInvitePage(c *gin.Context) {
 	}
 	page := PageSendInvite(vmodel)
 	h.RenderView(c, page)
+}
+
+func (h *Handler) GetTeamEditPage(c *gin.Context) {
+	user, err := h.GetAuthenticatedUser(c)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	params, err := h.GetURLUUIDParams(c, []string{"league_uuid", "team_uuid"})
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	leagueUUID, teamUUID := params[0], params[1]
+
+	team, err := h.teamService.GetByUUID(c, teamUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	vmodel := &VModelPageTeamEdit{
+		User: user,
+		VModelFormTeam: &VModelFormTeam{
+			LeagueUUID:            leagueUUID,
+			TeamUUID:              teamUUID,
+			ProfilePictureCurrent: team.ProfilePictureURL,
+			Name:                  team.Name,
+		},
+	}
+
+	page := PageTeamEdit(vmodel)
+	h.RenderView(c, page)
+}
+
+func (h *Handler) PutUpdateTeam(c *gin.Context) {
+	user, err := h.GetAuthenticatedUser(c)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	params, err := h.GetURLUUIDParams(c, []string{"league_uuid", "team_uuid"})
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	leagueUUID, teamUUID := params[0], params[1]
+
+	team, err := h.teamService.GetByUUID(c, teamUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	form := VModelFormTeam{
+		LeagueUUID:            leagueUUID,
+		TeamUUID:              teamUUID,
+		ProfilePictureCurrent: team.ProfilePictureURL,
+	}
+
+	err = c.Bind(&form)
+	if err != nil {
+		form.base.ServerError = err.Error()
+		view := ViewFormEditTeam(&form)
+		h.RenderViewWithStatus(c, view, http.StatusBadRequest)
+		return
+	}
+
+	if !form.Validate() {
+		// pp.Println("form.base.formErrors", form.base.FormErrors)
+		view := ViewFormEditTeam(&form)
+		h.RenderViewWithStatus(c, view, http.StatusBadRequest)
+		return
+	}
+
+	fileHeader, err := c.FormFile("profile_picture")
+	if err != nil && err.Error() != "http: no such file" {
+		form.base.ServerError = err.Error()
+		view := ViewFormEditTeam(&form)
+		h.RenderViewWithStatus(c, view, http.StatusInternalServerError)
+		return
+	}
+
+	var file *multipart.File = nil
+
+	if fileHeader != nil {
+		_file, err := fileHeader.Open()
+		if err != nil {
+			form.base.ServerError = err.Error()
+			view := ViewFormEditTeam(&form)
+			h.RenderViewWithStatus(c, view, http.StatusInternalServerError)
+			return
+		}
+		file = &_file
+	}
+
+	team.Name = form.Name
+
+	_, err = h.teamService.Update(c, user, team, file)
+	if err != nil {
+		form.base.ServerError = err.Error()
+		view := ViewFormEditTeam(&form)
+		h.RenderViewWithStatus(c, view, http.StatusInternalServerError)
+		return
+	}
+
+	h.ResponseSuccessRedirect(c, "informasi tim berhasil di update", fmt.Sprintf("/dashboard/leagues/%s/teams/%s", leagueUUID, teamUUID))
+	h.RenderView(c, ViewFormEditTeam(&form))
 }

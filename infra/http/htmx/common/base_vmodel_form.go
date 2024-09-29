@@ -63,9 +63,10 @@ func (b *BaseVModelForm) Validate(parentModel any) bool {
 				isValid = false
 			}
 
-			isValid = r.MatchString(fieldValue.String())
-			if !isValid {
+			isValidPhone := r.MatchString(fieldValue.String())
+			if !isValidPhone {
 				b.FormErrors[name] = fmt.Sprintf("%s invalid", label)
+				isValid = false
 			}
 		}
 

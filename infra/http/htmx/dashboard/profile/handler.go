@@ -147,4 +147,5 @@ func (h *Handler) PutUpdateProfile(c *gin.Context) {
 	}
 
 	h.ResponseSuccessRedirect(c, "informasi user berhasil di update", "/dashboard/profile")
+	h.RenderView(c, ViewFormEditProfile(&form))
 }
