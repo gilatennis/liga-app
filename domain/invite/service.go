@@ -51,7 +51,7 @@ func (s *Service) AcceptLeagueTeamInvite(ctx context.Context, userUUID, leagueUU
 	}
 
 	if league.ParticipationCategory == enums.CATEGORY_PARTICIPATION_TEAMS {
-		if len(team.Players) == 6 {
+		if len(team.Players) == 9 {
 			return &domainErrors.ErrConflict{Message: "jumlah anggota tim sudah mencapai batas maksimal"}
 		}
 	}
