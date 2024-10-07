@@ -60,7 +60,7 @@ func resetDB(db *gorm.DB) func(c *cli.Context) error {
 			&entities.User{},
 			&entities.MagicLinkLogin{},
 			&entities.MagicLinkRegistration{},
-			&entities.Wilayah{},
+			// &entities.Wilayah{},
 			&entities.League{},
 			&entities.LeagueRegistration{},
 			&entities.Team{},
@@ -80,7 +80,7 @@ func resetDB(db *gorm.DB) func(c *cli.Context) error {
 			&entities.User{},
 			&entities.MagicLinkLogin{},
 			&entities.MagicLinkRegistration{},
-			&entities.Wilayah{},
+			// &entities.Wilayah{},
 			&entities.League{},
 			&entities.LeagueRegistration{},
 			&entities.Team{},
@@ -95,6 +95,13 @@ func resetDB(db *gorm.DB) func(c *cli.Context) error {
 		if err != nil {
 			return fmt.Errorf("db.AutoMigrate(...): %w", err)
 		}
+
+		/*
+			err = wilayah.SeedWilayah(db)
+			if err != nil {
+				return fmt.Errorf("wilayah.SeedWilayah(db): %w", err)
+			}
+		*/
 
 		return nil
 	}
