@@ -239,6 +239,8 @@ templ Scripts() {
     function alertHandler(event) {
       const { type, message, redirect } = event.detail
 
+      console.log({ event })
+
       if (type == "success") {
         const hiddenClass = "w-[350px] m-4 alert alert-success transition-all hidden fixed top-20 right-0"
         const showClass = "w-[350px] m-4 alert alert-success transition-all fixed z-20 flex flex-row items-start top-20 right-0"

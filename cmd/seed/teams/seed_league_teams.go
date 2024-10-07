@@ -111,10 +111,12 @@ func createSinglesTeams(league *entities.League, teamCount int) []entities.Team 
 	teams := []entities.Team{}
 	for i := 0; i < teamCount; i++ {
 		u := entities.User{
-			Email:  faker.Email(),
-			Name:   faker.Name(),
-			Phone:  faker.Phonenumber(),
-			Gender: gender,
+			Email:      faker.Email(),
+			Name:       faker.Name(),
+			Phone:      faker.Phonenumber(),
+			Gender:     gender,
+			Province:   "31",
+			IsTestUser: true,
 		}
 
 		t := entities.Team{
@@ -147,17 +149,21 @@ func createDoublesTeams(league *entities.League, teamCount int) []entities.Team 
 	teams := []entities.Team{}
 	for i := 0; i < teamCount; i++ {
 		u1 := entities.User{
-			Email:  faker.Email(),
-			Name:   faker.Name(),
-			Phone:  faker.Phonenumber(),
-			Gender: gender1,
+			Email:      faker.Email(),
+			Name:       faker.Name(),
+			Phone:      faker.Phonenumber(),
+			Gender:     gender1,
+			Province:   "31",
+			IsTestUser: true,
 		}
 
 		u2 := entities.User{
-			Email:  faker.Email(),
-			Name:   faker.Name(),
-			Phone:  faker.Phonenumber(),
-			Gender: gender2,
+			Email:      faker.Email(),
+			Name:       faker.Name(),
+			Phone:      faker.Phonenumber(),
+			Gender:     gender2,
+			Province:   "31",
+			IsTestUser: true,
 		}
 
 		t := entities.Team{
@@ -187,10 +193,12 @@ func createBereguTeams(league *entities.League, teamCount int) []entities.Team {
 		teamMembers := []entities.User{}
 		for j := 0; j < teamMemberCount; j++ {
 			u := entities.User{
-				Email:  faker.Email(),
-				Name:   faker.Name(),
-				Phone:  faker.Phonenumber(),
-				Gender: gender,
+				Email:      faker.Email(),
+				Name:       faker.Name(),
+				Phone:      faker.Phonenumber(),
+				Gender:     gender,
+				Province:   "31",
+				IsTestUser: true,
 			}
 			teamMembers = append(teamMembers, u)
 		}

@@ -17,6 +17,7 @@ type User struct {
 	Ratings           []UserRating `gorm:"ForeignKey:UserUUID"`
 	ProfilePicture    string
 	ProfilePictureURL string `gorm:"-:all"`
+	IsTestUser        bool
 }
 
 func (u *User) GetLatestRatingString() string {
