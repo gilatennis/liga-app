@@ -19,6 +19,7 @@ import (
 	domainLeague "liga-app/domain/league"
 	domainRuleBook "liga-app/domain/rule_book"
 	domainTeam "liga-app/domain/team"
+	domainUser "liga-app/domain/user"
 	domainUserInfo "liga-app/domain/user_info"
 	dbAuth "liga-app/infra/mysql/auth"
 	dbLeague "liga-app/infra/mysql/league"
@@ -88,6 +89,7 @@ func setupHandlers(
 		userStore,
 		mail,
 	)
+	userService := domainUser.NewService(userStore)
 	userInfoService := domainUserInfo.NewService(
 		cfg,
 		wilayahStore,
@@ -107,7 +109,7 @@ func setupHandlers(
 	ruleBookService := domainRuleBook.NewService(gormStore)
 
 	HTMXHandlers := HTMXHandlers{
-		AuthHandler:                auth.NewHandler(cfg, authService),
+		AuthHandler:                auth.NewHandler(cfg, authService, userService),
 		IndexHandler:               index.NewHandler(ruleBookService),
 		InviteHandler:              invite.NewHandler(inviteService, leagueService, teamService),
 		DashboardHandler:           dashboard.NewHandler(userInfoService, leagueService),

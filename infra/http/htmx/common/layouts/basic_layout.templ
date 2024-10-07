@@ -59,9 +59,12 @@ templ BasicLayout(title string) {
       <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-M37PLKWT"
       height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <!-- End Google Tag Manager (noscript) -->
+      @AlertSuccess()
+      @AlertError()
       <div class="container max-w-[80rem] mx-auto grow">
         { children... }
       </div>
+      @Scripts()
       @BasicFooter()
       @ScriptFeatherIcons()
     </body>

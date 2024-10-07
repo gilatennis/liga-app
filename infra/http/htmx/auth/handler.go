@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"liga-app/config"
 	"liga-app/enums"
+	"liga-app/infra/http/htmx/common"
 	"liga-app/infra/http/htmx/common/renderer"
 	iServices "liga-app/interfaces/services"
+	"liga-app/utils"
 	"log"
 	"net/http"
 	"strings"
@@ -21,15 +23,22 @@ import (
 )
 
 type Handler struct {
+	common.BaseHandler
 	cfg         *config.Config
 	authService iServices.IAuthService
+	userService iServices.IUserService
 }
 
-func NewHandler(cfg *config.Config, authService iServices.IAuthService) *Handler {
+func NewHandler(
+	cfg *config.Config,
+	authService iServices.IAuthService,
+	userService iServices.IUserService,
+) *Handler {
 	SetupSocialLoginProviders(cfg)
 	return &Handler{
 		cfg:         cfg,
 		authService: authService,
+		userService: userService,
 	}
 }
 
@@ -155,6 +164,34 @@ func (h *Handler) SubmitLoginForm(c *gin.Context) {
 		c.Render(http.StatusBadRequest, r)
 		return
 	}
+
+	/**
+	 * INFO: for logging in with test users in development environment
+	 * */
+	if utils.IsDevEnv() {
+		user, err := h.userService.GetUserByEmail(c, model.Email)
+		if err != nil {
+			content := LoginForm(model, redirect)
+			r := renderer.New(c.Request.Context(), http.StatusInternalServerError, content)
+			c.Render(http.StatusInternalServerError, r)
+			return
+		}
+
+		if user.IsTestUser {
+			session := sessions.Default(c)
+			session.Set("user_uuid", user.UUID.String())
+			if err := session.Save(); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+
+			h.ResponseSuccessRedirect(c, "login sukses", "/dashboard")
+			content := LoginForm(model, redirect)
+			h.RenderView(c, content)
+			return
+		}
+	}
+	// ----------------------------------
 
 	var magicLinkRedirect *string = nil
 	if redirect != "" {
