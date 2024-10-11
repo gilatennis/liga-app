@@ -3,10 +3,13 @@ package main
 import (
 	"errors"
 	"fmt"
+	"liga-app/cmd/seed/court_time_slots"
 	"liga-app/cmd/seed/leagues"
+	"liga-app/cmd/seed/matches"
 	"liga-app/cmd/seed/teams"
 	"liga-app/config"
 	"liga-app/entities"
+	"liga-app/infra/gsheet"
 	"liga-app/infra/mysql"
 	"log"
 	"os"
@@ -16,7 +19,10 @@ import (
 	"gorm.io/gorm"
 )
 
-var db *gorm.DB
+var (
+	db        *gorm.DB
+	gsheetAPI *gsheet.API
+)
 
 func LoadEnv() error {
 	_, err := os.Stat(".env")
@@ -40,13 +46,18 @@ func init() {
 	}
 
 	// load and validate config
-	config, err := config.NewConfig()
+	cfg, err := config.NewConfig()
 	if err != nil {
 		log.Fatalf("config.NewConfig(): failed to load config: %v", err)
 	}
 
 	// connect to database
-	db, err = mysql.NewGormDB(config)
+	db, err = mysql.NewGormDB(cfg)
+	if err != nil {
+		log.Fatalf("mysql.NewDB(): failed to connect to database: %v", err)
+	}
+
+	gsheetAPI, err = gsheet.NewAPI(cfg)
 	if err != nil {
 		log.Fatalf("mysql.NewDB(): failed to connect to database: %v", err)
 	}
@@ -130,6 +141,21 @@ func main() {
 					},
 				},
 				Action: teams.SeedLeagueTeams(db),
+			},
+			{
+				Name:        "generate-pool-matches",
+				Description: "Generate pool matches",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name: "league-uuid",
+					},
+				},
+				Action: matches.GeneratePoolMatches(db, gsheetAPI),
+			},
+			{
+				Name:        "reset-court-time-slots",
+				Description: "Reset Court Time Slots",
+				Action:      court_time_slots.ResetCourtTimeSlots(db, gsheetAPI),
 			},
 		},
 	}
