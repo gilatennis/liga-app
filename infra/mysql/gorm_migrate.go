@@ -23,6 +23,14 @@ func GormMigrate(db *gorm.DB) error {
 		&entities.RuleBook{},
 		&entities.Match{},
 		&entities.MatchSet{},
+		&entities.Round{},
+		&entities.Venue{},
+		&entities.Court{},
+		&entities.CourtTimeSlot{},
+		&entities.MatchScheduleRequest{},
+		&entities.Group{},
+		&entities.Fixture{},
+		&entities.GroupTeam{},
 	)
 
 	if errMigrate != nil {

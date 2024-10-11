@@ -22,7 +22,8 @@ func NewStore(db *gorm.DB) *Store {
 func (s *Store) Get(ctx context.Context, p *common.Pagination, f *repositories.TeamFilter) ([]entities.Team, int64, error) {
 	teams := []entities.Team{}
 	var count int64
-	db := s.db.WithContext(ctx).
+
+	db := s.db.WithContext(ctx).Session(&gorm.Session{}).
 		Distinct().
 		Preload("Captain").
 		Preload("Players").
@@ -36,10 +37,10 @@ func (s *Store) Get(ctx context.Context, p *common.Pagination, f *repositories.T
 
 	if f != nil {
 		if f.LeagueUUID != nil {
-			db.Where("league_teams.league_uuid = ?", *f.LeagueUUID)
+			db = db.Where("league_teams.league_uuid = ?", *f.LeagueUUID)
 		}
 		if f.PlayerUUID != nil {
-			db.Where("team_players.player_uuid = ?", *f.PlayerUUID)
+			db = db.Where("team_players.player_uuid = ?", *f.PlayerUUID)
 		}
 	}
 
@@ -48,7 +49,23 @@ func (s *Store) Get(ctx context.Context, p *common.Pagination, f *repositories.T
 		return nil, 0, err
 	}
 
-	err = db.Count(&count).Error
+	dbCount := s.db.WithContext(ctx).Debug().
+		Model(&entities.Team{}).
+		Distinct("teams.uuid").
+		Joins("JOIN league_teams ON league_teams.team_uuid = teams.uuid").
+		Joins("JOIN league_registrations lr ON lr.league_uuid = league_teams.league_uuid").
+		Where("lr.payment_status = 'PAID'")
+
+	if f != nil {
+		if f.LeagueUUID != nil {
+			dbCount = dbCount.Where("league_teams.league_uuid = ?", *f.LeagueUUID)
+		}
+		if f.PlayerUUID != nil {
+			dbCount = dbCount.Where("team_players.player_uuid = ?", *f.PlayerUUID)
+		}
+	}
+
+	err = dbCount.Count(&count).Error
 	if err != nil {
 		return nil, 0, err
 	}
