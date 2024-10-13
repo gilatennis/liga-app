@@ -51,6 +51,18 @@ func (h *Handler) GetMatchListPage(c *gin.Context) {
 	p := iCommon.NewPagination(1, 10, []iCommon.OrderBy{{Column: "rounds.number", Direction: "asc"}})
 	f := &services.MatchFilter{}
 
+	matchStatus := c.Query("match_status")
+	matchParticipant := c.Query("match_participant")
+
+	if matchStatus != "" && matchStatus != "ALL" {
+		status := services.MATCH_FILTER_STATUS(matchStatus)
+		f.Status = &status
+	}
+
+	if matchParticipant == "" || matchParticipant == "ME" {
+		f.UserUUID = &user.UUID
+	}
+
 	matches, count, err := h.matchService.Get(c, p, f)
 	if err != nil {
 		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())

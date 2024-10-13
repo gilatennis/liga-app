@@ -37,6 +37,16 @@ func (s *Store) Get(ctx context.Context, p *common.Pagination, f *repositories.M
 		if f.RoundIsBefore != nil {
 			queryDB = queryDB.Where("rounds.start <= ?", f.RoundIsBefore)
 		}
+		if f.UserUUID != nil {
+			queryDB = queryDB.
+				Joins("LEFT JOIN team_players tpa on matches.team_a_uuid = tpa.team_uuid AND tpa.player_uuid = ?", f.UserUUID).
+				Joins("LEFT JOIN team_players tpb on matches.team_b_uuid = tpb.team_uuid AND tpb.player_uuid = ?", f.UserUUID).
+				Where("tpa.player_uuid = ? OR tpb.player_uuid = ?", f.UserUUID, f.UserUUID)
+		}
+
+		if f.Status != nil {
+			queryDB = queryDB.Where("status = ?", *f.Status)
+		}
 	}
 
 	err := queryDB.Debug().

@@ -14,7 +14,7 @@ type MatchFilter struct {
 	RoundIsAfter  *time.Time
 	RoundIsBefore *time.Time
 	UserUUID      *uuid.UUID
-	Status        enums.MATCH_STATUS
+	Status        *enums.MATCH_STATUS
 }
 
 type IMatchRepository interface {
