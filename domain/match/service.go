@@ -1,6 +1,10 @@
 package match
 
 import (
+	"context"
+	"fmt"
+	"liga-app/entities"
+	"liga-app/interfaces/common"
 	iRepo "liga-app/interfaces/repositories"
 	"time"
 
@@ -8,13 +12,27 @@ import (
 )
 
 type Service struct {
-	courtTimeSlotStore iRepo.ICourtTimeSlotRepository
+	matchRepo         iRepo.IMatchRepository
+	courtTimeSlotRepo iRepo.ICourtTimeSlotRepository
 }
 
-func NewService(courtTimeSlotStore iRepo.ICourtTimeSlotRepository) *Service {
+func NewService(
+	matchRepo iRepo.IMatchRepository,
+	courtTimeSlotRepo iRepo.ICourtTimeSlotRepository,
+) *Service {
 	return &Service{
-		courtTimeSlotStore: courtTimeSlotStore,
+		matchRepo:         matchRepo,
+		courtTimeSlotRepo: courtTimeSlotRepo,
 	}
+}
+
+func (s *Service) Get(ctx context.Context, p *common.Pagination, f *iRepo.MatchFilter) ([]entities.Match, int64, error) {
+	matches, count, err := s.matchRepo.Get(ctx, p, f)
+	if err != nil {
+		return nil, 0, fmt.Errorf("s.matchRepo.Get(ctx, p, f) : %w", err)
+	}
+
+	return matches, count, nil
 }
 
 func (s *Service) ProposeMatchSchedule(userUUID uuid.UUID, start time.Time, end time.Time) error {

@@ -53,6 +53,7 @@ func (s *Store) Get(ctx context.Context, p *common.Pagination, f *repositories.T
 		Model(&entities.Team{}).
 		Distinct("teams.uuid").
 		Joins("JOIN league_teams ON league_teams.team_uuid = teams.uuid").
+		Joins("JOIN team_players ON team_players.team_uuid = teams.uuid").
 		Joins("JOIN league_registrations lr ON lr.league_uuid = league_teams.league_uuid").
 		Where("lr.payment_status = 'PAID'")
 

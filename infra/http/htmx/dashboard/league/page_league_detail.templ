@@ -154,7 +154,7 @@ templ PageLeagueDetail(vmodel *VModelPageLeagueDetail) {
               }
             </div>
           }
-          @ComponentCardButton("#") {
+          @ComponentCardButton(fmt.Sprintf("/dashboard/leagues/%s/matches", vmodel.League.UUID)) {
             <div class="grid grid-row-2 gap-4 p-4">
               <div class="flex justify-center text-primary">
                 <i data-feather="list" width="32" height="32"></i>

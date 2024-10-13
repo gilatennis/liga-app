@@ -5,6 +5,7 @@ import (
 	"liga-app/infra/http/htmx/auth"
 	"liga-app/infra/http/htmx/dashboard"
 	dashLeague "liga-app/infra/http/htmx/dashboard/league"
+	dashLeagueMatch "liga-app/infra/http/htmx/dashboard/league/match"
 	dashLeagueTeam "liga-app/infra/http/htmx/dashboard/league/team"
 	dashProfile "liga-app/infra/http/htmx/dashboard/profile"
 	"liga-app/infra/http/htmx/index"
@@ -26,6 +27,7 @@ import (
 	dbCourtTimeSlot "liga-app/infra/mysql/court_time_slot"
 	dbLeague "liga-app/infra/mysql/league"
 	dbLeagueReg "liga-app/infra/mysql/league_registration"
+	dbMatch "liga-app/infra/mysql/match"
 	dbTeam "liga-app/infra/mysql/team"
 	dbUser "liga-app/infra/mysql/user"
 	dbWilayah "liga-app/infra/mysql/wilayah"
@@ -44,13 +46,14 @@ type Handlers struct {
 }
 
 type HTMXHandlers struct {
-	IndexHandler               *index.Handler
-	AuthHandler                *auth.Handler
-	InviteHandler              *invite.Handler
-	DashboardHandler           *dashboard.Handler
-	DashboardLeagueHandler     *dashLeague.Handler
-	DashboardLeagueTeamHandler *dashLeagueTeam.Handler
-	DashboardProfileHandler    *dashProfile.Handler
+	IndexHandler                *index.Handler
+	AuthHandler                 *auth.Handler
+	InviteHandler               *invite.Handler
+	DashboardHandler            *dashboard.Handler
+	DashboardLeagueHandler      *dashLeague.Handler
+	DashboardLeagueTeamHandler  *dashLeagueTeam.Handler
+	DashboardLeagueMatchHandler *dashLeagueMatch.Handler
+	DashboardProfileHandler     *dashProfile.Handler
 }
 
 type JSONHandlers struct {
@@ -85,6 +88,7 @@ func setupHandlers(
 	leagueRegStore := dbLeagueReg.NewStore(db)
 	teamStore := dbTeam.NewStore(db)
 	courtTimeSlotStore := dbCourtTimeSlot.NewStore(db)
+	matchStore := dbMatch.NewStore(db)
 
 	authService := domainAuth.NewService(
 		cfg,
@@ -110,17 +114,17 @@ func setupHandlers(
 	teamService := domainTeam.NewService(cfg, teamStore, minioClient)
 	inviteService := domainInvite.NewService(leagueRegStore, leagueStore, teamStore)
 	ruleBookService := domainRuleBook.NewService(gormStore)
-	matchService := domainMatch.NewService(courtTimeSlotStore)
-	_ = matchService
+	matchService := domainMatch.NewService(matchStore, courtTimeSlotStore)
 
 	HTMXHandlers := HTMXHandlers{
-		AuthHandler:                auth.NewHandler(cfg, authService, userService),
-		IndexHandler:               index.NewHandler(ruleBookService),
-		InviteHandler:              invite.NewHandler(inviteService, leagueService, teamService),
-		DashboardHandler:           dashboard.NewHandler(userInfoService, leagueService),
-		DashboardLeagueHandler:     dashLeague.NewHandler(leagueService, teamService),
-		DashboardLeagueTeamHandler: dashLeagueTeam.NewHandler(leagueService, teamService),
-		DashboardProfileHandler:    dashProfile.NewHandler(userInfoService),
+		AuthHandler:                 auth.NewHandler(cfg, authService, userService),
+		IndexHandler:                index.NewHandler(ruleBookService),
+		InviteHandler:               invite.NewHandler(inviteService, leagueService, teamService),
+		DashboardHandler:            dashboard.NewHandler(userInfoService, leagueService),
+		DashboardLeagueHandler:      dashLeague.NewHandler(leagueService, teamService),
+		DashboardLeagueMatchHandler: dashLeagueMatch.NewHandler(leagueService, matchService),
+		DashboardLeagueTeamHandler:  dashLeagueTeam.NewHandler(leagueService, teamService),
+		DashboardProfileHandler:     dashProfile.NewHandler(userInfoService),
 	}
 
 	JSONHandlers := JSONHandlers{

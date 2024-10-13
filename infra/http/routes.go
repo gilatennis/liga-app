@@ -75,6 +75,10 @@ func setupHtxmRoutes(r *gin.Engine, handlers *Handlers, middlewares *middlewares
 		leagues.GET("/:league_uuid/teams/:team_uuid/edit", handlers.HTMXHandlers.DashboardLeagueTeamHandler.GetTeamEditPage)
 		leagues.PUT("/:league_uuid/teams/:team_uuid/edit", handlers.HTMXHandlers.DashboardLeagueTeamHandler.PutUpdateTeam)
 
+		// league matches
+		leagues.GET("/:league_uuid/matches", handlers.HTMXHandlers.DashboardLeagueMatchHandler.GetMatchListPage)
+		leagues.GET("/:league_uuid/matches/view", handlers.HTMXHandlers.DashboardLeagueMatchHandler.GetMatchListView)
+
 		dashboard.GET("/profile", handlers.HTMXHandlers.DashboardProfileHandler.GetProfileDetailPage)
 		dashboard.GET("/profile/edit", handlers.HTMXHandlers.DashboardProfileHandler.GetProfileEditPage)
 		dashboard.PUT("/profile/edit", handlers.HTMXHandlers.DashboardProfileHandler.PutUpdateProfile)
