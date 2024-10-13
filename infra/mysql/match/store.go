@@ -30,6 +30,15 @@ func (s *Store) Get(ctx context.Context, p *common.Pagination, f *repositories.M
 		queryDB = queryDB.Order(fmt.Sprintf("%s %s", o.Column, o.Direction))
 	}
 
+	if f != nil {
+		if f.RoundIsAfter != nil {
+			queryDB = queryDB.Where("rounds.start >= ?", f.RoundIsAfter)
+		}
+		if f.RoundIsBefore != nil {
+			queryDB = queryDB.Where("rounds.start <= ?", f.RoundIsBefore)
+		}
+	}
+
 	err := queryDB.Debug().
 		Preload("League").Preload("TeamA").Preload("TeamB").Preload("Round").
 		Offset(p.Offset).

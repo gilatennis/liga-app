@@ -3,13 +3,18 @@ package repositories
 import (
 	"context"
 	"liga-app/entities"
+	"liga-app/enums"
 	"liga-app/interfaces/common"
+	"time"
 
 	"github.com/google/uuid"
 )
 
 type MatchFilter struct {
-	TeamUUID *uuid.UUID
+	RoundIsAfter  *time.Time
+	RoundIsBefore *time.Time
+	UserUUID      *uuid.UUID
+	Status        enums.MATCH_STATUS
 }
 
 type IMatchRepository interface {

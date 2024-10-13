@@ -6,6 +6,7 @@ import (
 	"liga-app/cmd/seed/court_time_slots"
 	"liga-app/cmd/seed/leagues"
 	"liga-app/cmd/seed/matches"
+	"liga-app/cmd/seed/round_schedule"
 	"liga-app/cmd/seed/teams"
 	"liga-app/config"
 	"liga-app/entities"
@@ -151,6 +152,11 @@ func main() {
 					},
 				},
 				Action: matches.GeneratePoolMatches(db, gsheetAPI),
+			},
+			{
+				Name:        "reset-round-schedules",
+				Description: "Reset round schedules",
+				Action:      round_schedule.ResetRoundSchedules(db, gsheetAPI),
 			},
 			{
 				Name:        "reset-court-time-slots",

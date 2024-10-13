@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"liga-app/infra/http/htmx/common"
 	iCommon "liga-app/interfaces/common"
-	"liga-app/interfaces/repositories"
 	"liga-app/interfaces/services"
 	"net/http"
 	"strconv"
@@ -50,7 +49,7 @@ func (h *Handler) GetMatchListPage(c *gin.Context) {
 	}
 
 	p := iCommon.NewPagination(1, 10, []iCommon.OrderBy{{Column: "rounds.number", Direction: "asc"}})
-	f := &repositories.MatchFilter{}
+	f := &services.MatchFilter{}
 
 	matches, count, err := h.matchService.Get(c, p, f)
 	if err != nil {
@@ -73,7 +72,7 @@ func (h *Handler) GetMatchListPage(c *gin.Context) {
 }
 
 func (h *Handler) GetMatchListView(c *gin.Context) {
-	_, err := h.GetAuthenticatedUser(c)
+	user, err := h.GetAuthenticatedUser(c)
 	if err != nil {
 		h.RenderErrorPage(c, http.StatusUnauthorized, err.Error())
 		return
@@ -92,9 +91,20 @@ func (h *Handler) GetMatchListView(c *gin.Context) {
 	if pageStr != "" {
 		page, _ = strconv.Atoi(pageStr)
 	}
-
 	p := iCommon.NewPagination(page, 10, []iCommon.OrderBy{{Column: "rounds.number", Direction: "asc"}})
-	f := &repositories.MatchFilter{}
+	f := &services.MatchFilter{}
+
+	matchStatus := c.Query("match_status")
+	matchParticipant := c.Query("match_participant")
+
+	if matchStatus != "" && matchStatus != "ALL" {
+		status := services.MATCH_FILTER_STATUS(matchStatus)
+		f.Status = &status
+	}
+
+	if matchParticipant == "ME" {
+		f.UserUUID = &user.UUID
+	}
 
 	matches, count, err := h.matchService.Get(c, p, f)
 	if err != nil {
