@@ -27,7 +27,6 @@ script onOptionChange() {
   const target = "#view-match-list"
   const event = "refetch-list"
   htmx.trigger(target, event)
-  // htmx.trigger("#" + tableID, event)
 }
 
 templ ViewFilterMatchList() {
@@ -60,6 +59,7 @@ templ ViewFilterMatchList() {
       Label: "Peserta Pertandingan",
       Name: "match_participant",
       SelectedValue: "ME",
+      JS_OnChange: onOptionChange(),
       Options: []components.InputSelectOption{
         {
           Text: "Semua",

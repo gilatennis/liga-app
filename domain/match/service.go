@@ -43,10 +43,12 @@ func (s *Service) Get(ctx context.Context, p *common.Pagination, f *iService.Mat
 				repoFilter.RoundIsAfter = &startOfWeek
 
 			case iService.MATCH_FILTER_STATUS_COMPLETED:
-				repoFilter.Status = enums.MATCH_STATUS_COMPLETED
+				status := enums.MATCH_STATUS_COMPLETED
+				repoFilter.Status = &status
 
 			case iService.MATCH_FILTER_STATUS_OVERDUE:
-				repoFilter.Status = enums.MATCH_STATUS_WAITING
+				status := enums.MATCH_STATUS_WAITING
+				repoFilter.Status = &status
 				repoFilter.RoundIsBefore = &startOfWeek
 
 			}
