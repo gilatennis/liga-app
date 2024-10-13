@@ -1,0 +1,155 @@
+package match
+
+import (
+  "liga-app/infra/http/htmx/common/layouts"
+  // "liga-app/infra/http/htmx/common/components"
+  "liga-app/infra/http/htmx/dashboard/league"
+  "liga-app/entities"
+  // "liga-app/enums"
+  "strconv"
+	"github.com/google/uuid"
+  "fmt"
+	"liga-app/infra/http/htmx/common/components"
+)
+
+templ PageMatchList(vmodel *VModelPageMatchList) {
+  @layouts.DashboardLayout("Tim", vmodel.User, layouts.FOOTER_MENU_LEAGUE) {
+    <div class="space-y-8">
+      @league.ViewLeagueDetail(vmodel.League, false)
+      @components.PageHeader("Daftar Pertandingan")
+      @ViewFilterMatchList()
+      @ViewMatchList(vmodel.League.UUID, vmodel.Matches, vmodel.MatchesNextPage)
+    </div>
+  }
+}
+
+script onOptionChange() {
+  const target = "#view-match-list"
+  const event = "refetch-list"
+  htmx.trigger(target, event)
+  // htmx.trigger("#" + tableID, event)
+}
+
+templ ViewFilterMatchList() {
+  <div id="filter-match-list" class="flex flex-row space-x-4">
+    @components.InputSelect(components.InputSelectParams{
+      Label: "Status Pertandingan",
+      Name: "match_status",
+      SelectedValue: "ALL",
+      JS_OnChange: onOptionChange(),
+      Options: []components.InputSelectOption{
+        {
+          Text: "Semua",
+          Value: "ALL",
+        },
+        {
+          Text: "Akan Datang",
+          Value: "UPCOMING",
+        },
+        {
+          Text: "Selesai",
+          Value: "COMPLETED",
+        },
+        {
+          Text: "Overdue",
+          Value: "OVERDUE",
+        },
+      },
+    })
+    @components.InputSelect(components.InputSelectParams{
+      Label: "Peserta Pertandingan",
+      Name: "match_participant",
+      SelectedValue: "MY_MATCHES",
+      Options: []components.InputSelectOption{
+        {
+          Text: "Semua",
+          Value: "ALL",
+        },
+        {
+          Text: "Pertandingan Saya",
+          Value: "MY_MATCHES",
+        },
+      },
+    })
+  </div>
+}
+
+func urlGetMatchListView(leagueUUID uuid.UUID) string {
+  return fmt.Sprintf("/dashboard/leagues/%s/matches/view", leagueUUID)
+}
+
+func urlLoadMoreMatches(leagueUUID uuid.UUID, page int) string {
+  return fmt.Sprintf("/dashboard/leagues/%s/matches/view?page=%d", leagueUUID, page)
+}
+
+templ ViewMatchList(leagueUUID uuid.UUID, matches []entities.Match, nextPage int) {
+  <div
+    class="space-y-4"
+    id="view-match-list"
+    hx-trigger="refetch-list"
+    hx-get={urlGetMatchListView(leagueUUID)}
+    hx-include="#filter-match-list"
+    hx-swap="outerHTML"
+  >
+    for _, m := range matches {
+      <div class="card w-auto shadow-xl">
+        <div class="p-4 space-y-4">
+          <div class="flex flex-row">
+            <div class="flex-1 text-left text-primary font-bold">{m.Status}</div>
+            <div class="flex-1 text-left text-secondary font-bold">Pertandingan ke {strconv.Itoa(m.Round.Number)}</div>
+          </div>
+          <div class="flex flex-row justify-between space-x-6 items-center">
+            <div class="flex-3 text-sm">{m.TeamA.Name}</div>
+            <div class="flex-1">VS</div>
+            <div class="flex-3 text-sm">{m.TeamB.Name}</div>
+          </div>
+        </div>
+      </div>
+    }
+    if nextPage > 0 {
+      <div id="load-more-replace"> 
+        <button
+          class="btn btn-primary"
+          hx-get={urlLoadMoreMatches(leagueUUID, nextPage)}
+          hx-target="#load-more-replace"
+          hx-swap="outerHTML"
+          hx-include=""
+        >
+          Load More
+        </button>
+      </div>
+    }
+  </div>
+
+}
+
+templ ViewMoreMatches(leagueUUID uuid.UUID, matches []entities.Match, nextPage int) {
+  for _, m := range matches {
+    <div class="card w-auto shadow-xl">
+      <div class="p-4 space-y-4">
+        <div class="flex flex-row">
+          <div class="flex-1 text-left text-primary font-bold">{m.Status}</div>
+          <div class="flex-1 text-left text-secondary font-bold">Pertandingan ke {strconv.Itoa(m.Round.Number)}</div>
+        </div>
+        <div class="flex flex-row justify-between space-x-6 items-center">
+          <div class="flex-3 text-sm">{m.TeamA.Name}</div>
+          <div class="flex-1">VS</div>
+          <div class="flex-3 text-sm">{m.TeamB.Name}</div>
+        </div>
+      </div>
+    </div>
+  }
+  if nextPage > 0 {
+    <div id="load-more-replace"> 
+      <button
+        class="btn btn-primary"
+        hx-get={urlLoadMoreMatches(leagueUUID, nextPage)}
+        hx-target="#load-more-replace"
+        hx-swap="outerHTML"
+        hx-include=""
+      >
+        Load More
+      </button>
+    </div>
+  }
+}
