@@ -6,6 +6,7 @@ import (
 	"liga-app/config"
 	"liga-app/infra/gsheet/court_time_slot"
 	"liga-app/infra/gsheet/drawings"
+	"liga-app/infra/gsheet/round_schedule"
 
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
@@ -15,6 +16,7 @@ import (
 type API struct {
 	CourtTimeSlot *court_time_slot.API
 	Drawings      *drawings.API
+	RoundSchedule *round_schedule.API
 }
 
 func NewAPI(cfg *config.Config) (*API, error) {
@@ -25,10 +27,12 @@ func NewAPI(cfg *config.Config) (*API, error) {
 
 	apiCourtTimeSlot := court_time_slot.NewAPI(srv)
 	apiDrawings := drawings.NewAPI(srv)
+	apiRoundSchedule := round_schedule.NewAPI(srv)
 
 	return &API{
 		CourtTimeSlot: apiCourtTimeSlot,
 		Drawings:      apiDrawings,
+		RoundSchedule: apiRoundSchedule,
 	}, nil
 }
 
