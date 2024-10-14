@@ -18,7 +18,7 @@ func NewAPI(srv *sheets.Service) *API {
 	return &API{srv: srv}
 }
 
-func (a *API) GetByCourtSlug(ctx context.Context, slug string, rangeStart time.Time, rangeEnd time.Time) ([]entities.CourtTimeSlot, error) {
+func (a *API) GetByCourtSlug(ctx context.Context, slug string) ([]entities.CourtTimeSlot, error) {
 	// Prints the names and majors of students in a sample spreadsheet:
 	// https://docs.google.com/spreadsheets/d/16Sbt3gsI1fsKQMFCVmjf1qnVwbBfc5UDZanOITI9bqE/edit?gid=0#gid=0
 	spreadsheetId := "16Sbt3gsI1fsKQMFCVmjf1qnVwbBfc5UDZanOITI9bqE"
@@ -41,6 +41,10 @@ func (a *API) GetByCourtSlug(ctx context.Context, slug string, rangeStart time.T
 			courtSlug := row[0].(string)
 			timeStartStr := row[1].(string)
 			timeEndStr := row[2].(string)
+
+			if courtSlug != slug {
+				continue
+			}
 
 			timeStart, err := time.Parse(time.RFC3339, timeStartStr)
 			if err != nil {

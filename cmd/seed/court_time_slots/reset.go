@@ -31,42 +31,78 @@ func ResetCourtTimeSlots(db *gorm.DB, gsheetAPI *gsheet.API) func(c *cli.Context
 
 		tx := db.WithContext(c.Context).Begin()
 
-		err = tx.Delete(&entities.CourtTimeSlot{}, "court_uuid = ?", courtA.UUID).Error
+		err = tx.Unscoped().Delete(&entities.CourtTimeSlot{}, "court_uuid = ?", courtA.UUID).Error
 		if err != nil {
 			return fmt.Errorf("tx.Delete(&entities.CourtTimeSlot{}, \"court_uuid = ?\", courtA.UUID).Error : %w", err)
 		}
 
-		err = tx.Delete(&entities.CourtTimeSlot{}, "court_uuid = ?", courtB.UUID).Error
+		err = tx.Unscoped().Delete(&entities.CourtTimeSlot{}, "court_uuid = ?", courtB.UUID).Error
 		if err != nil {
 			return fmt.Errorf("tx.Delete(&entities.CourtTimeSlot{}, \"court_uuid = ?\", courtB.UUID).Error : %w", err)
 		}
 
-		rangeStart := "2024-11-01T00:00:00+07:00"
-		rangeEnd := "2024-12-30T23:59:59+07:00"
-		timeRangeStart, _ := time.Parse(time.RFC3339, rangeStart)
-		timeRangeEnd, _ := time.Parse(time.RFC3339, rangeEnd)
+		// rangeStart := "2024-11-01T00:00:00+07:00"
+		// rangeEnd := "2024-12-30T23:59:59+07:00"
+		// timeRangeStart, _ := time.Parse(time.RFC3339, rangeStart)
+		// timeRangeEnd, _ := time.Parse(time.RFC3339, rangeEnd)
 
-		timeslotsCourtA, err := gsheetAPI.CourtTimeSlot.GetByCourtSlug(c.Context, slugCourtA, timeRangeStart, timeRangeEnd)
+		timeslotsCourtA, err := gsheetAPI.CourtTimeSlot.GetByCourtSlug(c.Context, slugCourtA)
 		if err != nil {
 			return fmt.Errorf("gsheetAPI.CourtTimeSlot.GetByCourtSlug(slugCourtA, ...): %w", err)
 		}
 
-		for i, t := range timeslotsCourtA {
-			t.CourtUUID = courtA.UUID
-			timeslotsCourtA[i] = t
-		}
-
-		timeslotsCourtB, err := gsheetAPI.CourtTimeSlot.GetByCourtSlug(c.Context, slugCourtB, timeRangeStart, timeRangeEnd)
+		timeslotsCourtB, err := gsheetAPI.CourtTimeSlot.GetByCourtSlug(c.Context, slugCourtB)
 		if err != nil {
 			return fmt.Errorf("gsheetAPI.CourtTimeSlot.GetByCourtSlug(slugCourtB, ...): %w", err)
 		}
 
-		for i, t := range timeslotsCourtB {
-			t.CourtUUID = courtA.UUID
-			timeslotsCourtB[i] = t
+		const SLOT_DURATION time.Duration = 40 * time.Minute
+
+		timeslots := []entities.CourtTimeSlot{}
+
+		for _, t := range timeslotsCourtA {
+			// INFO: divide time slots by 40 minutes
+
+			totalDuration := t.End.Sub(t.Start)
+			slots := int(totalDuration / SLOT_DURATION)
+
+			start := t.Start
+			for i := 0; i < slots; i++ {
+				end := start.Add(SLOT_DURATION)
+				ts := entities.CourtTimeSlot{
+					CourtUUID: courtA.UUID,
+					Start:     start,
+					End:       end,
+				}
+				start = end
+
+				timeslots = append(timeslots, ts)
+			}
 		}
 
-		timeslots := append(timeslotsCourtA, timeslotsCourtB...)
+		for _, t := range timeslotsCourtB {
+			// INFO: divide time slots by 40 minutes
+
+			totalDuration := t.End.Sub(t.Start)
+			slots := int(totalDuration / SLOT_DURATION)
+
+			start := t.Start
+			for i := 0; i < slots; i++ {
+				end := start.Add(SLOT_DURATION)
+				ts := entities.CourtTimeSlot{
+					CourtUUID: courtB.UUID,
+					Start:     start,
+					End:       end,
+				}
+				start = end
+
+				timeslots = append(timeslots, ts)
+			}
+		}
+
+		for _, ts := range timeslots {
+			fmt.Printf("Court UUID: %s - Start: %s - End: %s \n", ts.CourtUUID, ts.Start.String(), ts.End.String())
+		}
 
 		err = tx.Omit(clause.Associations).Create(timeslots).Error
 		if err != nil {
