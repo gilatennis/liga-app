@@ -90,6 +90,10 @@ type Config struct {
 		ApiKey       string `yaml:"api_key"`
 		MerchantCode string `yaml:"merchant_code"`
 	} `yaml:"duitku"`
+
+	Google struct {
+		ServiceAccountCreds string `yaml:"service_account_creds"`
+	} `yaml:"google"`
 }
 
 func getConfigPath() string {

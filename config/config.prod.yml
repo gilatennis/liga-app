@@ -73,4 +73,5 @@ duitku:
   api_key: $DUITKU_API_KEY
   merchant_code: D14653
 
-
+google:
+  service_account_creds: $GOOGLE_SERVICE_ACCOUNT_CREDS

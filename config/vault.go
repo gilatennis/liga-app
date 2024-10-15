@@ -21,6 +21,7 @@ var SECRET_PATHS = []string{
 	"minio",
 	"oauth",
 	"redis",
+	"google",
 }
 
 func LoadVaultSecrets(mountPath string) (map[string]interface{}, error) {
