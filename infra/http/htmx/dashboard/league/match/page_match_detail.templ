@@ -1,0 +1,73 @@
+package match
+
+import (
+  "liga-app/infra/http/htmx/common/layouts"
+  // "liga-app/infra/http/htmx/common/components"
+  "liga-app/infra/http/htmx/dashboard/league"
+  // "liga-app/entities"
+  // "liga-app/enums"
+  "strconv"
+	// "github.com/google/uuid"
+  "fmt"
+	"liga-app/infra/http/htmx/common/components"
+	"liga-app/entities"
+  "time"
+	"liga-app/enums"
+)
+
+templ PageMatchDetail(vmodel VModelPageMatchDetail) {
+  @layouts.DashboardLayout("Tim", vmodel.User, layouts.FOOTER_MENU_LEAGUE) {
+    <div class="space-y-8">
+      @league.ViewLeagueDetail(vmodel.League, false)
+      @components.PageHeader("Detail Pertandingan")
+      @ViewMatchDetail(vmodel)
+    </div>
+  }
+}
+
+templ ViewMatchDetail(vmodel VModelPageMatchDetail) {
+  <div class="card w-auto shadow-xl">
+    <div class="p-4 space-y-4">
+      <div class="flex flex-row">
+        <div class="flex-1 text-left text-primary font-bold">{vmodel.Match.FilterStatus}</div>
+        <div class="flex-1 text-left text-secondary font-bold">Pertandingan ke {strconv.Itoa(vmodel.Match.Round.Number)}</div>
+      </div>
+      <div class="flex flex-row justify-between space-x-6 items-center">
+        <div class="flex-3 text-sm">{vmodel.Match.TeamA.Name}</div>
+        <div class="flex-1">VS</div>
+        <div class="flex-3 text-sm">{vmodel.Match.TeamB.Name}</div>
+      </div>
+      if IsMatchScheduleable(vmodel.Match) {
+        <div class="pt-4">
+          <a hx-boost="false" href={hrefScheduleMatch(vmodel.Match)} class="btn btn-primary w-full">
+            Atur Jadwal Pertandingan
+          </a>
+        </div>
+      }
+    </div>
+  </div>
+}
+
+func hrefScheduleMatch(m *entities.Match) templ.SafeURL {
+  return templ.URL(fmt.Sprintf("/dashboard/leagues/%s/matches/%s/schedule/venues", m.LeagueUUID, m.UUID))
+}
+
+func IsMatchScheduleable(match *entities.Match) bool {
+  return match.Status == string(enums.MATCH_STATUS_WAITING) &&
+    match.TimeStart == nil &&
+    (IsCurrentRound(match) || IsPreviousRound(match))
+}
+
+func IsCurrentRound(match *entities.Match) bool {
+  if match.Round.Start == nil || match.Round.End == nil {
+    return false
+  }
+  return time.Now().After(*match.Round.Start) && time.Now().Before(*match.Round.End)
+}
+
+func IsPreviousRound(match *entities.Match) bool {
+  if match.Round.Start == nil || match.Round.End == nil {
+    return false
+  }
+  return match.Round.End.Before(time.Now())
+}

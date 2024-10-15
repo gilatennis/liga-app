@@ -7,6 +7,7 @@ import (
 	"liga-app/interfaces/common"
 	"liga-app/interfaces/repositories"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -69,4 +70,18 @@ func (s *Store) Get(ctx context.Context, p *common.Pagination, f *repositories.M
 	fmt.Println("store : count : ", count)
 
 	return matches, count, nil
+}
+
+func (s *Store) GetByUUID(ctx context.Context, matchUUID uuid.UUID) (*entities.Match, error) {
+	match := entities.Match{}
+
+	err := s.db.Where("uuid = ?", matchUUID).
+		Preload("League").Preload("TeamA").
+		Preload("TeamB").Preload("Round").
+		First(&match).Error
+	if err != nil {
+		return nil, fmt.Errorf("s.db.Where(\"uuid = ?\", matchUUID=%s).First(&match).Error : %w", matchUUID, err)
+	}
+
+	return &match, nil
 }

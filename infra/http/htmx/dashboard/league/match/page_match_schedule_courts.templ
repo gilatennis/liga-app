@@ -1,0 +1,55 @@
+package match
+
+import (
+  "liga-app/infra/http/htmx/common/layouts"
+  // "liga-app/infra/http/htmx/common/components"
+  "liga-app/infra/http/htmx/dashboard/league"
+  // "liga-app/entities"
+  // "liga-app/enums"
+  // "strconv"
+	"github.com/google/uuid"
+  "fmt"
+	"liga-app/infra/http/htmx/common/components"
+	"liga-app/entities"
+)
+
+templ PageMatchScheduleCourts(vmodel VModelPageMatchScheduleCourts) {
+  @layouts.DashboardLayout("Tim", vmodel.User, layouts.FOOTER_MENU_LEAGUE) {
+    <div class="space-y-8">
+      @league.ViewLeagueDetail(vmodel.League, false)
+      @components.PageHeader("Pilih Lapangan")
+      <div>
+        <h1 class="text-xl font-bold">{vmodel.Venue.Name}</h1>
+        <p>{vmodel.Venue.Address}</p>
+      </div>
+      @ViewCourtList(vmodel)
+    </div>
+  }
+}
+
+templ ViewCourtList(vmodel VModelPageMatchScheduleCourts) {
+  <div class="flex flex-col space-y-8">
+    for _, c := range vmodel.Venue.Courts {
+      @ViewCourtCard(vmodel.League.UUID, vmodel.Match.UUID, vmodel.Venue.UUID, &c)
+    }
+  </div>
+}
+
+templ ViewCourtCard(leagueUUID, matchUUID, venueUUID uuid.UUID, court *entities.Court) {
+  <a hx-boost="false" href={hrefSelectCourtDays(leagueUUID, matchUUID, venueUUID, court.UUID)}>
+    <div class="card h-24 card-side bg-base-100 shadow-xl w-auto">
+      <figure>
+        <img class="h-full object-cover" src={court.Image} alt={court.Name} />
+      </figure>
+      <div class="p-4">
+        <h2 class="card-title">{court.Name}</h2>
+      </div>
+    </div>
+  </a>
+}
+
+func hrefSelectCourtDays(leagueUUID, matchUUID, venueUUID, courtUUID uuid.UUID) templ.SafeURL {
+  return templ.URL(fmt.Sprintf("/dashboard/leagues/%s/matches/%s/schedule/venues/%s/courts/%s/days",
+    leagueUUID, matchUUID, venueUUID, courtUUID,
+  ))
+}

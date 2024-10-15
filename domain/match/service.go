@@ -61,16 +61,20 @@ func (s *Service) Get(ctx context.Context, p *common.Pagination, f *iService.Mat
 	}
 
 	for i, m := range matches {
-		if m.Round.End != nil && startOfWeek.Before(*m.Round.End) && m.Status == string(enums.MATCH_STATUS_WAITING) {
-			m.FilterStatus = string(iService.MATCH_FILTER_STATUS_UPCOMING)
-			matches[i] = m
-		} else if m.Round.End != nil && startOfWeek.After(*m.Round.End) && m.Status == string(enums.MATCH_STATUS_WAITING) {
-			m.FilterStatus = string(iService.MATCH_FILTER_STATUS_OVERDUE)
-			matches[i] = m
-		} else {
-			m.FilterStatus = string(m.Status)
-			matches[i] = m
-		}
+		s.setMatchFilterStatus(&m)
+		matches[i] = m
+		/*
+			if m.Round.End != nil && startOfWeek.Before(*m.Round.End) && m.Status == string(enums.MATCH_STATUS_WAITING) {
+				m.FilterStatus = string(iService.MATCH_FILTER_STATUS_UPCOMING)
+				matches[i] = m
+			} else if m.Round.End != nil && startOfWeek.After(*m.Round.End) && m.Status == string(enums.MATCH_STATUS_WAITING) {
+				m.FilterStatus = string(iService.MATCH_FILTER_STATUS_OVERDUE)
+				matches[i] = m
+			} else {
+				m.FilterStatus = string(m.Status)
+				matches[i] = m
+			}
+		*/
 	}
 
 	return matches, count, nil
@@ -82,6 +86,28 @@ func (s *Service) getStartOfWeek() time.Time {
 	thisWeek := utils.GetCurrentWeek(loc)
 	monday := utils.FirstDayOfISOWeek(thisYear, thisWeek, loc)
 	return monday
+}
+
+func (s *Service) setMatchFilterStatus(m *entities.Match) {
+	startOfWeek := s.getStartOfWeek()
+	if m.Round.End != nil && startOfWeek.Before(*m.Round.End) && m.Status == string(enums.MATCH_STATUS_WAITING) {
+		m.FilterStatus = string(iService.MATCH_FILTER_STATUS_UPCOMING)
+	} else if m.Round.End != nil && startOfWeek.After(*m.Round.End) && m.Status == string(enums.MATCH_STATUS_WAITING) {
+		m.FilterStatus = string(iService.MATCH_FILTER_STATUS_OVERDUE)
+	} else {
+		m.FilterStatus = string(m.Status)
+	}
+}
+
+func (s *Service) GetByUUID(ctx context.Context, matchUUID uuid.UUID) (*entities.Match, error) {
+	match, err := s.matchRepo.GetByUUID(ctx, matchUUID)
+	if err != nil {
+		return nil, fmt.Errorf("s.matchRepo.GetByUUID(ctx, matchUUID=%s): %w", matchUUID, err)
+	}
+
+	s.setMatchFilterStatus(match)
+
+	return match, nil
 }
 
 func (s *Service) ProposeMatchSchedule(userUUID uuid.UUID, start time.Time, end time.Time) error {
