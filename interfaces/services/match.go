@@ -23,4 +23,5 @@ type MatchFilter struct {
 
 type IMatchService interface {
 	Get(ctx context.Context, p *common.Pagination, f *MatchFilter) ([]entities.Match, int64, error)
+	GetByUUID(ctx context.Context, matchUUID uuid.UUID) (*entities.Match, error)
 }

@@ -131,17 +131,23 @@ templ ViewMoreMatches(leagueUUID uuid.UUID, matches []entities.Match, nextPage i
 }
 
 templ ViewMatchCard(m entities.Match) {
-  <div class="card w-auto shadow-xl">
-    <div class="p-4 space-y-4">
-      <div class="flex flex-row">
-        <div class="flex-1 text-left text-primary font-bold">{m.FilterStatus}</div>
-        <div class="flex-1 text-left text-secondary font-bold">Pertandingan ke {strconv.Itoa(m.Round.Number)}</div>
-      </div>
-      <div class="flex flex-row justify-between space-x-6 items-center">
-        <div class="flex-3 text-sm">{m.TeamA.Name}</div>
-        <div class="flex-1">VS</div>
-        <div class="flex-3 text-sm">{m.TeamB.Name}</div>
+  <a hx-boost="false" href={hrefMatchDetail(m.LeagueUUID, m.UUID)}>
+    <div class="card w-auto shadow-xl">
+      <div class="p-4 space-y-4">
+        <div class="flex flex-row">
+          <div class="flex-1 text-left text-primary font-bold">{m.FilterStatus}</div>
+          <div class="flex-1 text-left text-secondary font-bold">Pertandingan ke {strconv.Itoa(m.Round.Number)}</div>
+        </div>
+        <div class="flex flex-row justify-between space-x-6 items-center">
+          <div class="flex-3 text-sm">{m.TeamA.Name}</div>
+          <div class="flex-1">VS</div>
+          <div class="flex-3 text-sm">{m.TeamB.Name}</div>
+        </div>
       </div>
     </div>
-  </div>
+  </a>
+}
+
+func hrefMatchDetail(leagueUUID uuid.UUID, matchUUID uuid.UUID) templ.SafeURL {
+  return templ.URL(fmt.Sprintf("/dashboard/leagues/%s/matches/%s", leagueUUID, matchUUID))
 }

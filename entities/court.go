@@ -9,4 +9,5 @@ type Court struct {
 	Name      string
 	Slug      string
 	TimeSlots []CourtTimeSlot `gorm:"ForeignKey:CourtUUID"`
+	Image     string
 }

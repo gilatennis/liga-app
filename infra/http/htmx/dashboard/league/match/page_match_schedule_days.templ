@@ -1,0 +1,44 @@
+package match
+
+import (
+  "liga-app/infra/http/htmx/common/layouts"
+  // "liga-app/infra/http/htmx/common/components"
+  "liga-app/infra/http/htmx/dashboard/league"
+  // "liga-app/entities"
+  // "liga-app/enums"
+  // "strconv"
+	// "github.com/google/uuid"
+  // "fmt"
+	"liga-app/infra/http/htmx/common/components"
+	// "liga-app/entities"
+  // "time"
+	// "liga-app/enums"
+	// "github.com/google/uuid"
+)
+
+templ PageMatchScheduleDays(vmodel VModelPageMatchScheduleDays) {
+  @layouts.DashboardLayout("Pilih Venue", vmodel.User, layouts.FOOTER_MENU_LEAGUE) {
+    <div class="space-y-8">
+      @league.ViewLeagueDetail(vmodel.League, false)
+      @components.PageHeader("Pilih Hari Bertanding")
+      <div>
+        <h1 class="text-xl font-bold">{vmodel.Venue.Name}</h1>
+        <p>{vmodel.Venue.Address}</p>
+        <h2 class="text-lg font-bold mt-4">{vmodel.Court.Name}</h2>
+      </div>
+      @ViewSelectDays(vmodel)
+    </div>
+  }
+}
+
+templ ViewSelectDays(vmodel VModelPageMatchScheduleDays) {
+  <div class="flex flex-col space-y-8">
+    for _, d := range vmodel.AvailableDays {
+      <div class="card w-auto shadow-xl ">
+        <div class="p-4">
+          {d.String()}
+        </div>
+      </div>
+    }
+  </div>
+}

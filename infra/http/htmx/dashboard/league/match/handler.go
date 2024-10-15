@@ -4,26 +4,34 @@ import (
 	"fmt"
 	"liga-app/infra/http/htmx/common"
 	iCommon "liga-app/interfaces/common"
+	"liga-app/interfaces/repositories"
 	"liga-app/interfaces/services"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/k0kubun/pp"
 )
 
 type Handler struct {
 	common.BaseHandler
 	leagueService services.ILeagueService
 	matchService  services.IMatchService
+	venueService  services.IVenueService
+	courtService  services.ICourtService
 }
 
 func NewHandler(
 	leagueService services.ILeagueService,
 	matchService services.IMatchService,
+	venueService services.IVenueService,
+	courtService services.ICourtService,
 ) *Handler {
 	return &Handler{
 		leagueService: leagueService,
 		matchService:  matchService,
+		venueService:  venueService,
+		courtService:  courtService,
 	}
 }
 
@@ -139,4 +147,190 @@ func (h *Handler) GetMatchListView(c *gin.Context) {
 		h.RenderView(c, view)
 		return
 	}
+}
+
+func (h *Handler) GetMatchDetailPage(c *gin.Context) {
+	user, err := h.GetAuthenticatedUser(c)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	params, err := h.GetURLUUIDParams(c, []string{"league_uuid", "match_uuid"})
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	leagueUUID, matchUUID := params[0], params[1]
+
+	league, err := h.leagueService.GetByUUID(c, leagueUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	match, err := h.matchService.GetByUUID(c, matchUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	vmodel := VModelPageMatchDetail{
+		User:   user,
+		League: league,
+		Match:  match,
+	}
+
+	page := PageMatchDetail(vmodel)
+	h.RenderView(c, page)
+}
+
+func (h *Handler) GetMatchScheduleVenueListPage(c *gin.Context) {
+	user, err := h.GetAuthenticatedUser(c)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	params, err := h.GetURLUUIDParams(c, []string{"league_uuid", "match_uuid"})
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	leagueUUID, matchUUID := params[0], params[1]
+
+	league, err := h.leagueService.GetByUUID(c, leagueUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	match, err := h.matchService.GetByUUID(c, matchUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	p := iCommon.NewPagination(1, 10, []iCommon.OrderBy{{Column: "rounds.number", Direction: "asc"}})
+	f := &repositories.VenueFilter{}
+	venues, _, err := h.venueService.Get(c, p, f)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	vmodel := VModelPageMatchScheduleVenues{
+		User:   user,
+		League: league,
+		Match:  match,
+		Venues: venues,
+	}
+
+	page := PageMatchScheduleVenues(vmodel)
+	h.RenderView(c, page)
+}
+
+func (h *Handler) GetMatchScheduleCourtListPage(c *gin.Context) {
+	user, err := h.GetAuthenticatedUser(c)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	params, err := h.GetURLUUIDParams(c, []string{"league_uuid", "match_uuid", "venue_uuid"})
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	leagueUUID, matchUUID, venueUUID := params[0], params[1], params[2]
+
+	league, err := h.leagueService.GetByUUID(c, leagueUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	match, err := h.matchService.GetByUUID(c, matchUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	venue, err := h.venueService.GetByUUID(c, venueUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	vmodel := VModelPageMatchScheduleCourts{
+		User:   user,
+		League: league,
+		Match:  match,
+		Venue:  venue,
+	}
+
+	page := PageMatchScheduleCourts(vmodel)
+	h.RenderView(c, page)
+}
+
+func (h *Handler) GetMatchScheduleCourtDaysPage(c *gin.Context) {
+	user, err := h.GetAuthenticatedUser(c)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	params, err := h.GetURLUUIDParams(c, []string{"league_uuid", "match_uuid", "venue_uuid", "court_uuid"})
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	leagueUUID, matchUUID, venueUUID, courtUUID := params[0], params[1], params[2], params[3]
+
+	league, err := h.leagueService.GetByUUID(c, leagueUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	match, err := h.matchService.GetByUUID(c, matchUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	venue, err := h.venueService.GetByUUID(c, venueUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	court, err := h.courtService.GetByUUID(c, courtUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	availableDays, err := h.courtService.GetCourtAvailableDays(c, courtUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	pp.Println("availableDays", availableDays)
+
+	vmodel := VModelPageMatchScheduleDays{
+		User:          user,
+		League:        league,
+		Match:         match,
+		Venue:         venue,
+		Court:         court,
+		AvailableDays: availableDays,
+	}
+	page := PageMatchScheduleDays(vmodel)
+	h.RenderView(c, page)
 }

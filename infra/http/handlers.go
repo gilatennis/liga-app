@@ -16,6 +16,7 @@ import (
 	"liga-app/third_party/mailtrap"
 
 	domainAuth "liga-app/domain/auth"
+	domainCourt "liga-app/domain/court"
 	domainInvite "liga-app/domain/invite"
 	domainLeague "liga-app/domain/league"
 	domainMatch "liga-app/domain/match"
@@ -23,13 +24,16 @@ import (
 	domainTeam "liga-app/domain/team"
 	domainUser "liga-app/domain/user"
 	domainUserInfo "liga-app/domain/user_info"
+	domainVenue "liga-app/domain/venue"
 	dbAuth "liga-app/infra/mysql/auth"
+	dbCourt "liga-app/infra/mysql/court"
 	dbCourtTimeSlot "liga-app/infra/mysql/court_time_slot"
 	dbLeague "liga-app/infra/mysql/league"
 	dbLeagueReg "liga-app/infra/mysql/league_registration"
 	dbMatch "liga-app/infra/mysql/match"
 	dbTeam "liga-app/infra/mysql/team"
 	dbUser "liga-app/infra/mysql/user"
+	dbVenue "liga-app/infra/mysql/venue"
 	dbWilayah "liga-app/infra/mysql/wilayah"
 
 	thirdPartyDuitku "liga-app/third_party/duitku"
@@ -89,6 +93,8 @@ func setupHandlers(
 	teamStore := dbTeam.NewStore(db)
 	courtTimeSlotStore := dbCourtTimeSlot.NewStore(db)
 	matchStore := dbMatch.NewStore(db)
+	venueStore := dbVenue.NewStore(db)
+	courtStore := dbCourt.NewStore(db)
 
 	authService := domainAuth.NewService(
 		cfg,
@@ -115,6 +121,8 @@ func setupHandlers(
 	inviteService := domainInvite.NewService(leagueRegStore, leagueStore, teamStore)
 	ruleBookService := domainRuleBook.NewService(gormStore)
 	matchService := domainMatch.NewService(matchStore, courtTimeSlotStore)
+	venueService := domainVenue.NewService(venueStore)
+	courtService := domainCourt.NewService(courtStore, courtTimeSlotStore)
 
 	HTMXHandlers := HTMXHandlers{
 		AuthHandler:                 auth.NewHandler(cfg, authService, userService),
@@ -122,7 +130,7 @@ func setupHandlers(
 		InviteHandler:               invite.NewHandler(inviteService, leagueService, teamService),
 		DashboardHandler:            dashboard.NewHandler(userInfoService, leagueService),
 		DashboardLeagueHandler:      dashLeague.NewHandler(leagueService, teamService),
-		DashboardLeagueMatchHandler: dashLeagueMatch.NewHandler(leagueService, matchService),
+		DashboardLeagueMatchHandler: dashLeagueMatch.NewHandler(leagueService, matchService, venueService, courtService),
 		DashboardLeagueTeamHandler:  dashLeagueTeam.NewHandler(leagueService, teamService),
 		DashboardProfileHandler:     dashProfile.NewHandler(userInfoService),
 	}

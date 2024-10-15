@@ -20,7 +20,8 @@ type Match struct {
 	IsByeTeamA   bool
 	IsByeTeamB   bool
 	Location     string
-	Time         *time.Time
+	TimeStart    *time.Time
+	TimeEnd      *time.Time
 	Sets         []MatchSet `gorm:"ForeignKey:MatchUUID"`
 	Status       string
 	FilterStatus string `gorm:"-:all"`
