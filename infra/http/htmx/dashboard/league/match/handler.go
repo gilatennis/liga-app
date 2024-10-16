@@ -8,6 +8,7 @@ import (
 	"liga-app/interfaces/services"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/k0kubun/pp"
@@ -332,5 +333,74 @@ func (h *Handler) GetMatchScheduleCourtDaysPage(c *gin.Context) {
 		AvailableDays: availableDays,
 	}
 	page := PageMatchScheduleDays(vmodel)
+	h.RenderView(c, page)
+}
+
+func (h *Handler) GetMatchScheduleCourtTimesPage(c *gin.Context) {
+	user, err := h.GetAuthenticatedUser(c)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	params, err := h.GetURLUUIDParams(c, []string{"league_uuid", "match_uuid", "venue_uuid", "court_uuid"})
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	leagueUUID, matchUUID, venueUUID, courtUUID := params[0], params[1], params[2], params[3]
+
+	league, err := h.leagueService.GetByUUID(c, leagueUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	match, err := h.matchService.GetByUUID(c, matchUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	venue, err := h.venueService.GetByUUID(c, venueUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	court, err := h.courtService.GetByUUID(c, courtUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	day := c.Query("day")
+	fmt.Println("day", day)
+
+	t, err := time.Parse(time.RFC3339, day)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	timeslots, err := h.courtService.GetCourtTimeSlotsByDay(c, courtUUID, t)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	vmodel := VModelPageMatchScheduleTimes{
+		User:      user,
+		League:    league,
+		Match:     match,
+		Venue:     venue,
+		Court:     court,
+		Day:       t,
+		TimeSlots: timeslots,
+	}
+	_ = vmodel
+
+	page := PageMatchScheduleTimes(vmodel)
 	h.RenderView(c, page)
 }

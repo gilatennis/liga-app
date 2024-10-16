@@ -1,0 +1,81 @@
+package match
+
+import (
+  "liga-app/infra/http/htmx/common/layouts"
+  // "liga-app/infra/http/htmx/common/components"
+  "liga-app/infra/http/htmx/dashboard/league"
+  // "liga-app/entities"
+  // "liga-app/enums"
+  // "strconv"
+  // "fmt"
+	"liga-app/infra/http/htmx/common/components"
+	// "liga-app/entities"
+  // "time"
+	// "liga-app/enums"
+	// "github.com/google/uuid"
+  "github.com/goodsign/monday"
+  // "net/url"
+)
+
+templ PageMatchScheduleTimes(vmodel VModelPageMatchScheduleTimes) {
+  @layouts.DashboardLayout("Pilih Venue", vmodel.User, layouts.FOOTER_MENU_LEAGUE) {
+    <div class="space-y-8">
+      @league.ViewLeagueDetail(vmodel.League, false)
+      @components.PageHeader("Pilih Waktu Bertanding")
+      <div class="space-y-4">
+        <img src={vmodel.Venue.Image} class="h-32 w-full object-cover" />
+        <div>
+          <h1 class="text-xl font-bold">{vmodel.Venue.Name}</h1>
+          <p>{vmodel.Venue.Address}</p>
+        </div>
+        <h2 class="text-lg font-bold mt-4">{vmodel.Court.Name}</h2>
+        <h2>
+          {monday.Format(vmodel.Day, "Monday 2 January 2006", monday.LocaleIdID)}
+        </h2>
+      </div>
+      @ViewSelectTimes(vmodel)
+    </div>
+  }
+}
+
+templ ViewSelectTimes(vmodel VModelPageMatchScheduleTimes) {
+  <div class="flex flex-col space-y-8">
+    for _, ts := range vmodel.TimeSlots {
+      <a href="">
+        <div class="card w-auto shadow-xl ">
+          <div class="p-4 flex flex-col space-y-2">
+            <p>{ts.Start.Format("15:04:05")} - {ts.End.Format("15:04:05")}</p>
+            if ts.Match == nil {
+              <p class="text-success font-bold">AVAILABLE</p>
+              <button
+                hx-post={urlPostMatchScheduleRequest()}
+                class="btn btn-primary btn-sm w-full"
+              >
+                PILIH TIMESLOT
+              </button>
+            } else {
+            
+            }
+          </div>
+        </div>
+      </a>
+    }
+  </div>
+}
+
+func urlPostMatchScheduleRequest() string {
+  return ""
+}
+
+/*
+func hrefScheduleTimes(leagueUUID, matchUUID, venueUUID, courtUUID uuid.UUID, day time.Time) templ.SafeURL {
+  return templ.URL(fmt.Sprintf(
+    "/dashboard/leagues/%s/matches/%s/schedule/venues/%s/courts/%s/times?day=%s",
+    leagueUUID,
+    matchUUID,
+    venueUUID,
+    courtUUID,
+    url.QueryEscape(day.Format(time.RFC3339)),
+  ))
+}
+*/
