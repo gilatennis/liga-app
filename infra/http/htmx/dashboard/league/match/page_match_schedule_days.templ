@@ -7,13 +7,14 @@ import (
   // "liga-app/entities"
   // "liga-app/enums"
   // "strconv"
-	// "github.com/google/uuid"
-  // "fmt"
+  "fmt"
 	"liga-app/infra/http/htmx/common/components"
 	// "liga-app/entities"
-  // "time"
+  "time"
 	// "liga-app/enums"
-	// "github.com/google/uuid"
+	"github.com/google/uuid"
+  "github.com/goodsign/monday"
+  "net/url"
 )
 
 templ PageMatchScheduleDays(vmodel VModelPageMatchScheduleDays) {
@@ -21,9 +22,12 @@ templ PageMatchScheduleDays(vmodel VModelPageMatchScheduleDays) {
     <div class="space-y-8">
       @league.ViewLeagueDetail(vmodel.League, false)
       @components.PageHeader("Pilih Hari Bertanding")
-      <div>
-        <h1 class="text-xl font-bold">{vmodel.Venue.Name}</h1>
-        <p>{vmodel.Venue.Address}</p>
+      <div class="space-y-4">
+        <img src={vmodel.Venue.Image} class="h-32 w-full object-cover" />
+        <div>
+          <h1 class="text-xl font-bold">{vmodel.Venue.Name}</h1>
+          <p>{vmodel.Venue.Address}</p>
+        </div>
         <h2 class="text-lg font-bold mt-4">{vmodel.Court.Name}</h2>
       </div>
       @ViewSelectDays(vmodel)
@@ -34,11 +38,24 @@ templ PageMatchScheduleDays(vmodel VModelPageMatchScheduleDays) {
 templ ViewSelectDays(vmodel VModelPageMatchScheduleDays) {
   <div class="flex flex-col space-y-8">
     for _, d := range vmodel.AvailableDays {
-      <div class="card w-auto shadow-xl ">
-        <div class="p-4">
-          {d.String()}
+      <a href={hrefScheduleTimes(vmodel.League.UUID, vmodel.Match.UUID, vmodel.Venue.UUID, vmodel.Court.UUID, d)}>
+        <div class="card w-auto shadow-xl ">
+          <div class="p-4">
+            {monday.Format(d, "Monday 2 January 2006", monday.LocaleIdID)}
+          </div>
         </div>
-      </div>
+      </a>
     }
   </div>
+}
+
+func hrefScheduleTimes(leagueUUID, matchUUID, venueUUID, courtUUID uuid.UUID, day time.Time) templ.SafeURL {
+  return templ.URL(fmt.Sprintf(
+    "/dashboard/leagues/%s/matches/%s/schedule/venues/%s/courts/%s/times?day=%s",
+    leagueUUID,
+    matchUUID,
+    venueUUID,
+    courtUUID,
+    url.QueryEscape(day.Format(time.RFC3339)),
+  ))
 }
