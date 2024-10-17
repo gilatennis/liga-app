@@ -5,6 +5,7 @@ package drawings
 import (
 	"fmt"
 	"liga-app/entities"
+	"liga-app/utils"
 
 	"github.com/google/uuid"
 	"google.golang.org/api/sheets/v4"
@@ -20,6 +21,10 @@ func NewAPI(srv *sheets.Service) *API {
 
 func (a *API) GetDrawings(leagueName string) ([]entities.GroupTeam, error) {
 	spreadsheetId := "1OT-r1U4_xeRmg53Wj62ujbfto0aaURXynyu80ka2vOQ"
+
+	if utils.IsDevEnv() {
+		spreadsheetId = "16iVddhPYqP9oYhXh5Omt9YeAraoKPnkhK2suHtMSaHE"
+	}
 
 	readRange := fmt.Sprintf("%s!A1:E", leagueName)
 	resp, err := a.srv.Spreadsheets.Values.Get(spreadsheetId, readRange).MajorDimension("ROWS").Do()

@@ -26,7 +26,10 @@ func (s *Store) GetByCourtSlug(
 	timeslots := []entities.CourtTimeSlot{}
 
 	err := s.db.WithContext(ctx).
+		Joins("JOIN courts on courts.uuid = court_time_slots.court_uuid").
 		Where("start >= ? AND end <= ?", rangeStart, rangeEnd).
+		Where("courts.slug = ?", slug).
+		Order("start ASC").
 		Find(&timeslots).
 		Error
 	if err != nil {

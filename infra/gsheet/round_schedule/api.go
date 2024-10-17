@@ -2,6 +2,7 @@ package round_schedule
 
 import (
 	"fmt"
+	"liga-app/utils"
 	"time"
 
 	"google.golang.org/api/sheets/v4"
@@ -18,6 +19,10 @@ func NewAPI(srv *sheets.Service) *API {
 func (a *API) GetRoundSchedule() ([][2]time.Time, error) {
 	spreadsheetId := "18GD0bdFLf1wj_b-KMBQ-MjAsTp_8zcpkKeeTVz2oBjI"
 
+	if utils.IsDevEnv() {
+		spreadsheetId = "1vPld27g9BMhrooLTgamNhEpBklp4cAOKOzB0sBCJTZc"
+	}
+
 	readRange := "Round Schedule!A1:E"
 	resp, err := a.srv.Spreadsheets.Values.Get(spreadsheetId, readRange).MajorDimension("ROWS").Do()
 	if err != nil {
@@ -33,10 +38,11 @@ func (a *API) GetRoundSchedule() ([][2]time.Time, error) {
 			if i == 0 {
 				continue
 			}
-			// fmt.Printf("%s, %s, %s\n", row[0], row[1], row[2])
 			roundNumber := row[0].(string)
 			timeStartStr := row[1].(string)
 			timeEndStr := row[2].(string)
+
+			fmt.Printf("%s, %s, %s\n", roundNumber, timeStartStr, timeEndStr)
 
 			_ = roundNumber
 
