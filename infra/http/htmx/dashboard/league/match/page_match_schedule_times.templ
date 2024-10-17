@@ -7,14 +7,16 @@ import (
   // "liga-app/entities"
   // "liga-app/enums"
   // "strconv"
-  // "fmt"
+  "fmt"
 	"liga-app/infra/http/htmx/common/components"
 	// "liga-app/entities"
-  // "time"
+  "time"
 	// "liga-app/enums"
-	// "github.com/google/uuid"
+	"github.com/google/uuid"
   "github.com/goodsign/monday"
   // "net/url"
+	"liga-app/entities"
+	"strings"
 )
 
 templ PageMatchScheduleTimes(vmodel VModelPageMatchScheduleTimes) {
@@ -23,12 +25,10 @@ templ PageMatchScheduleTimes(vmodel VModelPageMatchScheduleTimes) {
       @league.ViewLeagueDetail(vmodel.League, false)
       @components.PageHeader("Pilih Waktu Bertanding")
       <div class="space-y-4">
-        <img src={vmodel.Venue.Image} class="h-32 w-full object-cover" />
-        <div>
-          <h1 class="text-xl font-bold">{vmodel.Venue.Name}</h1>
-          <p>{vmodel.Venue.Address}</p>
-        </div>
+        <h1 class="text-xl font-bold">{vmodel.Venue.Name}</h1>
         <h2 class="text-lg font-bold mt-4">{vmodel.Court.Name}</h2>
+      </div>
+      <div class="sticky">
         <h2>
           {monday.Format(vmodel.Day, "Monday 2 January 2006", monday.LocaleIdID)}
         </h2>
@@ -44,11 +44,15 @@ templ ViewSelectTimes(vmodel VModelPageMatchScheduleTimes) {
       <a href="">
         <div class="card w-auto shadow-xl ">
           <div class="p-4 flex flex-col space-y-2">
-            <p>{ts.Start.Format("15:04:05")} - {ts.End.Format("15:04:05")}</p>
+            <p>{ts.Start.Format("15:04")} - {ts.End.Format("15:04")}</p>
             if ts.Match == nil {
               <p class="text-success font-bold">AVAILABLE</p>
               <button
-                hx-post={urlPostMatchScheduleRequest()}
+                hx-confirm={confirmMessageSelectSchedule(ts.Start, ts.End)}
+                hx-post={urlPostMatchScheduleRequest(vmodel.League.UUID, vmodel.Match.UUID, vmodel.Venue.UUID, vmodel.Court.UUID)}
+                hx-swap="none"
+                name="timeslot_uuids"
+                value={valuePostMatchScheduleRequest([]entities.CourtTimeSlot{ts})}
                 class="btn btn-primary btn-sm w-full"
               >
                 PILIH TIMESLOT
@@ -63,10 +67,29 @@ templ ViewSelectTimes(vmodel VModelPageMatchScheduleTimes) {
   </div>
 }
 
-func urlPostMatchScheduleRequest() string {
-  return ""
+func urlPostMatchScheduleRequest(leagueUUID, matchUUID, venueUUID, courtUUID uuid.UUID) string {
+  return fmt.Sprintf("/dashboard/leagues/%s/matches/%s/schedule/venues/%s/courts/%s/times",
+    leagueUUID,
+    matchUUID,
+    venueUUID,
+    courtUUID,
+  )
 }
 
+func valuePostMatchScheduleRequest(tslots []entities.CourtTimeSlot) string {
+  timeslotUUIDs := []string{}
+  for _, ts := range tslots {
+    timeslotUUIDs = append(timeslotUUIDs, ts.UUID.String())
+    // timeslotUUIDs = append(timeslotUUIDs, uuid.New().String())
+  }
+
+  val := strings.Join(timeslotUUIDs, ",")
+  return val
+}
+
+func confirmMessageSelectSchedule(start, end time.Time) string {
+  return fmt.Sprintf("Konfirmasi pilih jadwal %s - %s", start.Format("15:04"), end.Format("15:04"))
+}
 /*
 func hrefScheduleTimes(leagueUUID, matchUUID, venueUUID, courtUUID uuid.UUID, day time.Time) templ.SafeURL {
   return templ.URL(fmt.Sprintf(

@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
   "fmt"
 	"liga-app/infra/http/htmx/common/components"
+	"github.com/goodsign/monday"
 )
 
 templ PageMatchList(vmodel *VModelPageMatchList) {
@@ -136,7 +137,10 @@ templ ViewMatchCard(m entities.Match) {
       <div class="p-4 space-y-4">
         <div class="flex flex-row">
           <div class="flex-1 text-left text-primary font-bold">{m.FilterStatus}</div>
-          <div class="flex-1 text-left text-secondary font-bold">Pertandingan ke {strconv.Itoa(m.Round.Number)}</div>
+          <div class="flex-1">
+            <div class="text-left text-secondary font-bold">Pertandingan ke {strconv.Itoa(m.Round.Number)}</div>
+            <div class="text-xs">{monday.Format(*m.Round.Start, "02/01/2006", monday.LocaleIdID)} - {monday.Format(*m.Round.End, "02/01/2006", monday.LocaleIdID)}</div>
+          </div>
         </div>
         <div class="flex flex-row justify-between space-x-6 items-center">
           <div class="flex-3 text-sm">{m.TeamA.Name}</div>

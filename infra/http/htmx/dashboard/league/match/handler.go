@@ -8,9 +8,11 @@ import (
 	"liga-app/interfaces/services"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/k0kubun/pp"
 )
 
@@ -403,4 +405,47 @@ func (h *Handler) GetMatchScheduleCourtTimesPage(c *gin.Context) {
 
 	page := PageMatchScheduleTimes(vmodel)
 	h.RenderView(c, page)
+}
+
+func (h *Handler) PostRequestMatchSchedule(c *gin.Context) {
+	user, err := h.GetAuthenticatedUser(c)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusUnauthorized, err.Error())
+		return
+	}
+	_ = user
+
+	params, err := h.GetURLUUIDParams(c, []string{"league_uuid", "match_uuid", "venue_uuid", "court_uuid"})
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	leagueUUID, matchUUID, venueUUID, courtUUID := params[0], params[1], params[2], params[3]
+	_, _, _, _ = leagueUUID, matchUUID, venueUUID, courtUUID
+
+	type Payload struct {
+		TimeSlotUUIDs string `form:"timeslot_uuids"`
+	}
+	p := Payload{}
+	err = c.Bind(&p)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	timeslotUUIDStrings := strings.Split(p.TimeSlotUUIDs, ",")
+	// pp.Println("timeslotUUIDStrings", timeslotUUIDStrings)
+
+	timeslotUUIDs := []uuid.UUID{}
+	for _, s := range timeslotUUIDStrings {
+		tsUUID, err := uuid.Parse(s)
+		if err != nil {
+			h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+			return
+		}
+		timeslotUUIDs = append(timeslotUUIDs, tsUUID)
+	}
+
+	pp.Println("timeslotUUIDs", timeslotUUIDs)
 }

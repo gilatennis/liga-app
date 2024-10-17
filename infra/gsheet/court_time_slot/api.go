@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"liga-app/entities"
+	"liga-app/utils"
 	"log"
 	"time"
 
@@ -22,6 +23,11 @@ func (a *API) GetByCourtSlug(ctx context.Context, slug string) ([]entities.Court
 	// Prints the names and majors of students in a sample spreadsheet:
 	// https://docs.google.com/spreadsheets/d/16Sbt3gsI1fsKQMFCVmjf1qnVwbBfc5UDZanOITI9bqE/edit?gid=0#gid=0
 	spreadsheetId := "16Sbt3gsI1fsKQMFCVmjf1qnVwbBfc5UDZanOITI9bqE"
+
+	if utils.IsDevEnv() {
+		spreadsheetId = "1vsjcep_wTmz1W1vmQy7aEXoTF1o5ncBZ-y4F-JFjwPI"
+	}
+
 	readRange := "dislitbang-al!A1:C30"
 	resp, err := a.srv.Spreadsheets.Values.Get(spreadsheetId, readRange).MajorDimension("ROWS").Do()
 	if err != nil {
