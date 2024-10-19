@@ -31,6 +31,7 @@ import (
 	dbLeague "liga-app/infra/mysql/league"
 	dbLeagueReg "liga-app/infra/mysql/league_registration"
 	dbMatch "liga-app/infra/mysql/match"
+	dbMatchSchedReq "liga-app/infra/mysql/match_schedule_request"
 	dbTeam "liga-app/infra/mysql/team"
 	dbUser "liga-app/infra/mysql/user"
 	dbVenue "liga-app/infra/mysql/venue"
@@ -95,6 +96,7 @@ func setupHandlers(
 	matchStore := dbMatch.NewStore(db)
 	venueStore := dbVenue.NewStore(db)
 	courtStore := dbCourt.NewStore(db)
+	matchSchedReqStore := dbMatchSchedReq.NewStore(db)
 
 	authService := domainAuth.NewService(
 		cfg,
@@ -120,7 +122,7 @@ func setupHandlers(
 	teamService := domainTeam.NewService(cfg, teamStore, minioClient)
 	inviteService := domainInvite.NewService(leagueRegStore, leagueStore, teamStore)
 	ruleBookService := domainRuleBook.NewService(gormStore)
-	matchService := domainMatch.NewService(matchStore, courtTimeSlotStore)
+	matchService := domainMatch.NewService(matchStore, courtTimeSlotStore, matchSchedReqStore)
 	venueService := domainVenue.NewService(venueStore)
 	courtService := domainCourt.NewService(courtStore, courtTimeSlotStore)
 

@@ -76,8 +76,16 @@ func (s *Store) GetByUUID(ctx context.Context, matchUUID uuid.UUID) (*entities.M
 	match := entities.Match{}
 
 	err := s.db.Where("uuid = ?", matchUUID).
-		Preload("League").Preload("TeamA").
-		Preload("TeamB").Preload("Round").
+		Preload("League").
+		Preload("TeamA").
+		Preload("TeamA.Captain").
+		Preload("TeamB").
+		Preload("TeamB.Captain").
+		Preload("Round").
+		Preload("MatchScheduleRequest").
+		Preload("MatchScheduleRequest.Court").
+		Preload("MatchScheduleRequest.Court.Venue").
+		Preload("MatchScheduleRequest.TimeSlots").
 		First(&match).Error
 	if err != nil {
 		return nil, fmt.Errorf("s.db.Where(\"uuid = ?\", matchUUID=%s).First(&match).Error : %w", matchUUID, err)

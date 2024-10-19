@@ -7,12 +7,14 @@ import (
   // "liga-app/entities"
   // "liga-app/enums"
   "strconv"
-	// "github.com/google/uuid"
+	"github.com/google/uuid"
+  "net/url"
   "fmt"
 	"liga-app/infra/http/htmx/common/components"
 	"liga-app/entities"
   "time"
 	"liga-app/enums"
+	"github.com/goodsign/monday"
 )
 
 templ PageMatchDetail(vmodel VModelPageMatchDetail) {
@@ -37,15 +39,136 @@ templ ViewMatchDetail(vmodel VModelPageMatchDetail) {
         <div class="flex-1">VS</div>
         <div class="flex-3 text-sm">{vmodel.Match.TeamB.Name}</div>
       </div>
-      if IsMatchScheduleable(vmodel.Match) {
+
+      if vmodel.Match.MatchScheduleRequest == nil &&
+        isMatchParticipantCaptain(vmodel.User, vmodel.Match) &&
+        IsMatchScheduleable(vmodel.Match) {
         <div class="pt-4">
           <a hx-boost="false" href={hrefScheduleMatch(vmodel.Match)} class="btn btn-primary w-full">
             Atur Jadwal Pertandingan
           </a>
         </div>
       }
+
+      if vmodel.Match.MatchScheduleRequest != nil {
+        <div class="pt-4 flex flex-col space-y-2">
+          <div class="text-lg font-bold">Jadwal Pertandingan</div>
+          if !vmodel.Match.MatchScheduleRequest.IsAccepted {
+            @alertScheduleConfirmation()
+          }
+          <div>{vmodel.Match.MatchScheduleRequest.Court.Venue.Name}</div>
+          <div>{vmodel.Match.MatchScheduleRequest.Court.Venue.Address}</div>
+          <div class="font-bold">{vmodel.Match.MatchScheduleRequest.Court.Name}</div>
+          <div>{displayTimeSlotsDate(vmodel.Match.MatchScheduleRequest.TimeSlots)}</div>
+          <div>{displayTimeSlotsTimeStartToEnd(vmodel.Match.MatchScheduleRequest.TimeSlots)}</div>
+        </div>
+
+        if isMatchScheduleCreator(vmodel.User, vmodel.Match) && !vmodel.Match.MatchScheduleRequest.IsAccepted {
+          <div class="pt-4">
+            <a hx-boost="false" href={hrefScheduleMatch(vmodel.Match)} class="btn btn-primary w-full">
+              Ubah Jadwal Pertandingan
+            </a>
+          </div>
+        }
+
+        if isMatchScheduleConfirmer(vmodel.User, vmodel.Match) {
+          <div class="pt-4 flex flex-col space-y-2">
+            if !vmodel.Match.MatchScheduleRequest.IsAccepted {
+              <button
+                class="btn btn-primary w-full"
+                hx-put={hrefPutConfirmMatchSchedule(vmodel.League.UUID, vmodel.Match.UUID, *vmodel.Match.MatchScheduleRequestUUID)}
+                hx-swap="none"
+                hx-confirm="Konfirmasi jadwal pertandingan. Setelah jadwal di konfirmasi jadwal tidak dapat diubah lagi. Kontak admin jika ada pertanyaan."
+              >
+                Konfirmasi Jadwal Pertandingan
+              </button>
+
+              <a href={hrefWAContactOpponentForScheduleChange(getMatchScheduleCreator(vmodel.Match), vmodel.Match.MatchScheduleRequest)}
+                target="_blank"
+                class="btn btn-secondary btn-sm"
+              >
+                <img alt="whatsapp" src="/static/icons/whatsapp.png" class="w-4 h-4" />
+                Kontak Lawan untuk perubahan jadwal
+              </a>
+            }
+
+          </div>
+        }
+
+        <div class="pt-4 flex flex-col">
+          <a href={hrefWAContactUs()} target="_blank" class="btn btn-secondary btn-sm">
+            <img alt="whatsapp" src="/static/icons/whatsapp.png" class="w-4 h-4" />
+            Kontak Admin
+          </a>
+        </div>
+      }
     </div>
   </div>
+}
+
+
+func isMatchScheduleCreator(user *entities.User, match *entities.Match) bool {
+  return isMatchParticipantCaptain(user, match) && user.UUID == match.MatchScheduleRequest.CreatedBy
+}
+
+func isMatchScheduleConfirmer(user *entities.User, match *entities.Match) bool {
+  return isMatchParticipantCaptain(user, match) && user.UUID != match.MatchScheduleRequest.CreatedBy
+}
+
+func isMatchParticipantCaptain(user *entities.User, match *entities.Match) bool {
+  return user.UUID == match.TeamA.CaptainUserUUID || user.UUID == match.TeamB.CaptainUserUUID
+}
+
+func getMatchScheduleCreator(match *entities.Match) *entities.User {
+  if match.TeamA.CaptainUserUUID == match.MatchScheduleRequest.CreatedBy {
+    return &match.TeamA.Captain
+  }
+  if match.TeamB.CaptainUserUUID == match.MatchScheduleRequest.CreatedBy {
+    return &match.TeamB.Captain
+  }
+  return nil
+}
+
+func hrefPutConfirmMatchSchedule(leagueUUID, matchUUID, matchScheduleRequestUUID uuid.UUID) string {
+  return fmt.Sprintf("/dashboard/leagues/%s/matches/%s/schedule/requests/%s/confirm", leagueUUID, matchUUID, matchScheduleRequestUUID)
+}
+
+templ alertScheduleConfirmation() {
+  <div role="alert" class="alert alert-warning flex flex-row items-start">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      class="h-6 w-6 shrink-0 stroke-current"
+      fill="none"
+      viewBox="0 0 24 24">
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+    </svg>
+    <div class="text-left space-y-4">Menunggu konfirmasi dari lawan</div>
+  </div>
+}
+
+func displayTimeSlotsDate(timeslots []entities.CourtTimeSlot) string {
+  if len(timeslots) == 0 {
+    return "-"
+  }
+  loc, _ := time.LoadLocation("Asia/Jakarta")
+  start := timeslots[0].Start.In(loc)
+
+  return monday.Format(start, "Monday 2 January 2006", monday.LocaleIdID)
+}
+
+func displayTimeSlotsTimeStartToEnd(timeslots []entities.CourtTimeSlot) string {
+  if len(timeslots) == 0 {
+    return "-"
+  }
+  loc, _ := time.LoadLocation("Asia/Jakarta")
+  start := timeslots[0]
+  end := timeslots[len(timeslots) - 1]
+
+  return fmt.Sprintf("%s - %s", start.Start.In(loc).Format("15:04"), end.End.In(loc).Format("15:04"))
 }
 
 func hrefScheduleMatch(m *entities.Match) templ.SafeURL {
@@ -70,4 +193,27 @@ func IsPreviousRound(match *entities.Match) bool {
     return false
   }
   return match.Round.End.Before(time.Now())
+}
+
+func hrefWAContactOpponentForScheduleChange(
+  captainScheduleCreator *entities.User,
+  matchScheduleRequest *entities.MatchScheduleRequest,
+) templ.SafeURL {
+  matchDate := displayTimeSlotsDate(matchScheduleRequest.TimeSlots)
+  text := fmt.Sprintf("Halo. Saya ingin request perubahan jadwal untuk pertandingan di %s", matchDate)
+  params := url.Values{}
+  params.Add("text", text)
+  return templ.URL(fmt.Sprintf("https://wa.me/%s?%s", captainScheduleCreator.Phone, params.Encode()))
+}
+
+func hrefWAContactUs() templ.SafeURL {
+  /*
+  phoneNumber := "628159239794"
+  text := "Halo, saya ingin bertanya mengenai Liga Gilatennis"
+  params := url.Values{}
+  params.Add("text", text)
+  return templ.URL(fmt.Sprintf("https://wa.me/%s?%s", phoneNumber, params.Encode()))
+  */
+  linkWAGroupSeason1Beginners := "https://chat.whatsapp.com/JUup3ZHCEMd1eO2WifCsI5"
+  return templ.URL(linkWAGroupSeason1Beginners)
 }
