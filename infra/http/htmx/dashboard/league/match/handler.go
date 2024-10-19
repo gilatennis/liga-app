@@ -435,7 +435,6 @@ func (h *Handler) PostRequestMatchSchedule(c *gin.Context) {
 	}
 
 	timeslotUUIDStrings := strings.Split(p.TimeSlotUUIDs, ",")
-	// pp.Println("timeslotUUIDStrings", timeslotUUIDStrings)
 
 	timeslotUUIDs := []uuid.UUID{}
 	for _, s := range timeslotUUIDStrings {
@@ -447,5 +446,71 @@ func (h *Handler) PostRequestMatchSchedule(c *gin.Context) {
 		timeslotUUIDs = append(timeslotUUIDs, tsUUID)
 	}
 
-	pp.Println("timeslotUUIDs", timeslotUUIDs)
+	scheduleRequestUUID, err := h.matchService.RequestMatchSchedule(c, user.UUID, matchUUID, timeslotUUIDs)
+	if err != nil {
+		fmt.Println(err)
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	_ = scheduleRequestUUID
+
+	location := fmt.Sprintf("/dashboard/leagues/%s/matches/%s",
+		leagueUUID, matchUUID,
+	)
+	h.ResponseSuccessRedirect(c, "request match schedule success", location)
+}
+
+/*
+func (h *Handler) GetScheduleRequestDetailPage(c *gin.Context) {
+	user, err := h.GetAuthenticatedUser(c)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusUnauthorized, err.Error())
+		return
+	}
+	_ = user
+
+	params, err := h.GetURLUUIDParams(c, []string{"league_uuid", "match_uuid", "schedule_request_uuid"})
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	leagueUUID, matchUUID, scheduleRequestUUID := params[0], params[1], params[2]
+	_, _, _ = leagueUUID, matchUUID, scheduleRequestUUID
+
+	fmt.Println("scheduleRequestUUID", scheduleRequestUUID)
+
+	req, err := h.matchService.GetScheduleRequestByUUID(c, scheduleRequestUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+}
+*/
+
+func (h *Handler) PutConfirmMatchSchedule(c *gin.Context) {
+	user, err := h.GetAuthenticatedUser(c)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusUnauthorized, err.Error())
+		return
+	}
+	_ = user
+
+	params, err := h.GetURLUUIDParams(c, []string{"league_uuid", "match_uuid", "schedule_request_uuid"})
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	leagueUUID, matchUUID, scheduleRequestUUID := params[0], params[1], params[2]
+	_, _, _ = leagueUUID, matchUUID, scheduleRequestUUID
+
+	_, err = h.matchService.ConfirmMatchSchedule(c, user.UUID, scheduleRequestUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	location := fmt.Sprintf("/dashboard/leagues/%s/matches/%s", leagueUUID, matchUUID)
+	h.ResponseSuccessRedirect(c, "confirm match schedule success", location)
 }

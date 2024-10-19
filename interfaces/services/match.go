@@ -24,4 +24,7 @@ type MatchFilter struct {
 type IMatchService interface {
 	Get(ctx context.Context, p *common.Pagination, f *MatchFilter) ([]entities.Match, int64, error)
 	GetByUUID(ctx context.Context, matchUUID uuid.UUID) (*entities.Match, error)
+	RequestMatchSchedule(ctx context.Context, userUUID uuid.UUID, matchUUID uuid.UUID, timeslotUUIDs []uuid.UUID) (*uuid.UUID, error)
+	ConfirmMatchSchedule(ctx context.Context, userUUID uuid.UUID, matchScheduleRequestUUID uuid.UUID) (*uuid.UUID, error)
+	// GetScheduleRequestByUUID(ctx context.Context, matchScheduleRequestUUID uuid.UUID) (*entities.MatchScheduleRequest, error)
 }

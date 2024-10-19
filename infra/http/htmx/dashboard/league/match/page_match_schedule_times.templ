@@ -41,28 +41,25 @@ templ PageMatchScheduleTimes(vmodel VModelPageMatchScheduleTimes) {
 templ ViewSelectTimes(vmodel VModelPageMatchScheduleTimes) {
   <div class="flex flex-col space-y-8">
     for _, ts := range vmodel.TimeSlots {
-      <a href="">
-        <div class="card w-auto shadow-xl ">
-          <div class="p-4 flex flex-col space-y-2">
-            <p>{ts.Start.Format("15:04")} - {ts.End.Format("15:04")}</p>
-            if ts.Match == nil {
-              <p class="text-success font-bold">AVAILABLE</p>
-              <button
-                hx-confirm={confirmMessageSelectSchedule(ts.Start, ts.End)}
-                hx-post={urlPostMatchScheduleRequest(vmodel.League.UUID, vmodel.Match.UUID, vmodel.Venue.UUID, vmodel.Court.UUID)}
-                hx-swap="none"
-                name="timeslot_uuids"
-                value={valuePostMatchScheduleRequest([]entities.CourtTimeSlot{ts})}
-                class="btn btn-primary btn-sm w-full"
-              >
-                PILIH TIMESLOT
-              </button>
-            } else {
-            
-            }
-          </div>
+      <div class="card w-auto shadow-xl ">
+        <div class="p-4 flex flex-col space-y-2">
+          <p>{ts.Start.Format("15:04")} - {ts.End.Format("15:04")}</p>
+          if ts.Match == nil {
+            <p class="text-success font-bold">AVAILABLE</p>
+            <button
+              hx-confirm={confirmMessageSelectSchedule(ts.Start, ts.End)}
+              hx-post={urlPostMatchScheduleRequest(vmodel.League.UUID, vmodel.Match.UUID, vmodel.Venue.UUID, vmodel.Court.UUID)}
+              hx-swap="none"
+              name="timeslot_uuids"
+              value={valuePostMatchScheduleRequest([]entities.CourtTimeSlot{ts})}
+              class="btn btn-primary btn-sm w-full"
+            >
+              PILIH TIMESLOT
+            </button>
+          } else {
+          }
         </div>
-      </a>
+      </div>
     }
   </div>
 }

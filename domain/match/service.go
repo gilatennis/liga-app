@@ -3,9 +3,11 @@ package match
 import (
 	"context"
 	"fmt"
+	domainErrors "liga-app/domain/errors"
 	"liga-app/entities"
 	"liga-app/enums"
 	"liga-app/interfaces/common"
+	"liga-app/interfaces/repositories"
 	iRepo "liga-app/interfaces/repositories"
 	iService "liga-app/interfaces/services"
 	"liga-app/utils"
@@ -15,17 +17,20 @@ import (
 )
 
 type Service struct {
-	matchRepo         iRepo.IMatchRepository
-	courtTimeSlotRepo iRepo.ICourtTimeSlotRepository
+	matchRepo                iRepo.IMatchRepository
+	courtTimeSlotRepo        iRepo.ICourtTimeSlotRepository
+	matchScheduleRequestRepo iRepo.IMatchScheduleRequestRepository
 }
 
 func NewService(
 	matchRepo iRepo.IMatchRepository,
 	courtTimeSlotRepo iRepo.ICourtTimeSlotRepository,
+	matchScheduleRequestRepo iRepo.IMatchScheduleRequestRepository,
 ) *Service {
 	return &Service{
-		matchRepo:         matchRepo,
-		courtTimeSlotRepo: courtTimeSlotRepo,
+		matchRepo:                matchRepo,
+		courtTimeSlotRepo:        courtTimeSlotRepo,
+		matchScheduleRequestRepo: matchScheduleRequestRepo,
 	}
 }
 
@@ -110,10 +115,72 @@ func (s *Service) GetByUUID(ctx context.Context, matchUUID uuid.UUID) (*entities
 	return match, nil
 }
 
-func (s *Service) ProposeMatchSchedule(userUUID uuid.UUID, start time.Time, end time.Time) error {
-	return nil
+func (s *Service) RequestMatchSchedule(ctx context.Context, userUUID uuid.UUID, matchUUID uuid.UUID, timeslotUUIDs []uuid.UUID) (*uuid.UUID, error) {
+	p := common.NewPagination(1, len(timeslotUUIDs), []common.OrderBy{})
+	f := &repositories.CourtTimeSlotFilter{CourtTimeSlotUUIDs: timeslotUUIDs}
+	timeslots, _, err := s.courtTimeSlotRepo.Get(ctx, p, f)
+	if err != nil {
+		return nil, fmt.Errorf("s.courtTimeSlotRepo.Get(ctx, p, f) : %w", err)
+	}
+
+	if len(timeslots) == 0 {
+		return nil, &domainErrors.ErrNotFound{Message: "timeslots not found"}
+	}
+
+	courtUUID := timeslots[0].CourtUUID
+
+	for _, ts := range timeslots {
+		if ts.CourtUUID != courtUUID {
+			return nil, &domainErrors.ErrBadRequest{Message: "timeslots have to be for 1 court only"}
+		}
+		if ts.Match != nil {
+			return nil, &domainErrors.ErrConflict{Message: "timeslots requested already have match(es) assigned"}
+		}
+	}
+
+	req := entities.MatchScheduleRequest{
+		Base: entities.Base{
+			CreatedBy: userUUID,
+			UpdatedBy: userUUID,
+		},
+		MatchUUID: matchUUID,
+		CourtUUID: courtUUID,
+		TimeSlots: timeslots,
+	}
+
+	reqUUID, err := s.matchScheduleRequestRepo.Create(ctx, &req)
+	if err != nil {
+		return nil, fmt.Errorf("s.matchScheduleRequestRepo.Create(ctx, &req): %w", err)
+	}
+
+	return reqUUID, nil
 }
 
-func (s *Service) AcceptMatchSchedule(matchScheduleRequestUUID uuid.UUID) error {
-	return nil
+func (s *Service) ConfirmMatchSchedule(ctx context.Context, userUUID uuid.UUID, matchScheduleRequestUUID uuid.UUID) (*uuid.UUID, error) {
+	req, err := s.matchScheduleRequestRepo.GetByUUID(ctx, matchScheduleRequestUUID)
+	if err != nil {
+		return nil, fmt.Errorf("s.matchScheduleRequestRepo.GetByUUID(ctx, matchScheduleRequestUUID=%s) : %w", matchScheduleRequestUUID, err)
+	}
+
+	if !isMatchScheduleConfirmer(userUUID, &req.Match) {
+		return nil, &domainErrors.ErrUnauthorized{Message: "not authorized to confirm schedule"}
+	}
+
+	req.IsAccepted = true
+	req.UpdatedBy = userUUID
+
+	updatedUUID, err := s.matchScheduleRequestRepo.Update(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("s.matchScheduleRequestRepo.Update(ctx, req) : %w", err)
+	}
+
+	return updatedUUID, nil
+}
+
+func isMatchScheduleConfirmer(userUUID uuid.UUID, match *entities.Match) bool {
+	return isMatchParticipantCaptain(userUUID, match) && userUUID != match.MatchScheduleRequest.CreatedBy
+}
+
+func isMatchParticipantCaptain(userUUID uuid.UUID, match *entities.Match) bool {
+	return userUUID == match.TeamA.CaptainUserUUID || userUUID == match.TeamB.CaptainUserUUID
 }
