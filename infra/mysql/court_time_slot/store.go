@@ -28,6 +28,11 @@ func (s *Store) GetByCourtSlug(
 	timeslots := []entities.CourtTimeSlot{}
 
 	err := s.db.WithContext(ctx).
+		Preload("Match").
+		Preload("Match.TeamA").
+		Preload("Match.TeamA.Captain").
+		Preload("Match.TeamB").
+		Preload("Match.TeamB.Captain").
 		Joins("JOIN courts on courts.uuid = court_time_slots.court_uuid").
 		Where("start >= ? AND end <= ?", rangeStart, rangeEnd).
 		Where("courts.slug = ?", slug).

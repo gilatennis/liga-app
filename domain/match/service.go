@@ -169,7 +169,7 @@ func (s *Service) ConfirmMatchSchedule(ctx context.Context, userUUID uuid.UUID, 
 	req.IsAccepted = true
 	req.UpdatedBy = userUUID
 
-	updatedUUID, err := s.matchScheduleRequestRepo.Update(ctx, req)
+	updatedUUID, err := s.matchScheduleRequestRepo.AcceptMatchScheduleRequest(ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("s.matchScheduleRequestRepo.Update(ctx, req) : %w", err)
 	}
