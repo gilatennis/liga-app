@@ -15,6 +15,8 @@ import (
   "time"
 	"liga-app/enums"
 	"github.com/goodsign/monday"
+	// "github.com/k0kubun/pp"
+	"sort"
 )
 
 templ PageMatchDetail(vmodel VModelPageMatchDetail) {
@@ -146,7 +148,7 @@ templ alertScheduleConfirmation() {
         stroke-width="2"
         d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
     </svg>
-    <div class="text-left space-y-4">Menunggu konfirmasi dari lawan</div>
+    <div class="text-left space-y-4">Menunggu konfirmasi</div>
   </div>
 }
 
@@ -164,6 +166,11 @@ func displayTimeSlotsTimeStartToEnd(timeslots []entities.CourtTimeSlot) string {
   if len(timeslots) == 0 {
     return "-"
   }
+
+  sort.Slice(timeslots, func(i, j int) bool {
+    return timeslots[i].Start.Before(timeslots[j].Start)
+  })
+
   loc, _ := time.LoadLocation("Asia/Jakarta")
   start := timeslots[0]
   end := timeslots[len(timeslots) - 1]

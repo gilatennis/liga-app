@@ -109,3 +109,41 @@ func (s *Store) Update(ctx context.Context, req *entities.MatchScheduleRequest) 
 
 	return &req.UUID, nil
 }
+
+func (s *Store) AcceptMatchScheduleRequest(ctx context.Context, req *entities.MatchScheduleRequest) (*uuid.UUID, error) {
+	tx := s.db.WithContext(ctx).Begin()
+
+	reqTimeSlots := []entities.MatchScheduleRequestCourtTimeSlot{}
+	err := tx.Where("match_schedule_request_uuid = ?", req.UUID).Find(&reqTimeSlots).Error
+	if err != nil {
+		return nil, fmt.Errorf("tx.Where(\"match_schedule_request_uuid = ?\", req.UUID).Find(&reqTimeSlots).Error : %w", err)
+	}
+
+	timeslotsUUIDs := []uuid.UUID{}
+	for _, rts := range reqTimeSlots {
+		timeslotsUUIDs = append(timeslotsUUIDs, rts.CourtTimeSlotUUID)
+	}
+
+	err = tx.Model(&entities.CourtTimeSlot{}).
+		Where("uuid in ?", timeslotsUUIDs).
+		Update("match_uuid", req.Match.UUID).
+		Error
+	if err != nil {
+		return nil, fmt.Errorf("tx.Model(&entities.CourtTimeSlot{})...Update(match_uuid, req.Match.UUID).Error : %w", err)
+	}
+
+	err = tx.WithContext(ctx).
+		Omit(clause.Associations).
+		Save(req).
+		Error
+	if err != nil {
+		return nil, fmt.Errorf("s.db...Save(req).Error : %w", err)
+	}
+
+	err = tx.Commit().Error
+	if err != nil {
+		return nil, fmt.Errorf("tx.Commit().Error : %w", err)
+	}
+
+	return &req.UUID, nil
+}

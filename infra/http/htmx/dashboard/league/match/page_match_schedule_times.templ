@@ -5,7 +5,7 @@ import (
   // "liga-app/infra/http/htmx/common/components"
   "liga-app/infra/http/htmx/dashboard/league"
   // "liga-app/entities"
-  // "liga-app/enums"
+  "liga-app/enums"
   // "strconv"
   "fmt"
 	"liga-app/infra/http/htmx/common/components"
@@ -17,6 +17,7 @@ import (
   // "net/url"
 	"liga-app/entities"
 	"strings"
+	// "github.com/k0kubun/pp"
 )
 
 templ PageMatchScheduleTimes(vmodel VModelPageMatchScheduleTimes) {
@@ -40,28 +41,153 @@ templ PageMatchScheduleTimes(vmodel VModelPageMatchScheduleTimes) {
 
 templ ViewSelectTimes(vmodel VModelPageMatchScheduleTimes) {
   <div class="flex flex-col space-y-8">
-    for _, ts := range vmodel.TimeSlots {
-      <div class="card w-auto shadow-xl ">
-        <div class="p-4 flex flex-col space-y-2">
-          <p>{ts.Start.Format("15:04")} - {ts.End.Format("15:04")}</p>
-          if ts.Match == nil {
-            <p class="text-success font-bold">AVAILABLE</p>
-            <button
-              hx-confirm={confirmMessageSelectSchedule(ts.Start, ts.End)}
-              hx-post={urlPostMatchScheduleRequest(vmodel.League.UUID, vmodel.Match.UUID, vmodel.Venue.UUID, vmodel.Court.UUID)}
-              hx-swap="none"
-              name="timeslot_uuids"
-              value={valuePostMatchScheduleRequest([]entities.CourtTimeSlot{ts})}
-              class="btn btn-primary btn-sm w-full"
-            >
-              PILIH TIMESLOT
-            </button>
-          } else {
-          }
+    if vmodel.League.ParticipationCategory == enums.CATEGORY_PARTICIPATION_TEAMS {
+      for _, ts := range groupTimeSlotsForTeamSchedule(vmodel.TimeSlots) {
+        <div class="card w-auto shadow-xl ">
+          <div class="p-4 flex flex-col space-y-2">
+            <p>{ts.Start.Format("15:04")} - {ts.End.Format("15:04")}</p>
+            if ts.IsAvailable {
+              <p class="text-success font-bold">AVAILABLE</p>
+              <button
+                hx-confirm={confirmMessageSelectSchedule(ts.Start, ts.End)}
+                hx-post={urlPostMatchScheduleRequest(vmodel.League.UUID, vmodel.Match.UUID, vmodel.Venue.UUID, vmodel.Court.UUID)}
+                hx-swap="none"
+                name="timeslot_uuids"
+                value={valuePostMatchScheduleRequest(ts.TimeSlots)}
+                class="btn btn-primary btn-sm w-full"
+              >
+                PILIH TIMESLOT
+              </button>
+            } else {
+              <p class="text-error font-bold">UNAVAILABLE</p>
+              if ts.Match != nil {
+                <div class="flex flex-row justify-between space-x-6 items-center">
+                  <div class="flex-3 text-sm">{ts.Match.TeamA.Name}</div>
+                  <div class="flex-1">VS</div>
+                  <div class="flex-3 text-sm">{ts.Match.TeamB.Name}</div>
+                </div>
+              } else {
+                <p class="text-sm text-neutral-600">Pertandingan beregu perlu waktu minimal 2 jam</p>
+              }
+            }
+          </div>
         </div>
-      </div>
+      }
+    } else {
+      for _, ts := range vmodel.TimeSlots {
+        <div class="card w-auto shadow-xl ">
+          <div class="p-4 flex flex-col space-y-2">
+            <p>{ts.Start.Format("15:04")} - {ts.End.Format("15:04")}</p>
+            if ts.Match == nil {
+              <p class="text-success font-bold">AVAILABLE</p>
+              <button
+                hx-confirm={confirmMessageSelectSchedule(ts.Start, ts.End)}
+                hx-post={urlPostMatchScheduleRequest(vmodel.League.UUID, vmodel.Match.UUID, vmodel.Venue.UUID, vmodel.Court.UUID)}
+                hx-swap="none"
+                name="timeslot_uuids"
+                value={valuePostMatchScheduleRequest([]entities.CourtTimeSlot{ts})}
+                class="btn btn-primary btn-sm w-full"
+              >
+                PILIH TIMESLOT
+              </button>
+            } else {
+              <p class="text-error font-bold">UNAVAILABLE</p>
+            }
+          </div>
+        </div>
+      }
     }
   </div>
+}
+
+type TeamScheduleTimeSlot struct {
+  TimeSlots []entities.CourtTimeSlot
+  Start time.Time
+  End time.Time
+  Match *entities.Match
+  IsAvailable bool
+}
+
+func groupTimeSlotsForTeamSchedule(timeslots []entities.CourtTimeSlot) []TeamScheduleTimeSlot {
+  // pp.Println(timeslots)
+  teamScheduleTimeSlots := []TeamScheduleTimeSlot{}
+  curr := TeamScheduleTimeSlot{}
+
+  i := 0
+  for {
+    if i > len(timeslots) - 1 {
+      break
+    }
+
+    ts := timeslots[i]
+
+    // Match exists in timeslot
+    if ts.Match != nil {
+      fmt.Println("A")
+      curr.Match = ts.Match
+      curr.TimeSlots = append(curr.TimeSlots, ts)
+      curr.IsAvailable = false
+      curr.Start = ts.Start
+      curr.End = ts.End
+      teamScheduleTimeSlots = append(teamScheduleTimeSlots, curr)
+      // reset
+      curr = TeamScheduleTimeSlot{}
+
+      i += 1
+      continue
+    }
+
+    // Last 2 timeslots, can not be used, because we need 3 timeslots
+    if i + 1 == len(timeslots) - 1 {
+      fmt.Println("B")
+      for j := i; j < len(timeslots); j++ {
+        ts := timeslots[j]
+        curr.Match = ts.Match
+        curr.TimeSlots = append(curr.TimeSlots, ts)
+        curr.IsAvailable = false
+        curr.Start = ts.Start
+        curr.End = ts.End
+        teamScheduleTimeSlots = append(teamScheduleTimeSlots, curr)
+        // reset
+        curr = TeamScheduleTimeSlot{}
+      }
+      break
+    }
+
+    tsPlus1 := timeslots[i+1]
+    tsPlus2 := timeslots[i+2]
+
+    if tsPlus1.Match == nil && tsPlus2.Match == nil {
+      fmt.Println("C")
+      curr.TimeSlots = []entities.CourtTimeSlot{ts, tsPlus1, tsPlus2}
+      curr.Start = ts.Start
+      curr.End = tsPlus2.End
+      curr.IsAvailable = true
+      teamScheduleTimeSlots = append(teamScheduleTimeSlots, curr)
+      // reset
+      curr = TeamScheduleTimeSlot{}
+
+    } else {
+      fmt.Println("D")
+      for _, x := range []entities.CourtTimeSlot{ts, tsPlus1, tsPlus2} {
+        curr.Match = x.Match
+        curr.TimeSlots = append(curr.TimeSlots, x)
+        curr.IsAvailable = false
+        curr.Start = x.Start
+        curr.End = x.End
+        teamScheduleTimeSlots = append(teamScheduleTimeSlots, curr)
+        // reset
+        curr = TeamScheduleTimeSlot{}
+      }
+    }
+
+    i += 3
+    continue
+  }
+
+  // pp.Println(teamScheduleTimeSlots)
+
+  return teamScheduleTimeSlots
 }
 
 func urlPostMatchScheduleRequest(leagueUUID, matchUUID, venueUUID, courtUUID uuid.UUID) string {

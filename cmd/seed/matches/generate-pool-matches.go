@@ -2,6 +2,7 @@ package matches
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"liga-app/entities"
 	"liga-app/enums"
@@ -241,8 +242,11 @@ func DeleteLeagueRoundRobinFixture(ctx context.Context, db *gorm.DB, leagueUUID 
 		Where("format = ?", enums.FIXTURE_FORMAT_ROUND_ROBIN).
 		First(&fixtureRoundRobin).
 		Error
-	if err != nil {
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return fmt.Errorf("db.Where(...).Where(...).First(&fixtureRoundRobin) : %w", err)
+	}
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil
 	}
 
 	groups := []entities.Group{}
