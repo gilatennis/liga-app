@@ -14,7 +14,7 @@ templ PageTeamDetail(vmodel *VModelPageTeamDetail) {
   @layouts.DashboardLayout("Tim", vmodel.User, layouts.FOOTER_MENU_LEAGUE) {
     <div class="space-y-8">
       @league.ViewLeagueDetail(vmodel.League, false)
-      @components.PageHeader("Detail Tim")
+      @components.PageHeader("Detail Tim", "")
       @ViewTeamDetail(vmodel)
       @ViewTeamMembers(vmodel)
     </div>

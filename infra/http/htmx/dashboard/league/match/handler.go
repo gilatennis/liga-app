@@ -2,6 +2,7 @@ package match
 
 import (
 	"fmt"
+	"liga-app/entities"
 	"liga-app/infra/http/htmx/common"
 	iCommon "liga-app/interfaces/common"
 	"liga-app/interfaces/repositories"
@@ -513,4 +514,139 @@ func (h *Handler) PutConfirmMatchSchedule(c *gin.Context) {
 
 	location := fmt.Sprintf("/dashboard/leagues/%s/matches/%s", leagueUUID, matchUUID)
 	h.ResponseSuccessRedirect(c, "confirm match schedule success", location)
+}
+
+func (h *Handler) PostMatchSet(c *gin.Context) {
+	user, err := h.GetAuthenticatedUser(c)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusUnauthorized, err.Error())
+		return
+	}
+	_ = user
+
+	params, err := h.GetURLUUIDParams(c, []string{"league_uuid", "match_uuid"})
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	leagueUUID, matchUUID := params[0], params[1]
+	_, _ = leagueUUID, matchUUID
+
+	type MatchSetPayload struct {
+		PartaiName     string `form:"partai_name"`
+		MatchSetNumber int    `form:"match_set_number"`
+		TeamAScore     int    `form:"team_a_score"`
+		TeamBScore     int    `form:"team_b_score"`
+	}
+	p := MatchSetPayload{}
+	err = c.Bind(&p)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	matchSet := entities.MatchSet{
+		MatchUUID:  matchUUID,
+		Number:     p.MatchSetNumber,
+		TeamAScore: p.TeamAScore,
+		TeamBScore: p.TeamBScore,
+	}
+
+	_, err = h.matchService.SaveMatchSet(c, user.UUID, &matchSet)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	match, err := h.matchService.GetByUUID(c, matchUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	view := ViewTeamsMatchPartai(p.PartaiName, leagueUUID, match, p.MatchSetNumber)
+
+	h.ResponseAlertSuccess(c, "Skor berhasil di update")
+	h.RenderView(c, view)
+}
+
+func (h *Handler) PutMatchComplete(c *gin.Context) {
+	user, err := h.GetAuthenticatedUser(c)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusUnauthorized, err.Error())
+		return
+	}
+	_ = user
+
+	params, err := h.GetURLUUIDParams(c, []string{"league_uuid", "match_uuid"})
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	leagueUUID, matchUUID := params[0], params[1]
+	_, _ = leagueUUID, matchUUID
+
+	_, err = h.matchService.CompleteMatch(c, user.UUID, matchUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	league, err := h.leagueService.GetByUUID(c, leagueUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	match, err := h.matchService.GetByUUID(c, matchUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	view := ViewMatchDetailTeams(user, league, match)
+	h.ResponseAlertSuccess(c, "Pertandingan berhasil di update")
+	h.RenderView(c, view)
+}
+
+func (h *Handler) PutMatchConfirmComplete(c *gin.Context) {
+	user, err := h.GetAuthenticatedUser(c)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusUnauthorized, err.Error())
+		return
+	}
+	_ = user
+
+	params, err := h.GetURLUUIDParams(c, []string{"league_uuid", "match_uuid"})
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	leagueUUID, matchUUID := params[0], params[1]
+	_, _ = leagueUUID, matchUUID
+
+	_, err = h.matchService.ConfirmCompleteMatch(c, user.UUID, matchUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	league, err := h.leagueService.GetByUUID(c, leagueUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	match, err := h.matchService.GetByUUID(c, matchUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	view := ViewMatchDetailTeams(user, league, match)
+	h.ResponseAlertSuccess(c, "Pertandingan berhasil di update")
+	h.RenderView(c, view)
 }

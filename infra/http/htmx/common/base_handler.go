@@ -153,3 +153,16 @@ func (h *BaseHandler) ResponseAlertError(c *gin.Context, message string) error {
 	c.Header("HX-Trigger-After-Settle", string(jsonAlertMessage))
 	return nil
 }
+
+func (h *BaseHandler) ResponseAlertSuccess(c *gin.Context, message string) error {
+	alert := NewAlertPayload(AlertTypeSuccess, message)
+
+	jsonAlertMessage, err := alert.ToJSON()
+	if err != nil {
+		err = fmt.Errorf("htmx.common.base_handler.RenderResponseCreatedPage() : %w", err)
+		return err
+	}
+
+	c.Header("HX-Trigger-After-Settle", string(jsonAlertMessage))
+	return nil
+}

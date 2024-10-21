@@ -24,7 +24,7 @@ templ PageMatchScheduleTimes(vmodel VModelPageMatchScheduleTimes) {
   @layouts.DashboardLayout("Pilih Venue", vmodel.User, layouts.FOOTER_MENU_LEAGUE) {
     <div class="space-y-8">
       @league.ViewLeagueDetail(vmodel.League, false)
-      @components.PageHeader("Pilih Waktu Bertanding")
+      @components.PageHeader("Pilih Waktu Bertanding", "")
       <div class="space-y-4">
         <h1 class="text-xl font-bold">{vmodel.Venue.Name}</h1>
         <h2 class="text-lg font-bold mt-4">{vmodel.Court.Name}</h2>

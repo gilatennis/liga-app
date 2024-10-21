@@ -17,7 +17,7 @@ templ PageMatchScheduleCourts(vmodel VModelPageMatchScheduleCourts) {
   @layouts.DashboardLayout("Tim", vmodel.User, layouts.FOOTER_MENU_LEAGUE) {
     <div class="space-y-8">
       @league.ViewLeagueDetail(vmodel.League, false)
-      @components.PageHeader("Pilih Lapangan")
+      @components.PageHeader("Pilih Lapangan", "")
       <div class="space-y-4">
         <img src={vmodel.Venue.Image} class="h-32 w-full object-cover" />
         <div>
