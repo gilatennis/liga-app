@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Store struct {
@@ -86,10 +87,20 @@ func (s *Store) GetByUUID(ctx context.Context, matchUUID uuid.UUID) (*entities.M
 		Preload("MatchScheduleRequest.Court").
 		Preload("MatchScheduleRequest.Court.Venue").
 		Preload("MatchScheduleRequest.TimeSlots").
+		Preload("Sets").
 		First(&match).Error
 	if err != nil {
 		return nil, fmt.Errorf("s.db.Where(\"uuid = ?\", matchUUID=%s).First(&match).Error : %w", matchUUID, err)
 	}
 
 	return &match, nil
+}
+
+func (s *Store) Update(ctx context.Context, match *entities.Match) (*uuid.UUID, error) {
+	err := s.db.WithContext(ctx).Omit(clause.Associations).Save(match).Error
+	if err != nil {
+		return nil, fmt.Errorf("s.db.Save(match).Error : %w", err)
+	}
+
+	return &match.UUID, nil
 }

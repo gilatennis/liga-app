@@ -7,7 +7,6 @@ import (
 	"liga-app/entities"
 	"liga-app/enums"
 	"liga-app/interfaces/common"
-	"liga-app/interfaces/repositories"
 	iRepo "liga-app/interfaces/repositories"
 	iService "liga-app/interfaces/services"
 	"liga-app/utils"
@@ -20,17 +19,20 @@ type Service struct {
 	matchRepo                iRepo.IMatchRepository
 	courtTimeSlotRepo        iRepo.ICourtTimeSlotRepository
 	matchScheduleRequestRepo iRepo.IMatchScheduleRequestRepository
+	matchSetRepo             iRepo.IMatchSetRepository
 }
 
 func NewService(
 	matchRepo iRepo.IMatchRepository,
 	courtTimeSlotRepo iRepo.ICourtTimeSlotRepository,
 	matchScheduleRequestRepo iRepo.IMatchScheduleRequestRepository,
+	matchSetRepo iRepo.IMatchSetRepository,
 ) *Service {
 	return &Service{
 		matchRepo:                matchRepo,
 		courtTimeSlotRepo:        courtTimeSlotRepo,
 		matchScheduleRequestRepo: matchScheduleRequestRepo,
+		matchSetRepo:             matchSetRepo,
 	}
 }
 
@@ -94,6 +96,11 @@ func (s *Service) getStartOfWeek() time.Time {
 }
 
 func (s *Service) setMatchFilterStatus(m *entities.Match) {
+	if m.IsComplete && m.IsCompleteConfirmed {
+		m.FilterStatus = string(enums.MATCH_STATUS_COMPLETED)
+		return
+	}
+
 	startOfWeek := s.getStartOfWeek()
 	if m.Round.End != nil && startOfWeek.Before(*m.Round.End) && m.Status == string(enums.MATCH_STATUS_WAITING) {
 		m.FilterStatus = string(iService.MATCH_FILTER_STATUS_UPCOMING)
@@ -117,7 +124,7 @@ func (s *Service) GetByUUID(ctx context.Context, matchUUID uuid.UUID) (*entities
 
 func (s *Service) RequestMatchSchedule(ctx context.Context, userUUID uuid.UUID, matchUUID uuid.UUID, timeslotUUIDs []uuid.UUID) (*uuid.UUID, error) {
 	p := common.NewPagination(1, len(timeslotUUIDs), []common.OrderBy{})
-	f := &repositories.CourtTimeSlotFilter{CourtTimeSlotUUIDs: timeslotUUIDs}
+	f := &iRepo.CourtTimeSlotFilter{CourtTimeSlotUUIDs: timeslotUUIDs}
 	timeslots, _, err := s.courtTimeSlotRepo.Get(ctx, p, f)
 	if err != nil {
 		return nil, fmt.Errorf("s.courtTimeSlotRepo.Get(ctx, p, f) : %w", err)
@@ -183,4 +190,84 @@ func isMatchScheduleConfirmer(userUUID uuid.UUID, match *entities.Match) bool {
 
 func isMatchParticipantCaptain(userUUID uuid.UUID, match *entities.Match) bool {
 	return userUUID == match.TeamA.CaptainUserUUID || userUUID == match.TeamB.CaptainUserUUID
+}
+
+func (s *Service) SaveMatchSet(ctx context.Context, userUUID uuid.UUID, matchSet *entities.MatchSet) (*uuid.UUID, error) {
+	match, err := s.matchRepo.GetByUUID(ctx, matchSet.MatchUUID)
+	if err != nil {
+		return nil, fmt.Errorf("s.matchRepo.GetByUUID(ctx, matchSet.MatchUUID=%s) : %w", matchSet.MatchUUID, err)
+	}
+
+	if match.TeamA.CaptainUserUUID != userUUID && match.TeamB.CaptainUserUUID != userUUID {
+		return nil, &domainErrors.ErrUnauthorized{Message: "not authorized to save match set"}
+	}
+
+	matchSetUUID, err := s.matchSetRepo.SaveMatchSet(ctx, userUUID, matchSet)
+	if err != nil {
+		return nil, fmt.Errorf("s.matchSetRepo.SaveMatchSet(ctx, matchSet) : %w", err)
+	}
+
+	return matchSetUUID, nil
+}
+
+func (s *Service) CompleteMatch(ctx context.Context, userUUID, matchUUID uuid.UUID) (*uuid.UUID, error) {
+	match, err := s.matchRepo.GetByUUID(ctx, matchUUID)
+	if err != nil {
+		return nil, fmt.Errorf("s.matchRepo.GetByUUID(ctx, matchUUID=%s) : %w", matchUUID, err)
+	}
+
+	if match.TeamA.CaptainUserUUID != userUUID && match.TeamB.CaptainUserUUID != userUUID {
+		return nil, &domainErrors.ErrUnauthorized{Message: "not authorized to complete match"}
+	}
+
+	if match.League.ParticipationCategory == enums.CATEGORY_PARTICIPATION_TEAMS {
+		if len(match.Sets) < 3 {
+			return nil, &domainErrors.ErrBadRequest{Message: "not all match sets are completed"}
+		}
+		for _, s := range match.Sets {
+			if s.TeamAScore == 0 && s.TeamBScore == 0 {
+				return nil, &domainErrors.ErrBadRequest{Message: "not all match sets are completed"}
+			}
+		}
+	}
+
+	match.IsComplete = true
+	match.IsCompletedBy = userUUID
+	now := time.Now()
+	match.IsCompletedAt = &now
+
+	updatedUUID, err := s.matchRepo.Update(ctx, match)
+	if err != nil {
+		return nil, fmt.Errorf("s.matchRepo.Update(ctx, match) : %w", err)
+	}
+
+	return updatedUUID, nil
+}
+
+func (s *Service) ConfirmCompleteMatch(ctx context.Context, userUUID, matchUUID uuid.UUID) (*uuid.UUID, error) {
+	match, err := s.matchRepo.GetByUUID(ctx, matchUUID)
+	if err != nil {
+		return nil, fmt.Errorf("s.matchRepo.GetByUUID(ctx, matchUUID=%s) : %w", matchUUID, err)
+	}
+
+	if match.TeamA.CaptainUserUUID != userUUID && match.TeamB.CaptainUserUUID != userUUID {
+		return nil, &domainErrors.ErrUnauthorized{Message: "not authorized to complete match"}
+	}
+
+	if !match.IsComplete {
+		return nil, &domainErrors.ErrBadRequest{Message: "match not yet complete"}
+	}
+
+	match.IsCompleteConfirmed = true
+	match.IsCompleteConfirmedBy = userUUID
+	now := time.Now()
+	match.IsCompleteConfirmedAt = &now
+	match.Status = string(enums.MATCH_STATUS_COMPLETED)
+
+	updatedUUID, err := s.matchRepo.Update(ctx, match)
+	if err != nil {
+		return nil, fmt.Errorf("s.matchRepo.Update(ctx, match) : %w", err)
+	}
+
+	return updatedUUID, nil
 }

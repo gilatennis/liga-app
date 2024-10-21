@@ -27,4 +27,22 @@ type Match struct {
 	FilterStatus             string                `gorm:"-:all"`
 	MatchScheduleRequestUUID *uuid.UUID            `gorm:"type:CHAR(36)"`
 	MatchScheduleRequest     *MatchScheduleRequest `gorm:"ForeignKey:MatchScheduleRequestUUID;References:UUID;constraint:OnDelete:SET NULL;"`
+	IsComplete               bool
+	IsCompletedBy            uuid.UUID `gorm:"type:CHAR(36)"`
+	IsCompletedAt            *time.Time
+	IsCompleteConfirmed      bool
+	IsCompleteConfirmedBy    uuid.UUID `gorm:"type:CHAR(36)"`
+	IsCompleteConfirmedAt    *time.Time
+}
+
+func (m *Match) GetMatchSetByNumber(num int) *MatchSet {
+	var ms *MatchSet
+	for _, s := range m.Sets {
+		if s.Number == num {
+			ss := s
+			ms = &ss
+		}
+	}
+
+	return ms
 }

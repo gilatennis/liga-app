@@ -17,7 +17,7 @@ templ PageMatchList(vmodel *VModelPageMatchList) {
   @layouts.DashboardLayout("Tim", vmodel.User, layouts.FOOTER_MENU_LEAGUE) {
     <div class="space-y-8">
       @league.ViewLeagueDetail(vmodel.League, false)
-      @components.PageHeader("Daftar Pertandingan")
+      @components.PageHeader("Daftar Pertandingan", "")
       @ViewFilterMatchList()
       @ViewMatchList(vmodel.League.UUID, vmodel.Matches, vmodel.MatchesNextPage)
     </div>
@@ -85,7 +85,7 @@ func urlLoadMoreMatches(leagueUUID uuid.UUID, page int) string {
 
 templ ViewMatchList(leagueUUID uuid.UUID, matches []entities.Match, nextPage int) {
   <div
-    class="space-y-4"
+    class="flex flex-col space-y-4"
     id="view-match-list"
     hx-trigger="refetch-list"
     hx-get={urlGetMatchListView(leagueUUID)}
@@ -136,7 +136,11 @@ templ ViewMatchCard(m entities.Match) {
     <div class="card w-auto shadow-xl">
       <div class="p-4 space-y-4">
         <div class="flex flex-row">
-          <div class="flex-1 text-left text-primary font-bold">{m.FilterStatus}</div>
+          if m.FilterStatus == "COMPLETED" {
+            <div class="flex-1 text-left text-success font-bold">{m.FilterStatus}</div>
+          } else {
+            <div class="flex-1 text-left text-primary font-bold">{m.FilterStatus}</div>
+          }
           <div class="flex-1">
             <div class="text-left text-secondary font-bold">Pertandingan ke {strconv.Itoa(m.Round.Number)}</div>
             <div class="text-xs">{monday.Format(*m.Round.Start, "02/01/2006", monday.LocaleIdID)} - {monday.Format(*m.Round.End, "02/01/2006", monday.LocaleIdID)}</div>

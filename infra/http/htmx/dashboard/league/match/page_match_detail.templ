@@ -23,7 +23,7 @@ templ PageMatchDetail(vmodel VModelPageMatchDetail) {
   @layouts.DashboardLayout("Tim", vmodel.User, layouts.FOOTER_MENU_LEAGUE) {
     <div class="space-y-8">
       @league.ViewLeagueDetail(vmodel.League, false)
-      @components.PageHeader("Detail Pertandingan")
+      @components.PageHeader("Detail Pertandingan", fmt.Sprintf("/dashboard/leagues/%s/matches", vmodel.League.UUID))
       @ViewMatchDetail(vmodel)
     </div>
   }
@@ -33,7 +33,11 @@ templ ViewMatchDetail(vmodel VModelPageMatchDetail) {
   <div class="card w-auto shadow-xl">
     <div class="p-4 space-y-4">
       <div class="flex flex-row">
-        <div class="flex-1 text-left text-primary font-bold">{vmodel.Match.FilterStatus}</div>
+        if vmodel.Match.FilterStatus == "COMPLETED" {
+          <div class="flex-1 text-left text-success font-bold">{vmodel.Match.FilterStatus}</div>
+        } else {
+          <div class="flex-1 text-left text-primary font-bold">{vmodel.Match.FilterStatus}</div>
+        }
         <div class="flex-1 text-left text-secondary font-bold">Pertandingan ke {strconv.Itoa(vmodel.Match.Round.Number)}</div>
       </div>
       <div class="flex flex-row justify-between space-x-6 items-center">
@@ -42,6 +46,7 @@ templ ViewMatchDetail(vmodel VModelPageMatchDetail) {
         <div class="flex-3 text-sm">{vmodel.Match.TeamB.Name}</div>
       </div>
 
+      // INFO: Match Schedule not requested =========================
       if vmodel.Match.MatchScheduleRequest == nil &&
         isMatchParticipantCaptain(vmodel.User, vmodel.Match) &&
         IsMatchScheduleable(vmodel.Match) {
@@ -51,31 +56,33 @@ templ ViewMatchDetail(vmodel VModelPageMatchDetail) {
           </a>
         </div>
       }
+      // Match schedule not requested end ============================
 
+
+      // INFO: Match schedule requested ==============================
       if vmodel.Match.MatchScheduleRequest != nil {
-        <div class="pt-4 flex flex-col space-y-2">
-          <div class="text-lg font-bold">Jadwal Pertandingan</div>
-          if !vmodel.Match.MatchScheduleRequest.IsAccepted {
-            @alertScheduleConfirmation()
-          }
-          <div>{vmodel.Match.MatchScheduleRequest.Court.Venue.Name}</div>
-          <div>{vmodel.Match.MatchScheduleRequest.Court.Venue.Address}</div>
-          <div class="font-bold">{vmodel.Match.MatchScheduleRequest.Court.Name}</div>
-          <div>{displayTimeSlotsDate(vmodel.Match.MatchScheduleRequest.TimeSlots)}</div>
-          <div>{displayTimeSlotsTimeStartToEnd(vmodel.Match.MatchScheduleRequest.TimeSlots)}</div>
-        </div>
 
-        if isMatchScheduleCreator(vmodel.User, vmodel.Match) && !vmodel.Match.MatchScheduleRequest.IsAccepted {
-          <div class="pt-4">
-            <a hx-boost="false" href={hrefScheduleMatch(vmodel.Match)} class="btn btn-primary w-full">
-              Ubah Jadwal Pertandingan
-            </a>
-          </div>
-        }
-
-        if isMatchScheduleConfirmer(vmodel.User, vmodel.Match) {
+        // INFO: Match schedule not accepted yet
+        if !vmodel.Match.MatchScheduleRequest.IsAccepted {
           <div class="pt-4 flex flex-col space-y-2">
-            if !vmodel.Match.MatchScheduleRequest.IsAccepted {
+            <div class="text-lg font-bold">Jadwal Pertandingan</div>
+            @alertScheduleConfirmation()
+            <div>{vmodel.Match.MatchScheduleRequest.Court.Venue.Name}</div>
+            <div>{vmodel.Match.MatchScheduleRequest.Court.Venue.Address}</div>
+            <div class="font-bold">{vmodel.Match.MatchScheduleRequest.Court.Name}</div>
+            <div>{displayTimeSlotsDate(vmodel.Match.MatchScheduleRequest.TimeSlots)}</div>
+            <div>{displayTimeSlotsTimeStartToEnd(vmodel.Match.MatchScheduleRequest.TimeSlots)}</div>
+          </div>
+
+          if isMatchScheduleCreator(vmodel.User, vmodel.Match) {
+            <div class="pt-4">
+              <a hx-boost="false" href={hrefScheduleMatch(vmodel.Match)} class="btn btn-primary w-full">
+                Ubah Jadwal Pertandingan
+              </a>
+            </div>
+          }
+          if isMatchScheduleConfirmer(vmodel.User, vmodel.Match) {
+            <div class="pt-4 flex flex-col space-y-2">
               <button
                 class="btn btn-primary w-full"
                 hx-put={hrefPutConfirmMatchSchedule(vmodel.League.UUID, vmodel.Match.UUID, *vmodel.Match.MatchScheduleRequestUUID)}
@@ -92,18 +99,41 @@ templ ViewMatchDetail(vmodel VModelPageMatchDetail) {
                 <img alt="whatsapp" src="/static/icons/whatsapp.png" class="w-4 h-4" />
                 Kontak Lawan untuk perubahan jadwal
               </a>
-            }
-
-          </div>
+            </div>
+          }
         }
 
-        <div class="pt-4 flex flex-col">
-          <a href={hrefWAContactUs()} target="_blank" class="btn btn-secondary btn-sm">
-            <img alt="whatsapp" src="/static/icons/whatsapp.png" class="w-4 h-4" />
-            Kontak Admin
-          </a>
-        </div>
+        // INFO: Match schedule is accepted
+        if vmodel.Match.MatchScheduleRequest.IsAccepted {
+          <div class="pt-4 flex flex-col space-y-2">
+            <div class="text-lg font-bold">Jadwal Pertandingan</div>
+            <div>{vmodel.Match.MatchScheduleRequest.Court.Venue.Name}</div>
+            <div>{vmodel.Match.MatchScheduleRequest.Court.Venue.Address}</div>
+            <div class="font-bold">{vmodel.Match.MatchScheduleRequest.Court.Name}</div>
+            <div>{displayTimeSlotsDate(vmodel.Match.MatchScheduleRequest.TimeSlots)}</div>
+            <div>{displayTimeSlotsTimeStartToEnd(vmodel.Match.MatchScheduleRequest.TimeSlots)}</div>
+          </div>
+          <div class="pt-4 flex flex-col">
+            <a href={hrefWAContactUs()} target="_blank" class="btn btn-secondary btn-sm">
+              <img alt="whatsapp" src="/static/icons/whatsapp.png" class="w-4 h-4" />
+              Kontak Admin
+            </a>
+          </div>
+
+          // Match Score Input
+          <div class="pt-4 flex flex-col space-y-2">
+            <div class="text-lg font-bold">Skor Pertandingan</div>
+            if vmodel.League.ParticipationCategory == enums.CATEGORY_PARTICIPATION_TEAMS {
+              @ViewMatchDetailTeams(vmodel.User, vmodel.League, vmodel.Match)
+            }
+            if vmodel.League.ParticipationCategory == enums.CATEGORY_PARTICIPATION_SINGLES ||
+              vmodel.League.ParticipationCategory == enums.CATEGORY_PARTICIPATION_DOUBLES {
+
+            }
+          </div>
+        }
       }
+      // Match schedule requested end ============================================
     </div>
   </div>
 }

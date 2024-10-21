@@ -26,5 +26,7 @@ type IMatchService interface {
 	GetByUUID(ctx context.Context, matchUUID uuid.UUID) (*entities.Match, error)
 	RequestMatchSchedule(ctx context.Context, userUUID uuid.UUID, matchUUID uuid.UUID, timeslotUUIDs []uuid.UUID) (*uuid.UUID, error)
 	ConfirmMatchSchedule(ctx context.Context, userUUID uuid.UUID, matchScheduleRequestUUID uuid.UUID) (*uuid.UUID, error)
-	// GetScheduleRequestByUUID(ctx context.Context, matchScheduleRequestUUID uuid.UUID) (*entities.MatchScheduleRequest, error)
+	SaveMatchSet(ctx context.Context, userUUID uuid.UUID, matchSet *entities.MatchSet) (*uuid.UUID, error)
+	CompleteMatch(ctx context.Context, userUUID, matchUUID uuid.UUID) (*uuid.UUID, error)
+	ConfirmCompleteMatch(ctx context.Context, userUUID, matchUUID uuid.UUID) (*uuid.UUID, error)
 }

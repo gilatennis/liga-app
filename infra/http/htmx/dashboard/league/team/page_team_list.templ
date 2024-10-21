@@ -16,10 +16,10 @@ templ PageTeamList(vmodel *VModelPageTeamList) {
     <div class="space-y-8">
       @league.ViewLeagueDetail(vmodel.League, false)
       if vmodel.League.ParticipationCategory == enums.CATEGORY_PARTICIPATION_SINGLES {
-        @components.PageHeader("Daftar Pemain")
+        @components.PageHeader("Daftar Pemain", "")
         @ViewPlayerList(vmodel.League.UUID, vmodel.Teams, 0)
       } else {
-        @components.PageHeader("Daftar Tim")
+        @components.PageHeader("Daftar Tim", "")
         @ViewTeamList(vmodel.League.UUID, vmodel.Teams, 0)
       }
     </div>

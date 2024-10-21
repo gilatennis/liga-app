@@ -13,7 +13,7 @@ import (
 templ PageTeamEdit(vmodel *VModelPageTeamEdit) {
   @layouts.DashboardLayout("Tim", vmodel.User, layouts.FOOTER_MENU_LEAGUE) {
     <div class="space-y-8">
-      @components.PageHeader("Edit Informasi Tim")
+      @components.PageHeader("Edit Informasi Tim", "")
       @ViewFormEditTeam(vmodel.VModelFormTeam)
     </div>
   }
