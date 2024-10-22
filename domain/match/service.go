@@ -235,11 +235,21 @@ func (s *Service) CompleteMatch(ctx context.Context, userUUID, matchUUID uuid.UU
 
 	if match.League.ParticipationCategory == enums.CATEGORY_PARTICIPATION_TEAMS {
 		if len(match.Sets) < 3 {
-			return nil, &domainErrors.ErrBadRequest{Message: "not all match sets are completed"}
+			return nil, &domainErrors.ErrBadRequest{Message: "skor pertandingan belum lengkap"}
 		}
 		for _, s := range match.Sets {
 			if s.TeamAScore == 0 && s.TeamBScore == 0 {
-				return nil, &domainErrors.ErrBadRequest{Message: "not all match sets are completed"}
+				return nil, &domainErrors.ErrBadRequest{Message: "skor pertandingan belum lengkap"}
+			}
+		}
+
+	} else {
+		if len(match.Sets) == 0 {
+			return nil, &domainErrors.ErrBadRequest{Message: "skor pertandingan belum di update"}
+		}
+		for _, s := range match.Sets {
+			if s.TeamAScore == 0 && s.TeamBScore == 0 {
+				return nil, &domainErrors.ErrBadRequest{Message: "skor pertandingan belum di update"}
 			}
 		}
 	}

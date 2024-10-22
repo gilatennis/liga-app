@@ -4457,6 +4457,10 @@ html:has(.drawer-toggle:checked) {
   padding-right: 3rem;
 }
 
+.pr-4 {
+  padding-right: 1rem;
+}
+
 .pt-2 {
   padding-top: 0.5rem;
 }

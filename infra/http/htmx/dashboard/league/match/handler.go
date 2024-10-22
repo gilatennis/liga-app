@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"liga-app/config"
 	"liga-app/entities"
+	"liga-app/enums"
 	"liga-app/infra/http/htmx/common"
 	iCommon "liga-app/interfaces/common"
 	"liga-app/interfaces/repositories"
@@ -686,7 +687,7 @@ func (h *Handler) PostMatchSet(c *gin.Context) {
 		return
 	}
 
-	view := ViewTeamsMatchPartai(p.PartaiName, leagueUUID, match, p.MatchSetNumber)
+	view := ViewMatchSet(p.PartaiName, leagueUUID, match, p.MatchSetNumber, true)
 
 	h.ResponseAlertSuccess(c, "Skor berhasil di update")
 	h.RenderView(c, view)
@@ -709,12 +710,6 @@ func (h *Handler) PutMatchComplete(c *gin.Context) {
 	leagueUUID, matchUUID := params[0], params[1]
 	_, _ = leagueUUID, matchUUID
 
-	_, err = h.matchService.CompleteMatch(c, user.UUID, matchUUID)
-	if err != nil {
-		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
-		return
-	}
-
 	league, err := h.leagueService.GetByUUID(c, leagueUUID)
 	if err != nil {
 		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
@@ -727,7 +722,29 @@ func (h *Handler) PutMatchComplete(c *gin.Context) {
 		return
 	}
 
-	view := ViewMatchDetailTeams(user, league, match)
+	_, err = h.matchService.CompleteMatch(c, user.UUID, matchUUID)
+	if err != nil {
+		h.ResponseAlertError(c, err.Error())
+		view := ViewMatchDetailIndividuals(user, league, match)
+		h.RenderView(c, view)
+		return
+	}
+
+	// Fetch updated match entity
+	match, err = h.matchService.GetByUUID(c, matchUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if league.ParticipationCategory == enums.CATEGORY_PARTICIPATION_TEAMS {
+		view := ViewMatchDetailTeams(user, league, match)
+		h.ResponseAlertSuccess(c, "Pertandingan berhasil di update")
+		h.RenderView(c, view)
+		return
+	}
+
+	view := ViewMatchDetailIndividuals(user, league, match)
 	h.ResponseAlertSuccess(c, "Pertandingan berhasil di update")
 	h.RenderView(c, view)
 }
@@ -767,7 +784,14 @@ func (h *Handler) PutMatchConfirmComplete(c *gin.Context) {
 		return
 	}
 
-	view := ViewMatchDetailTeams(user, league, match)
+	if league.ParticipationCategory == enums.CATEGORY_PARTICIPATION_TEAMS {
+		view := ViewMatchDetailTeams(user, league, match)
+		h.ResponseAlertSuccess(c, "Pertandingan berhasil di update")
+		h.RenderView(c, view)
+		return
+	}
+
+	view := ViewMatchDetailIndividuals(user, league, match)
 	h.ResponseAlertSuccess(c, "Pertandingan berhasil di update")
 	h.RenderView(c, view)
 }
