@@ -3,6 +3,7 @@ package match
 import (
 	"liga-app/infra/http/htmx/common/components"
 	"liga-app/entities"
+	"liga-app/enums"
   "github.com/google/uuid"
   "fmt"
   "strconv"
@@ -15,9 +16,9 @@ templ ViewMatchDetailTeams(user *entities.User, league *entities.League, match *
       <div class="w-16 text-center font-bold">Skor</div>
     </div>
 
-    @ViewTeamsMatchPartai("Doubles #1", league.UUID, match, 1)
-    @ViewTeamsMatchPartai("Doubles #2", league.UUID, match, 2)
-    @ViewTeamsMatchPartai("Doubles #3", league.UUID, match, 3)
+    @ViewMatchSet("Doubles #1", league.UUID, match, 1, false)
+    @ViewMatchSet("Doubles #2", league.UUID, match, 2, false)
+    @ViewMatchSet("Doubles #3", league.UUID, match, 3, false)
 
     if canCompleteMatch(user.UUID, match) {
       <div class="pt-8">
@@ -82,9 +83,9 @@ func canConfirmCompleteMatch(userUUID uuid.UUID, match *entities.Match) bool {
     match.IsCompletedBy != userUUID
 }
 
-templ ViewTeamsMatchPartai(partaiName string, leagueUUID uuid.UUID, match *entities.Match, matchSetNumber int) {
+templ ViewMatchSet(partaiName string, leagueUUID uuid.UUID, match *entities.Match, matchSetNumber int, isOpen bool) {
   <div id={"match-set-" + strconv.Itoa(matchSetNumber)} class="collapse collapse-arrow bg-base-200">
-    <input type="radio" name="my-accordion-2" />
+    <input type="radio" name="my-accordion-2" checked?={isOpen} />
     <div class="collapse-title">
       <div class="flex flex-row">
         <div class="w-24">{partaiName}</div>
@@ -158,4 +159,96 @@ func teamBScore(ms *entities.MatchSet) string {
     return "0"
   }
   return strconv.Itoa(ms.TeamBScore)
+}
+
+func getMatchSetTitle(league *entities.League) string {
+  if league.ParticipationCategory == enums.CATEGORY_PARTICIPATION_DOUBLES {
+    return "Doubles"
+  }
+
+  if league.ParticipationCategory == enums.CATEGORY_PARTICIPATION_SINGLES {
+    return "Singles"
+  }
+
+  return ""
+}
+
+templ ViewMatchDetailIndividuals(user *entities.User, league *entities.League, match *entities.Match) {
+  <div id="match-detail" class="flex flex-col">
+
+    @ViewMatchSet(getMatchSetTitle(league), league.UUID, match, 1, true)
+
+    if canCompleteMatch(user.UUID, match) {
+      <div class="pt-8">
+        <button
+          class="btn btn-primary w-full"
+          hx-put={urlPutCompleteMatch(league.UUID, match.UUID)}
+          hx-confirm="Buat pertandingan selesai? Lawan akan diberitahu untuk konfirmasi bahwa pertandingan selesai"
+          hx-swap="outerHTML"
+          hx-target="#match-detail"
+        >
+          Pertandingan Selesai
+        </button>
+      </div>
+    }
+
+    if match.IsComplete && !match.IsCompleteConfirmed {
+      @alertMatchCompleteConfirmation()
+    }
+
+    if canConfirmCompleteMatch(user.UUID, match) {
+      <div class="pt-8">
+        <button
+          class="btn btn-primary w-full"
+          hx-put={urlPutConfirmCompleteMatch(league.UUID, match.UUID)}
+          hx-confirm="Konfirmasi pertandingan selesai? skor tidak bisa di update lagi setelah pertandingan selesai"
+          hx-swap="outerHTML"
+          hx-target="#match-detail"
+        >
+          Konfirmasi Pertandingan Selesai
+        </button>
+      </div>
+    }
+  </div>
+}
+
+templ ViewFormMatchSetIndividuals(vmodel VModelPageMatchDetail) {
+    <div id="match-set-1" class="bg-base-200 flex flex-col pl-4 pr-4 pb-2 pt-2">
+      <div class="flex flex-row justify-between px-2">
+        <div class="text-left text-sm">{vmodel.Match.TeamA.Name}</div>
+        <div>VS</div>
+        <div class="text-right text-sm pl-2">{vmodel.Match.TeamB.Name}</div>
+      </div>
+      <form
+        hx-post={urlPostMatchSet(vmodel.League.UUID, vmodel.Match.UUID)}
+        hx-swap="outerHTML"
+        hx-target={"#match-set-1"}
+      >
+        <input type="hidden" name="match_set_number" value={strconv.Itoa(1)} />
+        <div class="flex flex-row justify-between px-2">
+          @components.InputText(components.InputTextParams{
+            Label: " ",
+            Value: teamAScore(vmodel.Match.GetMatchSetByNumber(1)),
+            Name: "team_a_score",
+            Placeholder: "0",
+            Readonly: vmodel.Match.IsComplete && vmodel.Match.IsCompleteConfirmed,
+          })
+          <div class="w-16"> </div>
+          @components.InputText(components.InputTextParams{
+            Label: " ",
+            Value: teamBScore(vmodel.Match.GetMatchSetByNumber(1)),
+            Name: "team_b_score",
+            Placeholder: "0",
+            Readonly: vmodel.Match.IsComplete && vmodel.Match.IsCompleteConfirmed,
+          })
+        </div>
+        if !vmodel.Match.IsCompleteConfirmed {
+          <div class="w-full pt-8 px-2">
+            <button class="btn btn-primary w-full btn-sm">
+              Update Skor
+            </button>
+          </div>
+        }
+      </form>
+    </div>
 }

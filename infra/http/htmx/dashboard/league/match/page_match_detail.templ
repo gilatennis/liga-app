@@ -80,7 +80,7 @@ templ ViewMatchDetail(vmodel VModelPageMatchDetail) {
                 <img alt="whatsapp" src="/static/icons/whatsapp.png" class="w-4 h-4" />
                 Kontak Admin
               </a>
-              <a href={hrefWAContactOpponent(vmodel.User, vmodel.Match, vmodel.WebsiteBaseURL)} target="_blank" class="btn btn-secondary btn-sm">
+              <a href={hrefWAContactOpponentForConfirmation(vmodel.User, vmodel.Match, vmodel.WebsiteBaseURL)} target="_blank" class="btn btn-secondary btn-sm">
                 <img alt="whatsapp" src="/static/icons/whatsapp.png" class="w-4 h-4" />
                 Kontak Lawan untuk konfirmasi jadwal
               </a>
@@ -114,10 +114,14 @@ templ ViewMatchDetail(vmodel VModelPageMatchDetail) {
             <div class="text-lg font-bold">Jadwal Pertandingan</div>
             @ViewMatchSchedule(vmodel.Match.MatchScheduleRequest)
           </div>
-          <div class="pt-4 flex flex-col">
+          <div class="pt-4 flex flex-col space-y-2">
             <a href={hrefWAContactUs()} target="_blank" class="btn btn-secondary btn-sm">
               <img alt="whatsapp" src="/static/icons/whatsapp.png" class="w-4 h-4" />
               Kontak Admin
+            </a>
+            <a href={hrefWAContactOpponentForConfirmation(vmodel.User, vmodel.Match, vmodel.WebsiteBaseURL)} target="_blank" class="btn btn-secondary btn-sm">
+              <img alt="whatsapp" src="/static/icons/whatsapp.png" class="w-4 h-4" />
+              Kontak Lawan
             </a>
           </div>
 
@@ -129,7 +133,7 @@ templ ViewMatchDetail(vmodel VModelPageMatchDetail) {
             }
             if vmodel.League.ParticipationCategory == enums.CATEGORY_PARTICIPATION_SINGLES ||
               vmodel.League.ParticipationCategory == enums.CATEGORY_PARTICIPATION_DOUBLES {
-
+              @ViewMatchDetailIndividuals(vmodel.User, vmodel.League, vmodel.Match)
             }
           </div>
         }
@@ -261,7 +265,7 @@ func IsPreviousRound(match *entities.Match) bool {
   return match.Round.End.Before(time.Now())
 }
 
-func hrefWAContactOpponent(user *entities.User, match *entities.Match, webBaseURL string) templ.SafeURL {
+func hrefWAContactOpponentForConfirmation(user *entities.User, match *entities.Match, webBaseURL string) templ.SafeURL {
   var opponentCaptain entities.User 
   if match.TeamA.CaptainUserUUID == user.UUID {
     opponentCaptain = match.TeamB.Captain
