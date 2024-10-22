@@ -2,6 +2,7 @@ package match
 
 import (
 	"fmt"
+	"liga-app/config"
 	"liga-app/entities"
 	"liga-app/infra/http/htmx/common"
 	iCommon "liga-app/interfaces/common"
@@ -19,6 +20,7 @@ import (
 
 type Handler struct {
 	common.BaseHandler
+	cfg           *config.Config
 	leagueService services.ILeagueService
 	matchService  services.IMatchService
 	venueService  services.IVenueService
@@ -26,12 +28,14 @@ type Handler struct {
 }
 
 func NewHandler(
+	cfg *config.Config,
 	leagueService services.ILeagueService,
 	matchService services.IMatchService,
 	venueService services.IVenueService,
 	courtService services.ICourtService,
 ) *Handler {
 	return &Handler{
+		cfg:           cfg,
 		leagueService: leagueService,
 		matchService:  matchService,
 		venueService:  venueService,
@@ -181,9 +185,10 @@ func (h *Handler) GetMatchDetailPage(c *gin.Context) {
 	}
 
 	vmodel := VModelPageMatchDetail{
-		User:   user,
-		League: league,
-		Match:  match,
+		User:           user,
+		League:         league,
+		Match:          match,
+		WebsiteBaseURL: h.cfg.App.BaseURL,
 	}
 
 	page := PageMatchDetail(vmodel)
@@ -234,6 +239,122 @@ func (h *Handler) GetMatchScheduleVenueListPage(c *gin.Context) {
 
 	page := PageMatchScheduleVenues(vmodel)
 	h.RenderView(c, page)
+}
+
+func (h *Handler) GetUseOwnVenuePage(c *gin.Context) {
+	user, err := h.GetAuthenticatedUser(c)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	params, err := h.GetURLUUIDParams(c, []string{"league_uuid", "match_uuid"})
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	leagueUUID, matchUUID := params[0], params[1]
+
+	league, err := h.leagueService.GetByUUID(c, leagueUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	match, err := h.matchService.GetByUUID(c, matchUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	vmodel := VModelPageMatchScheduleOwnVenue{
+		User:                            user,
+		League:                          league,
+		Match:                           match,
+		VModelFormMatchScheduleOwnVenue: &VModelFormMatchScheduleOwnVenue{},
+	}
+
+	page := PageMatchScheduleOwnVenue(vmodel)
+	h.RenderView(c, page)
+}
+
+func (h *Handler) PostUseOwnVenueForm(c *gin.Context) {
+	user, err := h.GetAuthenticatedUser(c)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	params, err := h.GetURLUUIDParams(c, []string{"league_uuid", "match_uuid"})
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	leagueUUID, matchUUID := params[0], params[1]
+
+	league, err := h.leagueService.GetByUUID(c, leagueUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	match, err := h.matchService.GetByUUID(c, matchUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	_ = user
+	_ = league
+	_ = match
+
+	vmodelPage := VModelPageMatchScheduleOwnVenue{
+		User:   user,
+		League: league,
+		Match:  match,
+	}
+
+	p := VModelFormMatchScheduleOwnVenue{}
+	err = c.Bind(&p)
+	if err != nil {
+		vmodelPage.VModelFormMatchScheduleOwnVenue = &p
+		view := ViewOwnVenueForm(vmodelPage)
+		h.RenderViewWithStatus(c, view, http.StatusBadRequest)
+		return
+	}
+
+	if !p.Validate() {
+		vmodelPage.VModelFormMatchScheduleOwnVenue = &p
+		view := ViewOwnVenueForm(vmodelPage)
+		h.RenderViewWithStatus(c, view, http.StatusBadRequest)
+		return
+	}
+
+	vmodelPage.VModelFormMatchScheduleOwnVenue = &p
+
+	req := entities.MatchScheduleRequest{
+		VenueName: p.VenueName,
+		Address:   p.Address,
+		Notes:     p.Notes,
+		Start:     &p.Start,
+		End:       &p.End,
+	}
+	_, err = h.matchService.RequestMatchScheduleOwnVenue(c, user.UUID, matchUUID, &req)
+	if err != nil {
+		view := ViewOwnVenueForm(vmodelPage)
+		h.RenderViewWithStatus(c, view, http.StatusBadRequest)
+		return
+	}
+
+	location := fmt.Sprintf("/dashboard/leagues/%s/matches/%s",
+		leagueUUID, matchUUID,
+	)
+	h.ResponseSuccessRedirect(c, "request match schedule success", location)
+
+	view := ViewOwnVenueForm(vmodelPage)
+	h.RenderView(c, view)
 }
 
 func (h *Handler) GetMatchScheduleCourtListPage(c *gin.Context) {

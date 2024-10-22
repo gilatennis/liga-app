@@ -17,6 +17,7 @@ import (
 	"github.com/goodsign/monday"
 	// "github.com/k0kubun/pp"
 	"sort"
+	"strings"
 )
 
 templ PageMatchDetail(vmodel VModelPageMatchDetail) {
@@ -67,17 +68,21 @@ templ ViewMatchDetail(vmodel VModelPageMatchDetail) {
           <div class="pt-4 flex flex-col space-y-2">
             <div class="text-lg font-bold">Jadwal Pertandingan</div>
             @alertScheduleConfirmation()
-            <div>{vmodel.Match.MatchScheduleRequest.Court.Venue.Name}</div>
-            <div>{vmodel.Match.MatchScheduleRequest.Court.Venue.Address}</div>
-            <div class="font-bold">{vmodel.Match.MatchScheduleRequest.Court.Name}</div>
-            <div>{displayTimeSlotsDate(vmodel.Match.MatchScheduleRequest.TimeSlots)}</div>
-            <div>{displayTimeSlotsTimeStartToEnd(vmodel.Match.MatchScheduleRequest.TimeSlots)}</div>
+            @ViewMatchSchedule(vmodel.Match.MatchScheduleRequest)
           </div>
 
           if isMatchScheduleCreator(vmodel.User, vmodel.Match) {
-            <div class="pt-4">
+            <div class="pt-4 flex flex-col space-y-2">
               <a hx-boost="false" href={hrefScheduleMatch(vmodel.Match)} class="btn btn-primary w-full">
                 Ubah Jadwal Pertandingan
+              </a>
+              <a href={hrefWAContactUs()} target="_blank" class="btn btn-secondary btn-sm">
+                <img alt="whatsapp" src="/static/icons/whatsapp.png" class="w-4 h-4" />
+                Kontak Admin
+              </a>
+              <a href={hrefWAContactOpponent(vmodel.User, vmodel.Match, vmodel.WebsiteBaseURL)} target="_blank" class="btn btn-secondary btn-sm">
+                <img alt="whatsapp" src="/static/icons/whatsapp.png" class="w-4 h-4" />
+                Kontak Lawan untuk konfirmasi jadwal
               </a>
             </div>
           }
@@ -92,7 +97,7 @@ templ ViewMatchDetail(vmodel VModelPageMatchDetail) {
                 Konfirmasi Jadwal Pertandingan
               </button>
 
-              <a href={hrefWAContactOpponentForScheduleChange(getMatchScheduleCreator(vmodel.Match), vmodel.Match.MatchScheduleRequest)}
+              <a href={hrefWAContactOpponentForScheduleChange(getMatchScheduleCreator(vmodel.Match), vmodel.Match.MatchScheduleRequest, vmodel.Match, vmodel.WebsiteBaseURL)}
                 target="_blank"
                 class="btn btn-secondary btn-sm"
               >
@@ -107,11 +112,7 @@ templ ViewMatchDetail(vmodel VModelPageMatchDetail) {
         if vmodel.Match.MatchScheduleRequest.IsAccepted {
           <div class="pt-4 flex flex-col space-y-2">
             <div class="text-lg font-bold">Jadwal Pertandingan</div>
-            <div>{vmodel.Match.MatchScheduleRequest.Court.Venue.Name}</div>
-            <div>{vmodel.Match.MatchScheduleRequest.Court.Venue.Address}</div>
-            <div class="font-bold">{vmodel.Match.MatchScheduleRequest.Court.Name}</div>
-            <div>{displayTimeSlotsDate(vmodel.Match.MatchScheduleRequest.TimeSlots)}</div>
-            <div>{displayTimeSlotsTimeStartToEnd(vmodel.Match.MatchScheduleRequest.TimeSlots)}</div>
+            @ViewMatchSchedule(vmodel.Match.MatchScheduleRequest)
           </div>
           <div class="pt-4 flex flex-col">
             <a href={hrefWAContactUs()} target="_blank" class="btn btn-secondary btn-sm">
@@ -138,6 +139,25 @@ templ ViewMatchDetail(vmodel VModelPageMatchDetail) {
   </div>
 }
 
+func isUsingOwnVenue(matchSchedReq *entities.MatchScheduleRequest) bool {
+  return matchSchedReq.Court == nil
+}
+
+templ ViewMatchSchedule(matchSchedReq *entities.MatchScheduleRequest) {
+  if isUsingOwnVenue(matchSchedReq) {
+    <div>Venue: {matchSchedReq.VenueName}</div>
+    <div>Alamat: {matchSchedReq.Address}</div>
+    <div>Catatan: {matchSchedReq.Notes}</div>
+    <div>{displayDateOwnVenue(*matchSchedReq.Start)}</div>
+    <div>{displayTimeOwnVenue(*matchSchedReq.Start, *matchSchedReq.End)}</div>
+  } else {
+    <div>{matchSchedReq.Court.Venue.Name}</div>
+    <div>{matchSchedReq.Court.Venue.Address}</div>
+    <div class="font-bold">{matchSchedReq.Court.Name}</div>
+    <div>{displayTimeSlotsDate(matchSchedReq.TimeSlots)}</div>
+    <div>{displayTimeSlotsTimeStartToEnd(matchSchedReq.TimeSlots)}</div>
+  }
+}
 
 func isMatchScheduleCreator(user *entities.User, match *entities.Match) bool {
   return isMatchParticipantCaptain(user, match) && user.UUID == match.MatchScheduleRequest.CreatedBy
@@ -208,6 +228,15 @@ func displayTimeSlotsTimeStartToEnd(timeslots []entities.CourtTimeSlot) string {
   return fmt.Sprintf("%s - %s", start.Start.In(loc).Format("15:04"), end.End.In(loc).Format("15:04"))
 }
 
+func displayDateOwnVenue(d time.Time) string {
+  return monday.Format(d, "Monday 2 January 2006", monday.LocaleIdID)
+}
+
+func displayTimeOwnVenue(start, end time.Time) string {
+  loc, _ := time.LoadLocation("Asia/Jakarta")
+  return fmt.Sprintf("%s - %s", start.In(loc).Format("15:04"), end.In(loc).Format("15:04"))
+}
+
 func hrefScheduleMatch(m *entities.Match) templ.SafeURL {
   return templ.URL(fmt.Sprintf("/dashboard/leagues/%s/matches/%s/schedule/venues", m.LeagueUUID, m.UUID))
 }
@@ -232,14 +261,41 @@ func IsPreviousRound(match *entities.Match) bool {
   return match.Round.End.Before(time.Now())
 }
 
+func hrefWAContactOpponent(user *entities.User, match *entities.Match, webBaseURL string) templ.SafeURL {
+  var opponentCaptain entities.User 
+  if match.TeamA.CaptainUserUUID == user.UUID {
+    opponentCaptain = match.TeamB.Captain
+  } else {
+    opponentCaptain = match.TeamB.Captain
+  }
+
+  text := fmt.Sprintf("Halo %s saya sudah menjadwalkan pertandingan. Mohon konfirmasi pertandingan di %s",
+    opponentCaptain.Name,
+    fmt.Sprintf("%s/dashboard/leagues/%s/matches/%s", webBaseURL, match.LeagueUUID, match.UUID),
+  )
+  params := url.Values{}
+  params.Add("text", text)
+  if strings.HasPrefix(opponentCaptain.Phone, "0") {
+    opponentCaptain.Phone = strings.Replace(opponentCaptain.Phone, "0", "+62", 1)
+  }
+  return templ.URL(fmt.Sprintf("https://wa.me/%s?%s", opponentCaptain.Phone, params.Encode()))
+}
+
 func hrefWAContactOpponentForScheduleChange(
   captainScheduleCreator *entities.User,
   matchScheduleRequest *entities.MatchScheduleRequest,
+  match *entities.Match,
+  webBaseURL string,
 ) templ.SafeURL {
-  matchDate := displayTimeSlotsDate(matchScheduleRequest.TimeSlots)
-  text := fmt.Sprintf("Halo. Saya ingin request perubahan jadwal untuk pertandingan di %s", matchDate)
+  text := fmt.Sprintf("Halo. Saya ingin request perubahan jadwal untuk pertandingan di %s",
+    fmt.Sprintf("%s/dashboard/leagues/%s/matches/%s", webBaseURL, match.LeagueUUID, match.UUID),
+  )
   params := url.Values{}
   params.Add("text", text)
+  captainScheduleCreator.Phone = "08159239794"
+  if strings.HasPrefix(captainScheduleCreator.Phone, "0") {
+    captainScheduleCreator.Phone = strings.Replace(captainScheduleCreator.Phone, "0", "+62", 1)
+  }
   return templ.URL(fmt.Sprintf("https://wa.me/%s?%s", captainScheduleCreator.Phone, params.Encode()))
 }
 
@@ -254,3 +310,4 @@ func hrefWAContactUs() templ.SafeURL {
   linkWAGroupSeason1Beginners := "https://chat.whatsapp.com/JUup3ZHCEMd1eO2WifCsI5"
   return templ.URL(linkWAGroupSeason1Beginners)
 }
+

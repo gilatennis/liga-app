@@ -4115,6 +4115,10 @@ html:has(.drawer-toggle:checked) {
   min-width: 50px;
 }
 
+.max-w-96 {
+  max-width: 24rem;
+}
+
 .max-w-\[1028px\] {
   max-width: 1028px;
 }

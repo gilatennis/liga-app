@@ -1,0 +1,98 @@
+package match
+
+import (
+  "liga-app/infra/http/htmx/common/layouts"
+  // "liga-app/infra/http/htmx/common/components"
+  "liga-app/infra/http/htmx/dashboard/league"
+  // "liga-app/entities"
+  // "liga-app/enums"
+  // "strconv"
+	"github.com/google/uuid"
+  // "net/url"
+  "fmt"
+	"liga-app/infra/http/htmx/common/components"
+	// "liga-app/entities"
+  // "time"
+	// "liga-app/enums"
+	// "github.com/goodsign/monday"
+	// "github.com/k0kubun/pp"
+	// "sort"
+	"liga-app/infra/http/htmx/common/scripts"
+	"time"
+)
+
+templ PageMatchScheduleOwnVenue(vmodel VModelPageMatchScheduleOwnVenue) {
+  @layouts.DashboardLayout("Tim", vmodel.User, layouts.FOOTER_MENU_LEAGUE) {
+    <div class="space-y-8">
+      @league.ViewLeagueDetail(vmodel.League, false)
+      @components.PageHeader("Atur Lapangan Sendiri", fmt.Sprintf("/dashboard/leagues/%s/matches/%s/schedule/venues", vmodel.League.UUID, vmodel.Match.UUID))
+      @ViewOwnVenueForm(vmodel)
+    </div>
+  }
+}
+
+templ ViewOwnVenueForm(vmodel VModelPageMatchScheduleOwnVenue) {
+  <div id="form-use-own-venue"  class="card max-w-96 bg-base-100 shadow-xl">
+    <div class="card-body space-y-6">
+      <h1 class="card-title">Informasi Lapangan</h1>
+      <form
+        method="POST"
+        hx-post={urlPostOwnVenue(vmodel.League.UUID, vmodel.Match.UUID)}
+        hx-swap="outerHTML"
+        hx-target="#form-use-own-venue"
+        hx-target-400="#form-use-own-venue"
+        hx-target-5**="#form-use-own-venue"
+        class="flex-col space-y-4"
+      >
+        @components.InputText(components.InputTextParams{
+          Label: "Nama Venue",
+          Name: "venue_name",
+          Value: vmodel.VModelFormMatchScheduleOwnVenue.VenueName,
+          Error: vmodel.VModelFormMatchScheduleOwnVenue.base.FormErrors["name"],
+        })
+        @components.InputTextArea(components.InputTextAreaParams{
+          Label: "Alamat Venue",
+          Name: "address",
+          Value: vmodel.VModelFormMatchScheduleOwnVenue.Address,
+          Error: vmodel.VModelFormMatchScheduleOwnVenue.base.FormErrors["address"],
+        })
+        @components.InputText(components.InputTextParams{
+          Label: "Catatan",
+          Name: "notes",
+          Value: vmodel.VModelFormMatchScheduleOwnVenue.Notes,
+          Error: vmodel.VModelFormMatchScheduleOwnVenue.base.FormErrors["notes"],
+        })
+        @components.InputDatePicker(components.InputDatePickerParams{
+          Label: "Waktu Mulai",
+          Name: "start",
+          Value: displayDate(vmodel.VModelFormMatchScheduleOwnVenue.Start),
+          Error: vmodel.VModelFormMatchScheduleOwnVenue.base.FormErrors["start"],
+        })
+        @components.InputDatePicker(components.InputDatePickerParams{
+          Label: "Waktu Selesai",
+          Name: "end",
+          Value: displayDate(vmodel.VModelFormMatchScheduleOwnVenue.End),
+          Error: vmodel.VModelFormMatchScheduleOwnVenue.base.FormErrors["end"],
+        })
+        if vmodel.VModelFormMatchScheduleOwnVenue.base.ServerError != "" {
+          <p class="text-error mt-1">{ vmodel.VModelFormMatchScheduleOwnVenue.base.ServerError }</p>
+        }
+        <div class="pt-4">
+          <button class="btn btn-primary w-full">Submit</button>
+        </div>
+      </form>
+    </div>
+    @common.ScriptDateTimePicker()
+  </div>
+}
+
+func urlPostOwnVenue(leagueUUID, matchUUID uuid.UUID) string {
+  return fmt.Sprintf("/dashboard/leagues/%s/matches/%s/schedule/venues/use-own-venue", leagueUUID, matchUUID)
+}
+
+func displayDate(date time.Time) string {
+  if date.IsZero() {
+    return ""
+  }
+  return date.Format(time.RFC3339)
+}
