@@ -84,6 +84,8 @@ func setupHtxmRoutes(r *gin.Engine, handlers *Handlers, middlewares *middlewares
 		leagues.GET("/:league_uuid/matches/:match_uuid/schedule/venues/:venue_uuid/courts/:court_uuid/days", handlers.HTMXHandlers.DashboardLeagueMatchHandler.GetMatchScheduleCourtDaysPage)
 		leagues.GET("/:league_uuid/matches/:match_uuid/schedule/venues/:venue_uuid/courts/:court_uuid/times", handlers.HTMXHandlers.DashboardLeagueMatchHandler.GetMatchScheduleCourtTimesPage)
 		leagues.POST("/:league_uuid/matches/:match_uuid/schedule/venues/:venue_uuid/courts/:court_uuid/times", handlers.HTMXHandlers.DashboardLeagueMatchHandler.PostRequestMatchSchedule)
+		leagues.GET("/:league_uuid/matches/:match_uuid/schedule/venues/use-own-venue", handlers.HTMXHandlers.DashboardLeagueMatchHandler.GetUseOwnVenuePage)
+		leagues.POST("/:league_uuid/matches/:match_uuid/schedule/venues/use-own-venue", handlers.HTMXHandlers.DashboardLeagueMatchHandler.PostUseOwnVenueForm)
 		leagues.PUT("/:league_uuid/matches/:match_uuid/schedule/requests/:schedule_request_uuid/confirm", handlers.HTMXHandlers.DashboardLeagueMatchHandler.PutConfirmMatchSchedule)
 		leagues.POST("/:league_uuid/matches/:match_uuid/match-set", handlers.HTMXHandlers.DashboardLeagueMatchHandler.PostMatchSet)
 		leagues.PUT("/:league_uuid/matches/:match_uuid/complete", handlers.HTMXHandlers.DashboardLeagueMatchHandler.PutMatchComplete)

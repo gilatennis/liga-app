@@ -49,18 +49,20 @@ func (s *Store) Create(ctx context.Context, req *entities.MatchScheduleRequest) 
 		return nil, fmt.Errorf("s.db.WithContext(ctx).Create(req).Error")
 	}
 
-	reqTimeSlots := []entities.MatchScheduleRequestCourtTimeSlot{}
-	for _, ts := range req.TimeSlots {
-		rt := entities.MatchScheduleRequestCourtTimeSlot{
-			MatchScheduleRequestUUID: req.UUID,
-			CourtTimeSlotUUID:        ts.UUID,
+	if len(req.TimeSlots) > 0 {
+		reqTimeSlots := []entities.MatchScheduleRequestCourtTimeSlot{}
+		for _, ts := range req.TimeSlots {
+			rt := entities.MatchScheduleRequestCourtTimeSlot{
+				MatchScheduleRequestUUID: req.UUID,
+				CourtTimeSlotUUID:        ts.UUID,
+			}
+			reqTimeSlots = append(reqTimeSlots, rt)
 		}
-		reqTimeSlots = append(reqTimeSlots, rt)
-	}
 
-	err = tx.Omit(clause.Associations).Create(reqTimeSlots).Error
-	if err != nil {
-		return nil, fmt.Errorf("tx.Omit(clause.Associations).Create(reqTimeSlots).Error")
+		err = tx.Omit(clause.Associations).Create(reqTimeSlots).Error
+		if err != nil {
+			return nil, fmt.Errorf("tx.Omit(clause.Associations).Create(reqTimeSlots).Error")
+		}
 	}
 
 	err = tx.Model(&entities.Match{}).

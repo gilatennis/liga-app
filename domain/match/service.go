@@ -151,13 +151,26 @@ func (s *Service) RequestMatchSchedule(ctx context.Context, userUUID uuid.UUID, 
 			UpdatedBy: userUUID,
 		},
 		MatchUUID: matchUUID,
-		CourtUUID: courtUUID,
+		CourtUUID: &courtUUID,
 		TimeSlots: timeslots,
 	}
 
 	reqUUID, err := s.matchScheduleRequestRepo.Create(ctx, &req)
 	if err != nil {
 		return nil, fmt.Errorf("s.matchScheduleRequestRepo.Create(ctx, &req): %w", err)
+	}
+
+	return reqUUID, nil
+}
+
+func (s *Service) RequestMatchScheduleOwnVenue(ctx context.Context, userUUID uuid.UUID, matchUUID uuid.UUID, req *entities.MatchScheduleRequest) (*uuid.UUID, error) {
+	req.CreatedBy = userUUID
+	req.UpdatedBy = userUUID
+	req.MatchUUID = matchUUID
+
+	reqUUID, err := s.matchScheduleRequestRepo.Create(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("s.matchScheduleRequestRepo.Create(ctx, req): %w", err)
 	}
 
 	return reqUUID, nil

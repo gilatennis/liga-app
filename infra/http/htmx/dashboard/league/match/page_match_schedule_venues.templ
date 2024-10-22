@@ -31,7 +31,7 @@ templ ViewSelectVenue(vmodel VModelPageMatchScheduleVenues) {
     for _, v := range vmodel.Venues {
       @ViewVenueCard(v, *vmodel.Match)
     }
-    @ViewUseOwnVenue()
+    @ViewUseOwnVenue(vmodel.League.UUID, vmodel.Match.UUID)
   </div>
 }
 
@@ -58,8 +58,8 @@ func hrefSelectCourt(leagueUUID, matchUUID, venueUUID uuid.UUID) templ.SafeURL {
   return templ.URL(fmt.Sprintf("/dashboard/leagues/%s/matches/%s/schedule/venues/%s/courts", leagueUUID, matchUUID, venueUUID))
 }
 
-templ ViewUseOwnVenue() {
-  <a hx-boost="false" href={hrefUseOwnVenue()}>
+templ ViewUseOwnVenue(leagueUUID, matchUUID uuid.UUID) {
+  <a hx-boost="false" href={hrefUseOwnVenue(leagueUUID, matchUUID)}>
     <div class="card card-side bg-base-100 shadow-xl w-auto p-4">
       <figure>
         <i data-feather="book-open" class="text-secondary w-8 h-8"></i>
@@ -71,6 +71,6 @@ templ ViewUseOwnVenue() {
   </a>
 }
 
-func hrefUseOwnVenue() templ.SafeURL {
-  return templ.URL("")
+func hrefUseOwnVenue(leagueUUID, matchUUID uuid.UUID) templ.SafeURL {
+  return templ.URL(fmt.Sprintf("/dashboard/leagues/%s/matches/%s/schedule/venues/use-own-venue", leagueUUID, matchUUID))
 }
