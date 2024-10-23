@@ -19,19 +19,10 @@ type VModelFormMatchScheduleOwnVenue struct {
 	Address   string    `form:"address"`
 	Notes     string    `form:"notes"`
 	Start     time.Time `form:"start"`
-	End       time.Time `form:"end"`
 }
 
 func (v *VModelFormMatchScheduleOwnVenue) Validate() bool {
 	isValid := v.base.Validate(*v)
-
-	startDate := v.Start.Day()
-	endDate := v.End.Day()
-
-	if startDate != endDate {
-		v.base.FormErrors["end"] = "waktu mulai dan waktu selesai harus dalam hari yang sama"
-		isValid = false
-	}
 
 	return isValid
 }

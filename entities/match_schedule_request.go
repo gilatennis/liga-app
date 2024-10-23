@@ -19,7 +19,7 @@ type MatchScheduleRequest struct {
 	Address   string
 	Notes     string
 	Start     *time.Time
-	End       *time.Time
+	// End       *time.Time
 
 	IsAccepted bool
 }

@@ -35,7 +35,7 @@ templ ViewMatchDetailTeams(user *entities.User, league *entities.League, match *
     }
 
     if match.IsComplete && !match.IsCompleteConfirmed {
-      @alertMatchCompleteConfirmation()
+      @alertMatchCompleteConfirmation(user.UUID, match)
     }
 
     if canConfirmCompleteMatch(user.UUID, match) {
@@ -54,7 +54,7 @@ templ ViewMatchDetailTeams(user *entities.User, league *entities.League, match *
   </div>
 }
 
-templ alertMatchCompleteConfirmation() {
+templ alertMatchCompleteConfirmation(userUUID uuid.UUID, match *entities.Match) {
   <div role="alert" class="alert alert-warning flex flex-row items-start">
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -67,7 +67,11 @@ templ alertMatchCompleteConfirmation() {
         stroke-width="2"
         d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
     </svg>
-    <div class="text-left space-y-4">Menunggu konfirmasi pertandingan selesai</div>
+    if canConfirmCompleteMatch(userUUID, match) {
+      <div class="text-left space-y-4">Mohon konfirmasi bahwa skor sudah sesuai dan pertandingan sudah selesai</div>
+    } else {
+      <div class="text-left space-y-4">Menunggu konfirmasi lawan bahwa skor sudah benar dan pertandingan selesai</div>
+    }
   </div>
 }
 
@@ -193,7 +197,7 @@ templ ViewMatchDetailIndividuals(user *entities.User, league *entities.League, m
     }
 
     if match.IsComplete && !match.IsCompleteConfirmed {
-      @alertMatchCompleteConfirmation()
+      @alertMatchCompleteConfirmation(user.UUID, match)
     }
 
     if canConfirmCompleteMatch(user.UUID, match) {
