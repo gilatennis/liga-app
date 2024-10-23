@@ -68,12 +68,14 @@ templ ViewOwnVenueForm(vmodel VModelPageMatchScheduleOwnVenue) {
           Value: displayDate(vmodel.VModelFormMatchScheduleOwnVenue.Start),
           Error: vmodel.VModelFormMatchScheduleOwnVenue.base.FormErrors["start"],
         })
+        /*
         @components.InputDatePicker(components.InputDatePickerParams{
           Label: "Waktu Selesai",
           Name: "end",
           Value: displayDate(vmodel.VModelFormMatchScheduleOwnVenue.End),
           Error: vmodel.VModelFormMatchScheduleOwnVenue.base.FormErrors["end"],
         })
+        */
         if vmodel.VModelFormMatchScheduleOwnVenue.base.ServerError != "" {
           <p class="text-error mt-1">{ vmodel.VModelFormMatchScheduleOwnVenue.base.ServerError }</p>
         }

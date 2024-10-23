@@ -37,17 +37,14 @@ templ ViewSelectVenue(vmodel VModelPageMatchScheduleVenues) {
 
 templ ViewVenueCard(v entities.Venue, m entities.Match) {
   <a hx-boost="false" href={hrefSelectCourt(m.LeagueUUID, m.UUID, v.UUID)}>
-    <div class="card card-side bg-base-100 shadow-xl w-auto">
+    <div class="card bg-base-100 shadow-xl w-auto">
       <figure>
-        <img class="h-full object-cover" src={v.Image} alt={v.Name} />
+        <img class="h-24 w-full object-cover" src={v.Image} alt={v.Name} />
       </figure>
       <div class="p-4">
         <h2 class="card-title">{v.Name}</h2>
-        <p>{v.Address}</p>
         /*
-        <div class="card-actions justify-end">
-          <button class="btn btn-primary">Watch</button>
-        </div>
+        <p>{v.Address}</p>
         */
       </div>
     </div>

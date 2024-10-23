@@ -196,6 +196,44 @@ func (h *Handler) GetMatchDetailPage(c *gin.Context) {
 	h.RenderView(c, page)
 }
 
+func (h *Handler) GetMatchDetailView(c *gin.Context) {
+	user, err := h.GetAuthenticatedUser(c)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	params, err := h.GetURLUUIDParams(c, []string{"league_uuid", "match_uuid"})
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	leagueUUID, matchUUID := params[0], params[1]
+
+	league, err := h.leagueService.GetByUUID(c, leagueUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	match, err := h.matchService.GetByUUID(c, matchUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	vmodel := VModelPageMatchDetail{
+		User:           user,
+		League:         league,
+		Match:          match,
+		WebsiteBaseURL: h.cfg.App.BaseURL,
+	}
+
+	view := ViewMatchDetail(vmodel)
+	h.RenderView(c, view)
+}
+
 func (h *Handler) GetMatchScheduleVenueListPage(c *gin.Context) {
 	user, err := h.GetAuthenticatedUser(c)
 	if err != nil {
@@ -340,7 +378,6 @@ func (h *Handler) PostUseOwnVenueForm(c *gin.Context) {
 		Address:   p.Address,
 		Notes:     p.Notes,
 		Start:     &p.Start,
-		End:       &p.End,
 	}
 	_, err = h.matchService.RequestMatchScheduleOwnVenue(c, user.UUID, matchUUID, &req)
 	if err != nil {

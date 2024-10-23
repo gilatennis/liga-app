@@ -31,7 +31,12 @@ templ PageMatchDetail(vmodel VModelPageMatchDetail) {
 }
 
 templ ViewMatchDetail(vmodel VModelPageMatchDetail) {
-  <div class="card w-auto shadow-xl">
+  <div
+    class="card w-auto shadow-xl"
+    hx-get={string(urlMatchDetailView(vmodel.League.UUID, vmodel.Match.UUID))}
+    hx-trigger="every 10s"
+    hx-swap="outerHTML"
+  >
     <div class="p-4 space-y-4">
       <div class="flex flex-row">
         if vmodel.Match.FilterStatus == "COMPLETED" {
@@ -65,9 +70,9 @@ templ ViewMatchDetail(vmodel VModelPageMatchDetail) {
 
         // INFO: Match schedule not accepted yet
         if !vmodel.Match.MatchScheduleRequest.IsAccepted {
-          <div class="pt-4 flex flex-col space-y-2">
+          <div class="pt-4 flex flex-col space-y-4">
             <div class="text-lg font-bold">Jadwal Pertandingan</div>
-            @alertScheduleConfirmation()
+            @alertScheduleConfirmation(vmodel.User, vmodel.Match)
             @ViewMatchSchedule(vmodel.Match.MatchScheduleRequest)
           </div>
 
@@ -143,24 +148,30 @@ templ ViewMatchDetail(vmodel VModelPageMatchDetail) {
   </div>
 }
 
+func urlMatchDetailView(leagueUUID, matchUUID uuid.UUID) templ.SafeURL {
+  return templ.URL(fmt.Sprintf("/dashboard/leagues/%s/matches/%s/view", leagueUUID, matchUUID))
+}
+
 func isUsingOwnVenue(matchSchedReq *entities.MatchScheduleRequest) bool {
   return matchSchedReq.Court == nil
 }
 
 templ ViewMatchSchedule(matchSchedReq *entities.MatchScheduleRequest) {
-  if isUsingOwnVenue(matchSchedReq) {
-    <div>Venue: {matchSchedReq.VenueName}</div>
-    <div>Alamat: {matchSchedReq.Address}</div>
-    <div>Catatan: {matchSchedReq.Notes}</div>
-    <div>{displayDateOwnVenue(*matchSchedReq.Start)}</div>
-    <div>{displayTimeOwnVenue(*matchSchedReq.Start, *matchSchedReq.End)}</div>
-  } else {
-    <div>{matchSchedReq.Court.Venue.Name}</div>
-    <div>{matchSchedReq.Court.Venue.Address}</div>
-    <div class="font-bold">{matchSchedReq.Court.Name}</div>
-    <div>{displayTimeSlotsDate(matchSchedReq.TimeSlots)}</div>
-    <div>{displayTimeSlotsTimeStartToEnd(matchSchedReq.TimeSlots)}</div>
-  }
+  <div class="flex flex-col space-y-2">
+    if isUsingOwnVenue(matchSchedReq) {
+      <div>Venue: {matchSchedReq.VenueName}</div>
+      <div>Alamat: {matchSchedReq.Address}</div>
+      <div>Catatan: {matchSchedReq.Notes}</div>
+      <div>{displayDateOwnVenue(*matchSchedReq.Start)}</div>
+      <div>{displayTimeOwnVenue(*matchSchedReq.Start)}</div>
+    } else {
+      <div>{matchSchedReq.Court.Venue.Name}</div>
+      <div>{matchSchedReq.Court.Venue.Address}</div>
+      <div class="font-bold">{matchSchedReq.Court.Name}</div>
+      <div>{displayTimeSlotsDate(matchSchedReq.TimeSlots)}</div>
+      <div>{displayTimeSlotsTimeStartToEnd(matchSchedReq.TimeSlots)}</div>
+    }
+  </div>
 }
 
 func isMatchScheduleCreator(user *entities.User, match *entities.Match) bool {
@@ -189,7 +200,7 @@ func hrefPutConfirmMatchSchedule(leagueUUID, matchUUID, matchScheduleRequestUUID
   return fmt.Sprintf("/dashboard/leagues/%s/matches/%s/schedule/requests/%s/confirm", leagueUUID, matchUUID, matchScheduleRequestUUID)
 }
 
-templ alertScheduleConfirmation() {
+templ alertScheduleConfirmation(user *entities.User, match *entities.Match) {
   <div role="alert" class="alert alert-warning flex flex-row items-start">
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -202,7 +213,11 @@ templ alertScheduleConfirmation() {
         stroke-width="2"
         d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
     </svg>
-    <div class="text-left space-y-4">Menunggu konfirmasi</div>
+    if isMatchScheduleConfirmer(user, match) {
+      <div class="text-left text-sm space-y-4">Mohon konfirmasi jadwal pertandingan</div>
+    } else {
+      <div class="text-left text-sm space-y-4">Menunggu konfirmasi jadwal oleh lawan</div>
+    }
   </div>
 }
 
@@ -236,9 +251,9 @@ func displayDateOwnVenue(d time.Time) string {
   return monday.Format(d, "Monday 2 January 2006", monday.LocaleIdID)
 }
 
-func displayTimeOwnVenue(start, end time.Time) string {
+func displayTimeOwnVenue(start time.Time) string {
   loc, _ := time.LoadLocation("Asia/Jakarta")
-  return fmt.Sprintf("%s - %s", start.In(loc).Format("15:04"), end.In(loc).Format("15:04"))
+  return fmt.Sprintf("%s", start.In(loc).Format("15:04"))
 }
 
 func hrefScheduleMatch(m *entities.Match) templ.SafeURL {

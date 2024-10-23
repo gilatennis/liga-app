@@ -23,11 +23,7 @@ templ PageMatchScheduleDays(vmodel VModelPageMatchScheduleDays) {
       @league.ViewLeagueDetail(vmodel.League, false)
       @components.PageHeader("Pilih Hari Bertanding", "")
       <div class="space-y-4">
-        <img src={vmodel.Venue.Image} class="h-32 w-full object-cover" />
-        <div>
-          <h1 class="text-xl font-bold">{vmodel.Venue.Name}</h1>
-          <p>{vmodel.Venue.Address}</p>
-        </div>
+        <h1 class="text-xl font-bold">{vmodel.Venue.Name}</h1>
         <h2 class="text-lg font-bold mt-4">{vmodel.Court.Name}</h2>
       </div>
       @ViewSelectDays(vmodel)
