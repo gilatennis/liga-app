@@ -8,6 +8,7 @@ import (
 	"liga-app/cmd/seed/matches"
 	"liga-app/cmd/seed/round_schedule"
 	"liga-app/cmd/seed/teams"
+	"liga-app/cmd/seed/user_ratings"
 	"liga-app/config"
 	"liga-app/entities"
 	"liga-app/infra/gsheet"
@@ -162,6 +163,11 @@ func main() {
 				Name:        "reset-court-time-slots",
 				Description: "Reset Court Time Slots",
 				Action:      court_time_slots.ResetCourtTimeSlots(db, gsheetAPI),
+			},
+			{
+				Name:        "update-user-ratings",
+				Description: "Update user ratings from gsheet",
+				Action:      user_ratings.UpdateUserRatings(db, gsheetAPI),
 			},
 		},
 	}
