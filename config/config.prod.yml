@@ -61,7 +61,7 @@ oauth:
   google_secret: $OAUTH_GOOGLE_SECRET
   google_callback_url: https://liga.gilatennis.com/auth/login/oauth/google/callback
   # -- For local environment --
-  # google_callback_url: https://secure-imp-becoming.ngrok-free.app/auth/login/oauth/google/callback
+  # google_callback_url: https://tunnel.gilatennis.com/auth/login/oauth/google/callback
 
   facebook_app_id: 1533261570735840
   facebook_secret: $OAUTH_FACEBOOK_SECRET

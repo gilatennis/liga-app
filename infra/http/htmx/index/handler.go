@@ -26,7 +26,7 @@ func (h *Handler) Index(c *gin.Context) {
 	// INFO: for getting into a user's account, for debugging
 	/*
 		session := sessions.Default(c)
-		session.Set("user_uuid", "a901de1a-3ccb-472b-b4a9-8a84b6809398")
+		session.Set("user_uuid", "1bd9fa64-77be-42d3-a43e-c08683990bf7")
 		pp.Println(session)
 
 		if err := session.Save(); err != nil {
