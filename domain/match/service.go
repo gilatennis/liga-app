@@ -109,6 +109,10 @@ func (s *Service) setMatchFilterStatus(m *entities.Match) {
 	} else {
 		m.FilterStatus = string(m.Status)
 	}
+
+	if m.TeamA == nil || m.TeamB == nil {
+		m.FilterStatus = "NO SCHEDULE"
+	}
 }
 
 func (s *Service) GetByUUID(ctx context.Context, matchUUID uuid.UUID) (*entities.Match, error) {

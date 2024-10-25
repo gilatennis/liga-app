@@ -151,6 +151,10 @@ func main() {
 					&cli.StringFlag{
 						Name: "league-uuid",
 					},
+					&cli.BoolFlag{
+						Name:  "home-and-away",
+						Value: false,
+					},
 				},
 				Action: matches.GeneratePoolMatches(db, gsheetAPI),
 			},

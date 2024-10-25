@@ -29,6 +29,8 @@ func GeneratePoolMatches(db *gorm.DB, gsheetAPI *gsheet.API) func(c *cli.Context
 			return fmt.Errorf("uuid.Parse(leagueUUIDStr=%s): %w", leagueUUIDStr, err)
 		}
 
+		isHomeAndAway := c.Bool("home-and-away")
+
 		league, err := leagueStore.GetByUUID(c.Context, leagueUUID)
 		if err != nil {
 			return fmt.Errorf("leagueStore.GetByUUID(...): %w", err)
@@ -77,7 +79,7 @@ func GeneratePoolMatches(db *gorm.DB, gsheetAPI *gsheet.API) func(c *cli.Context
 				}
 			}
 
-			rounds, err := GenerateRoundRobinMatches(g.UUID, teamIDs)
+			rounds, err := GenerateRoundRobinMatches(g.UUID, teamIDs, isHomeAndAway)
 			if err != nil {
 				return fmt.Errorf("GenerateRoundRobinMatches(groupUUID, teamIDs) : %w", err)
 			}
@@ -109,7 +111,7 @@ func PrintRounds(rounds []entities.Round) {
 	}
 }
 
-func GenerateRoundRobinMatches(groupUUID uuid.UUID, teamIDs []string) ([]entities.Round, error) {
+func GenerateRoundRobinMatches(groupUUID uuid.UUID, teamIDs []string, isHomeAndAway bool) ([]entities.Round, error) {
 	// assign number to teamIDs
 	numToTeamID := make(map[int]string)
 	var teamNums []int
@@ -128,6 +130,12 @@ func GenerateRoundRobinMatches(groupUUID uuid.UUID, teamIDs []string) ([]entitie
 	}
 
 	numRounds := len(teamIDs) - 1
+
+	if isHomeAndAway {
+		numRounds = numRounds * 2
+	}
+	fmt.Println("numRounds", numRounds)
+
 	rounds := []entities.Round{}
 	for i := 0; i < numRounds; i++ {
 		r := entities.Round{

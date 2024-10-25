@@ -26,7 +26,8 @@ func (s *Store) Get(ctx context.Context, p *common.Pagination, f *repositories.M
 
 	queryDB := s.db.WithContext(ctx).
 		Model(&entities.Match{}).
-		Joins("JOIN rounds on matches.round_uuid = rounds.uuid")
+		Joins("JOIN rounds on matches.round_uuid = rounds.uuid").
+		Joins("JOIN `groups` on rounds.group_uuid = `groups`.uuid")
 
 	for _, o := range p.OrderBy {
 		queryDB = queryDB.Order(fmt.Sprintf("%s %s", o.Column, o.Direction))

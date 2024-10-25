@@ -35,7 +35,7 @@ var DEFAULT_LEAGUES []entities.League = []entities.League{
 		LinkWARatingAdmin:     "628159239794",
 	},
 	{
-		Name:                  "Singles Putra",
+		Name:                  "Tunggal Putra",
 		WilayahIDProvince:     "31",
 		ParticipationCategory: enums.CATEGORY_PARTICIPATION_SINGLES,
 		GenderCategory:        enums.CATEGORY_GENDER_MALE,
@@ -46,7 +46,7 @@ var DEFAULT_LEAGUES []entities.League = []entities.League{
 		LinkWARatingAdmin:     "628159239794",
 	},
 	{
-		Name:                  "Singles Putri",
+		Name:                  "Tunggal Putri",
 		WilayahIDProvince:     "31",
 		ParticipationCategory: enums.CATEGORY_PARTICIPATION_SINGLES,
 		GenderCategory:        enums.CATEGORY_GENDER_FEMALE,
@@ -57,7 +57,7 @@ var DEFAULT_LEAGUES []entities.League = []entities.League{
 		LinkWARatingAdmin:     "628159239794",
 	},
 	{
-		Name:                  "Doubles Putra",
+		Name:                  "Ganda Putra",
 		WilayahIDProvince:     "31",
 		ParticipationCategory: enums.CATEGORY_PARTICIPATION_DOUBLES,
 		GenderCategory:        enums.CATEGORY_GENDER_MALE,
@@ -68,7 +68,7 @@ var DEFAULT_LEAGUES []entities.League = []entities.League{
 		LinkWARatingAdmin:     "628159239794",
 	},
 	{
-		Name:                  "Doubles Putri",
+		Name:                  "Ganda Putri",
 		WilayahIDProvince:     "31",
 		ParticipationCategory: enums.CATEGORY_PARTICIPATION_DOUBLES,
 		GenderCategory:        enums.CATEGORY_GENDER_FEMALE,
@@ -79,7 +79,7 @@ var DEFAULT_LEAGUES []entities.League = []entities.League{
 		LinkWARatingAdmin:     "628159239794",
 	},
 	{
-		Name:                  "Doubles Mixed",
+		Name:                  "Ganda Mixed",
 		WilayahIDProvince:     "31",
 		ParticipationCategory: enums.CATEGORY_PARTICIPATION_DOUBLES,
 		GenderCategory:        enums.CATEGORY_GENDER_MIXED,
