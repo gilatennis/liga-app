@@ -18,7 +18,12 @@ templ ViewMatchDetailTeams(user *entities.User, league *entities.League, match *
 
     @ViewMatchSet("Doubles #1", league.UUID, match, 1, false)
     @ViewMatchSet("Doubles #2", league.UUID, match, 2, false)
-    @ViewMatchSet("Doubles #3", league.UUID, match, 3, false)
+    if league.GenderCategory == enums.CATEGORY_GENDER_FEMALE {
+      @ViewMatchSet("Doubles #3", league.UUID, match, 3, false)
+    }
+    if league.GenderCategory == enums.CATEGORY_GENDER_MALE {
+      @ViewMatchSet("Singles", league.UUID, match, 3, false)
+    }
 
     if canCompleteMatch(user.UUID, match) {
       <div class="pt-8">
