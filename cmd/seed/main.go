@@ -169,6 +169,11 @@ func main() {
 				Action:      court_time_slots.ResetCourtTimeSlots(db, gsheetAPI),
 			},
 			{
+				Name:        "update-court-time-slots",
+				Description: "Update Court Time Slots",
+				Action:      court_time_slots.UpdateCourtTimeSlots(db, gsheetAPI),
+			},
+			{
 				Name:        "update-user-ratings",
 				Description: "Update user ratings from gsheet",
 				Action:      user_ratings.UpdateUserRatings(db, gsheetAPI),

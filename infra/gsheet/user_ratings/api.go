@@ -20,7 +20,7 @@ func NewAPI(srv *sheets.Service) *API {
 func (a *API) GetUserRatings() ([]entities.UserRating, error) {
 	spreadsheetId := "1-_JaTkguErMKv9ZAlTmQFKe6pjmmxItI9bLsY90VI7E"
 
-	readRange := "Assessments S1!A1:F"
+	readRange := "Assessments S1!A1:H"
 	resp, err := a.srv.Spreadsheets.Values.Get(spreadsheetId, readRange).MajorDimension("ROWS").Do()
 	if err != nil {
 		return nil, fmt.Errorf("a.srv.Spreadsheets.Values.Get(spreadsheetId, readRange).MajorDimension(\"ROWS\").Do() : %w", err)
@@ -40,9 +40,11 @@ func (a *API) GetUserRatings() ([]entities.UserRating, error) {
 			teamName := row[2].(string)
 			userUUIDStr := row[3].(string)
 			userName := row[4].(string)
-			ntrpRatingStr := row[5].(string)
+			email := row[5].(string)
+			phone := row[6].(string)
+			ntrpRatingStr := row[7].(string)
 
-			fmt.Printf("%s, %s, %s, %s, %s, %s\n", leagueUUIDStr, leagueName, teamName, userUUIDStr, userName, ntrpRatingStr)
+			fmt.Printf("%s, %s, %s, %s, %s, %s, %s, %s\n", leagueUUIDStr, leagueName, teamName, userUUIDStr, userName, email, phone, ntrpRatingStr)
 
 			if ntrpRatingStr == "-" {
 				continue
