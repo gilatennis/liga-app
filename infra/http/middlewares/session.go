@@ -2,11 +2,13 @@ package middlewares
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"liga-app/config"
 	"liga-app/entities"
 	"liga-app/interfaces"
 	"net/http"
+	"strings"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -36,6 +38,21 @@ func NewSessionMiddleware(
 			fmt.Println("error parsing user_uuid from session. user_uuid: ", userUUIDStr)
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 			return
+		}
+
+		fullPath := c.FullPath()
+		if strings.HasPrefix("/admin/dashboard", fullPath) {
+			isAdmin, err := sessionIsAdmin(c, db, userUUID)
+			if err != nil {
+				fmt.Printf("sessionIsAdmin(c, db, userUUID=%s) : %+v \n", userUUIDStr, err)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+				return
+			}
+
+			if !isAdmin {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+				return
+			}
 		}
 
 		user, err := sessionGetUserByUUID(c, cfg, db, fileStorage, userUUID)
@@ -77,4 +94,21 @@ func sessionGetUserByUUID(
 	}
 
 	return &user, nil
+}
+
+func sessionIsAdmin(
+	ctx context.Context,
+	db *gorm.DB,
+	userUUID uuid.UUID,
+) (bool, error) {
+	adm := entities.Admin{}
+
+	err := db.WithContext(ctx).Where("user_uuid = ?", userUUID).First(&adm).Error
+	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
+		return false, nil
+	} else if err != nil {
+		return false, fmt.Errorf("s.db.Where(user_uuid = ?, userUUID=%s): %w", userUUID, err)
+	}
+
+	return true, nil
 }

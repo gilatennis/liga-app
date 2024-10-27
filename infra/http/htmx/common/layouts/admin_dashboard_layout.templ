@@ -1,0 +1,29 @@
+package layouts
+
+import (
+  "liga-app/entities"
+)
+
+templ AdminDashboardLayout(title string, user *entities.User) {
+  <html data-theme="light">
+    @Head(title)
+    <!--
+      tabindex="0" is required so that :focus can work on ios. (makes dropdown menu dismissable) 
+      https://github.com/saadeghi/daisyui/issues/824
+    -->
+    <body 
+      tabindex="0" 
+      hx-boost="true" 
+      hx-ext="response-targets" 
+      class="h-screen flex flex-col"
+    >
+      @Navbar(user)
+      @DashboardDrawer(user) {
+        { children... }
+      }
+      @DashboardFooter()
+      @Scripts()
+      @ScriptFeatherIcons()
+    </body>
+  </html>
+}

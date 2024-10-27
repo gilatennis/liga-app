@@ -30,7 +30,16 @@ func setupHtxmRoutes(r *gin.Engine, handlers *Handlers, middlewares *middlewares
 	r.GET("/", handlers.HTMXHandlers.IndexHandler.Index)
 
 	public := r.Group("/")
+	publicRoutes(public, handlers, middlewares)
 
+	dashboard := r.Group("/dashboard")
+	dashboardRoutes(dashboard, handlers, middlewares)
+
+	admin := r.Group("/admin")
+	adminRoutes(admin, handlers, middlewares)
+}
+
+func publicRoutes(public *gin.RouterGroup, handlers *Handlers, middlewares *middlewares.Middlewares) {
 	auth := public.Group("/auth")
 	{
 		auth.GET("/register", handlers.HTMXHandlers.AuthHandler.GetRegisterForm)
@@ -50,8 +59,9 @@ func setupHtxmRoutes(r *gin.Engine, handlers *Handlers, middlewares *middlewares
 		invite.GET("/accept", middlewares.SessionMiddleware, handlers.HTMXHandlers.InviteHandler.GetAcceptInvitePage)
 		invite.POST("/accept", middlewares.SessionMiddleware, handlers.HTMXHandlers.InviteHandler.PostAcceptInvite)
 	}
+}
 
-	dashboard := r.Group("/dashboard")
+func dashboardRoutes(dashboard *gin.RouterGroup, handlers *Handlers, middlewares *middlewares.Middlewares) {
 	dashboard.Use(middlewares.SessionMiddleware)
 	{
 		dashboard.GET("", handlers.HTMXHandlers.DashboardHandler.Index)
@@ -95,6 +105,20 @@ func setupHtxmRoutes(r *gin.Engine, handlers *Handlers, middlewares *middlewares
 		dashboard.GET("/profile", handlers.HTMXHandlers.DashboardProfileHandler.GetProfileDetailPage)
 		dashboard.GET("/profile/edit", handlers.HTMXHandlers.DashboardProfileHandler.GetProfileEditPage)
 		dashboard.PUT("/profile/edit", handlers.HTMXHandlers.DashboardProfileHandler.PutUpdateProfile)
+	}
+}
+
+func adminRoutes(admin *gin.RouterGroup, handlers *Handlers, middlewares *middlewares.Middlewares) {
+	adminAuth := admin.Group("/auth")
+	{
+		adminAuth.GET("/login", handlers.HTMXHandlers.AdminAuthHandler.GetLoginForm)
+		adminAuth.GET("/login/oauth/:provider", handlers.HTMXHandlers.AdminAuthHandler.LoginWithOAuth)
+	}
+
+	adminDashboard := admin.Group("/dashboard")
+	adminDashboard.Use(middlewares.SessionMiddleware)
+	{
+		adminDashboard.GET("", handlers.HTMXHandlers.AdminDashHandler.Index)
 	}
 }
 

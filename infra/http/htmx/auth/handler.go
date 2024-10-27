@@ -349,12 +349,12 @@ func (h *Handler) LoginWithOAuthCallback(c *gin.Context) {
 
 	redirectURL := "/dashboard"
 
-	redirectInSession := sessions.Default(c).Get("redirect")
+	redirectInSession := session.Get("redirect")
 	if redirectInSession != nil && redirectInSession.(string) != "" {
 		redirectURL = redirectInSession.(string)
+		// clear redirect in session
+		session.Delete("redirect")
 	}
-	// clear redirect in session
-	session.Delete("redirect")
 
 	fmt.Println("DEBUG: [SocialLoginCallback] redirectURL: ", redirectURL)
 	c.Redirect(http.StatusFound, redirectURL)

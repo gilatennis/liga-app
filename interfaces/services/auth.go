@@ -24,4 +24,6 @@ type IAuthService interface {
 	CompleteMagicLinkLogin(ctx context.Context, email string, token string) (*entities.User, error) // returns redirect url, error
 
 	LoginWithOAuth(ctx context.Context, email string, loginMethod enums.LOGIN_METHOD) (*entities.User, error)
+
+	IsAdmin(ctx context.Context, email string) (bool, error)
 }

@@ -61,7 +61,7 @@ func (s *Store) Get(ctx context.Context, p *common.Pagination, f *repositories.L
       select
         l.uuid AS league_uuid,
         COUNT(DISTINCT lt.uuid) AS team_count,
-        COUNT(lp.uuid) AS player_count
+        COUNT(DISTINCT lp.uuid) AS player_count
       from leagues l
         left join league_teams lt on l.uuid = lt.league_uuid 
         left join league_players lp on l.uuid = lp.league_uuid

@@ -24,6 +24,7 @@ type Service struct {
 	authRepo    repositories.IAuthRepository
 	userRepo    repositories.IUserRepository
 	emailSender interfaces.IEmailSender
+	adminRepo   repositories.IAdminRepository
 }
 
 func NewService(
@@ -31,12 +32,14 @@ func NewService(
 	authRepo repositories.IAuthRepository,
 	userRepo repositories.IUserRepository,
 	emailSender interfaces.IEmailSender,
+	adminRepo repositories.IAdminRepository,
 ) *Service {
 	return &Service{
 		config:      config,
 		authRepo:    authRepo,
 		userRepo:    userRepo,
 		emailSender: emailSender,
+		adminRepo:   adminRepo,
 	}
 }
 
@@ -293,6 +296,26 @@ func (s *Service) CreateResetPasswordEmailContent(token string) string {
 	return text
 }
 
+func (s *Service) IsAdmin(ctx context.Context, email string) (bool, error) {
+	user, err := s.userRepo.GetUserByEmail(ctx, email)
+	if err != nil {
+		return false, fmt.Errorf("s.userRepo.GetUserByEmail(ctx, email=%s) : %w", email, err)
+	}
+
+	admin, err := s.adminRepo.GetByUserUUID(ctx, user.UUID)
+	var errNotFound *domainErrors.ErrNotFound
+	if err != nil && !errors.As(err, &errNotFound) {
+		return false, fmt.Errorf("s.adminRepo.GetByUserUUID(ctx, user.UUID=%s) : %w", user.UUID, err)
+	}
+
+	if err != nil && errors.As(err, &errNotFound) {
+		return false, nil
+	}
+
+	_ = admin
+	return true, nil
+}
+
 /*
 func (s *Service) Register(ctx context.Context, payload services.IRegisterPayload) error {
 	name := payload.GetName()
@@ -446,72 +469,6 @@ func (s *Service) ResendVerificationEmail(ctx context.Context, email string) err
 	content := verifEmailContent
 
 	err = s.emailSender.SendEmail(ctx, from, to, subject, content)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-*/
-
-/*
-func (s *Service) CreateResetPasswordRequest(ctx context.Context, email string) error {
-	user, err := s.userRepo.GetUserByEmail(ctx, email)
-	if err != nil {
-		return err
-	}
-
-	resetPasswordToken := uniuri.NewLen(20)
-	tokenExpiresAt := time.Now().Add(time.Hour * 24)
-
-	resetPasswordReq := &entities.ResetPasswordRequest{
-		UserUUID:       user.UUID,
-		User:           *user,
-		Token:          resetPasswordToken,
-		TokenExpiredAt: tokenExpiresAt,
-	}
-
-	_, err = s.authRepo.CreateResetPasswordRequest(ctx, resetPasswordReq)
-	if err != nil {
-		return err
-	}
-
-	emailContent := s.CreateResetPasswordEmailContent(resetPasswordToken)
-	from := s.config.Email.EmailSender
-	to := user.Email
-	subject := "Reset Password"
-	content := emailContent
-
-	err = s.emailSender.SendEmail(ctx, from, to, subject, content)
-	if err != nil {
-		return fmt.Errorf("failed to send email: %w", err)
-	}
-
-	return nil
-}
-*/
-
-/*
-func (s *Service) UpdatePassword(ctx context.Context, token string, password string) error {
-	req, err := s.authRepo.GetResetPasswordRequestByToken(ctx, token)
-	if err != nil {
-		return err
-	}
-
-	user, err := s.userRepo.GetUserByUUID(ctx, req.UserUUID)
-	if err != nil {
-		return err
-	}
-
-	// TODO: password validation
-
-	hashedPassword, err := s.HashPassword(password)
-	if err != nil {
-		return err
-	}
-
-	user.Password = hashedPassword
-	_, err = s.userRepo.UpdateUser(ctx, user)
 	if err != nil {
 		return err
 	}

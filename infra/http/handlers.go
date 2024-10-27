@@ -2,6 +2,9 @@ package http
 
 import (
 	"liga-app/config"
+	admin "liga-app/infra/http/htmx/admin"
+	adminAuth "liga-app/infra/http/htmx/admin/auth"
+	adminDash "liga-app/infra/http/htmx/admin/dashboard"
 	"liga-app/infra/http/htmx/auth"
 	"liga-app/infra/http/htmx/dashboard"
 	dashLeague "liga-app/infra/http/htmx/dashboard/league"
@@ -25,6 +28,7 @@ import (
 	domainUser "liga-app/domain/user"
 	domainUserInfo "liga-app/domain/user_info"
 	domainVenue "liga-app/domain/venue"
+	dbAdmin "liga-app/infra/mysql/admin"
 	dbAuth "liga-app/infra/mysql/auth"
 	dbCourt "liga-app/infra/mysql/court"
 	dbCourtTimeSlot "liga-app/infra/mysql/court_time_slot"
@@ -60,6 +64,9 @@ type HTMXHandlers struct {
 	DashboardLeagueTeamHandler  *dashLeagueTeam.Handler
 	DashboardLeagueMatchHandler *dashLeagueMatch.Handler
 	DashboardProfileHandler     *dashProfile.Handler
+	AdminHandler                *admin.Handler
+	AdminDashHandler            *adminDash.Handler
+	AdminAuthHandler            *adminAuth.Handler
 }
 
 type JSONHandlers struct {
@@ -99,12 +106,14 @@ func setupHandlers(
 	courtStore := dbCourt.NewStore(db)
 	matchSchedReqStore := dbMatchSchedReq.NewStore(db)
 	matchSetStore := dbMatchSet.NewStore(db)
+	adminStore := dbAdmin.NewStore(db)
 
 	authService := domainAuth.NewService(
 		cfg,
 		authStore,
 		userStore,
 		mail,
+		adminStore,
 	)
 	userService := domainUser.NewService(userStore)
 	userInfoService := domainUserInfo.NewService(
@@ -137,6 +146,9 @@ func setupHandlers(
 		DashboardLeagueMatchHandler: dashLeagueMatch.NewHandler(cfg, leagueService, matchService, venueService, courtService),
 		DashboardLeagueTeamHandler:  dashLeagueTeam.NewHandler(leagueService, teamService),
 		DashboardProfileHandler:     dashProfile.NewHandler(userInfoService),
+		AdminHandler:                admin.NewHandler(),
+		AdminDashHandler:            adminDash.NewHandler(leagueService),
+		AdminAuthHandler:            adminAuth.NewHandler(cfg, authService, userService),
 	}
 
 	JSONHandlers := JSONHandlers{

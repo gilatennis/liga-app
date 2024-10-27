@@ -1,0 +1,67 @@
+package dashboard
+
+import (
+  "liga-app/infra/http/htmx/common/layouts"
+  "strconv"
+  "liga-app/entities"
+  "liga-app/enums"
+)
+
+templ PageDashboard(vmodel VModelPageDashboard) {
+  @layouts.AdminDashboardLayout("Dashboard", vmodel.User) {
+    @ViewLeagueList(vmodel.Leagues, 0, true)
+  }
+}
+
+templ ViewLeagueList(leagues []entities.League, nextPage int, showTeamCount bool) {
+  <div class="card-group-match-list grid grid-cols-2 gap-4">
+    for _, l := range leagues {
+      <a hx-boost="false" href="">
+        <div class="card min-h-[320px] w-auto shadow-xl">
+          <div class="card-body px-2 justify-between items-center space-y-2">
+            <div class="flex flex-row space-x-2">
+              <div class="badge badge-sm badge-primary">Season {strconv.Itoa(l.Season)}</div>
+              <div class="badge badge-sm badge-secondary">{string(l.Level)}</div>
+            </div>
+            <div class="text-center text-3xl px-2">
+              {l.Name}
+            </div>
+            <div class="flex flex-row items-center space-x-2">
+              <i data-feather="map-pin" width="16" height="16"></i>
+              <p>{l.Wilayah.Name}</p>
+            </div>
+            if showTeamCount {
+              <div class="flex flex-col items-center">
+                if l.ParticipationCategory == enums.CATEGORY_PARTICIPATION_SINGLES {
+                  <h2 class="text-6xl">{strconv.Itoa(int(l.PlayerCount))}</h2>
+                  <h2 class="text-xl">Pemain</h2>
+                } else {
+                  <h2 class="text-6xl">{strconv.Itoa(int(l.TeamCount))}</h2>
+                  <h2 class="text-xl">Tim</h2>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </a>
+    }
+  </div>
+
+  if nextPage > 0 {
+    <div id="load-more-replace" class="mt-8 flex flex-row justify-center"> 
+      <button
+        class="btn btn-primary btn-wide"
+        hx-get={urlLoadMore(nextPage)}
+        hx-target="#load-more-replace"
+        hx-swap="outerHTML"
+        hx-include=""
+      >
+        Load More
+      </button>
+    </div>
+  }
+}
+
+func urlLoadMore(nextPage int) string {
+  return ""
+}

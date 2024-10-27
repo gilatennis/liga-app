@@ -89,7 +89,7 @@ templ Navbar(user *entities.User) {
 templ DashboardDrawer(user *entities.User) {
   <div class="drawer">
     <input id="my-drawer" type="checkbox" class="drawer-toggle" />
-    <div class="drawer-content min-h-full flex-grow overflow-auto mb-8">
+    <div class="drawer-content min-h-full flex-grow overflow-auto mb-8 p-4 mt-12">
       @AlertSuccess()
       @AlertError()
       <!-- Page content here -->
@@ -221,7 +221,7 @@ templ ButtonMenuDashboardFooter(params ButtonMenuDashboardFooterParams) {
 }
 
 templ DashboardFooter() {
-  <footer class="footer sticky top-[100vh] p-10 bg-neutral text-neutral-content">
+  <footer class="footer sticky top-[100vh] p-10 bg-primary text-primary-content">
     <nav>
       <p>© {strconv.Itoa(time.Now().Year())} - gilatennis.com</p>
     </nav> 

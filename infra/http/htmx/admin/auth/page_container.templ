@@ -1,0 +1,21 @@
+package auth
+
+import (
+  "liga-app/infra/http/htmx/common/layouts"
+)
+
+templ pageContainer(title string) {
+  @layouts.BasicLayout(title) {
+    @container() {
+      { children... }
+    }
+  }
+}
+
+templ container() {
+  <div class="h-full flex items-center justify-center pb-[10vh]">
+    { children... }
+  </div>
+}
+
+
