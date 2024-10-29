@@ -58,7 +58,11 @@ templ ViewTeamList(leagueUUID uuid.UUID, teams []entities.Team, nextPage int) {
           <div class="flex items-center space-x-4 justify-start w-full">
             <div class="avatar placeholder">
               <div class="bg-primary text-neutral-content w-10 rounded-full">
-                <span class="text-3xl">{string(t.Name[0])}</span>
+                if t.Name == "" {
+                  <span class="text-3xl">-</span>
+                } else {
+                  <span class="text-3xl">{string(t.Name[0])}</span>
+                }
               </div>
             </div>
             <div class="w-full text-left">

@@ -19,3 +19,8 @@ type VModelFormAddTeam struct {
 	PaymentAmount float64  `form:"payment_amount"`
 	PaymentID     string   `form:"payment_id"`
 }
+
+func (v *VModelFormAddTeam) Validate() bool {
+	isValid := v.base.Validate(*v)
+	return isValid
+}

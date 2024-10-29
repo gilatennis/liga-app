@@ -1,7 +1,9 @@
 package team
 
 import (
+	"fmt"
 	"liga-app/entities"
+	"liga-app/enums"
 	"liga-app/infra/http/htmx/common"
 	iCommon "liga-app/interfaces/common"
 	iRepo "liga-app/interfaces/repositories"
@@ -11,6 +13,7 @@ import (
 	"github.com/a-h/templ"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/k0kubun/pp"
 )
 
 type Handler struct {
@@ -190,9 +193,10 @@ func (h *Handler) GetAddTeamPage(c *gin.Context) {
 	}
 
 	vmodel := VModelPageAddTeam{
-		User:    user,
-		League:  league,
-		Players: players,
+		User:              user,
+		League:            league,
+		Players:           players,
+		VModelFormAddTeam: &VModelFormAddTeam{},
 	}
 	page := PageAddTeam(vmodel)
 	h.RenderView(c, page)
@@ -242,6 +246,8 @@ func (h *Handler) PostAddTeam(c *gin.Context) {
 
 	teamName := vmodel.VModelFormAddTeam.TeamName
 
+	pp.Println(vmodel.VModelFormAddTeam)
+
 	playerUUIDs := []uuid.UUID{}
 	for _, pUUIDStr := range vmodel.VModelFormAddTeam.PlayerUUIDs {
 		pUUID, err := uuid.Parse(pUUIDStr)
@@ -259,6 +265,7 @@ func (h *Handler) PostAddTeam(c *gin.Context) {
 		UserUUID:      playerUUIDs[0],
 		PaymentAmount: vmodel.VModelFormAddTeam.PaymentAmount,
 		PaymentID:     vmodel.VModelFormAddTeam.PaymentID,
+		PaymentStatus: enums.PAYMENT_STATUS_PAID,
 	}
 
 	_, err = h.leagueService.RegisterTeamToLeague(c, &leagueReg, teamName, playerUUIDs)
@@ -268,4 +275,7 @@ func (h *Handler) PostAddTeam(c *gin.Context) {
 		h.RenderViewWithStatus(c, view, http.StatusBadRequest)
 		return
 	}
+
+	h.ResponseSuccessRedirect(c, "berhasil menambah tim / pemain", fmt.Sprintf("/admin/dashboard/leagues/%s", leagueUUID))
+	h.RenderView(c, ViewFormAddTeam(vmodel))
 }

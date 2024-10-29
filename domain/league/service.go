@@ -21,6 +21,7 @@ type Service struct {
 	leagueRegRepo repositories.ILeagueRegistrationRepository
 	wilayahRepo   repositories.IWilayahRepository
 	duitkuAPI     duitku.IDuitkuAPI
+	userRepo      repositories.IUserRepository
 }
 
 func NewService(
@@ -30,6 +31,7 @@ func NewService(
 	leagueRegRepo repositories.ILeagueRegistrationRepository,
 	wilayahRepo repositories.IWilayahRepository,
 	duitkuAPI duitku.IDuitkuAPI,
+	userRepo repositories.IUserRepository,
 ) *Service {
 	return &Service{
 		cfg:           cfg,
@@ -38,6 +40,7 @@ func NewService(
 		leagueRegRepo: leagueRegRepo,
 		wilayahRepo:   wilayahRepo,
 		duitkuAPI:     duitkuAPI,
+		userRepo:      userRepo,
 	}
 }
 
@@ -195,8 +198,26 @@ func (s *Service) RegisterTeamToLeague(
 		teamPlayers = append(teamPlayers, u)
 	}
 	team := &entities.Team{
+		Name:            teamName,
 		CaptainUserUUID: teamPlayers[0].UUID,
 		Players:         teamPlayers,
+	}
+
+	league, err := s.leagueRepo.GetByUUID(ctx, leagueReg.LeagueUUID)
+	if err != nil {
+		return nil, fmt.Errorf("s.leagueRepo.GetByUUID(ctx, leagueReg.LeagueUUID=%s) : %w", leagueReg.LeagueUUID, err)
+	}
+
+	if league.ParticipationCategory == enums.CATEGORY_PARTICIPATION_SINGLES {
+		captain, err := s.userRepo.GetUserByUUID(ctx, team.CaptainUserUUID)
+		if err != nil {
+			return nil, fmt.Errorf("s.userRepo.GetUserByUUID(team.CaptainUserUUID=%s) : %w", team.CaptainUserUUID, err)
+		}
+		team.Name = captain.Name
+	}
+
+	if team.Name == "" {
+		return nil, fmt.Errorf("team.Name is required")
 	}
 
 	leagueRegUUID, err := s.leagueRegRepo.RegisterTeamToLeague(ctx, leagueReg, team)
