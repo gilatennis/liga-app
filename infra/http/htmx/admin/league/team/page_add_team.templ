@@ -1,0 +1,104 @@
+package team
+
+import (
+  "liga-app/infra/http/htmx/common/layouts"
+  "liga-app/infra/http/htmx/common/components"
+  "liga-app/infra/http/htmx/admin/league"
+  "liga-app/entities"
+  "liga-app/enums"
+  // "strconv"
+	// "github.com/google/uuid"
+  "fmt"
+)
+
+templ PageAddTeam(vmodel VModelPageAddTeam) {
+  @layouts.AdminDashboardLayout("Tim", vmodel.User) {
+    <div class="space-y-8">
+      @league.ViewLeagueDetail(vmodel.League, true)
+      if vmodel.League.ParticipationCategory == enums.CATEGORY_PARTICIPATION_SINGLES {
+        @components.PageHeader("Tambah Pemain", "")
+      } else {
+        @components.PageHeader("Tambah Tim", "")
+      }
+      @ViewFormAddTeam(vmodel)
+    </div>
+  }
+}
+
+templ ViewFormAddTeam(vmodel VModelPageAddTeam) {
+  <form>
+    if vmodel.League.ParticipationCategory == enums.CATEGORY_PARTICIPATION_SINGLES {
+      <div class="text-lg pt-8">Data Pembayaran</div>
+      @components.InputText(components.InputTextParams{
+        Label: "Payment Amount",
+      })
+      @components.InputText(components.InputTextParams{
+        Label: "Payment ID",
+      })
+      <div class="text-lg pt-8">Data Pemain</div>
+      @components.InputSelect(components.InputSelectParams{
+        Label: "Pemain",
+        Options: optionPlayers(vmodel.Players),
+      })
+    } else if vmodel.League.ParticipationCategory == enums.CATEGORY_PARTICIPATION_DOUBLES {
+      <div class="text-lg pt-8">Data Pembayaran</div>
+      @components.InputText(components.InputTextParams{
+        Label: "Payment Amount",
+      })
+      @components.InputText(components.InputTextParams{
+        Label: "Payment ID",
+      })
+
+      <div class="text-lg pt-8">Data Pemain</div>
+      @components.InputSelect(components.InputSelectParams{
+        Label: "Kapten",
+        Name: "[]player_uuids",
+        Options: optionPlayers(vmodel.Players),
+      })
+      @components.InputSelect(components.InputSelectParams{
+        Label: "Partner",
+        Name: "[]player_uuids",
+        Options: optionPlayers(vmodel.Players),
+      })
+      @components.InputText(components.InputTextParams{
+        Label: "Payment ID",
+      })
+
+    } else if vmodel.League.ParticipationCategory == enums.CATEGORY_PARTICIPATION_TEAMS {
+      <div class="text-lg pt-8">Data Pembayaran</div>
+      @components.InputText(components.InputTextParams{
+        Label: "Payment Amount",
+      })
+      @components.InputText(components.InputTextParams{
+        Label: "Payment ID",
+      })
+
+      <div class="text-lg pt-8">Data Pemain</div>
+      @components.InputSelect(components.InputSelectParams{
+        Label: "Pemain #1 (Kapten)",
+        Name: "[]player_uuids",
+        Options: optionPlayers(vmodel.Players),
+      })
+      for i := 0; i < 8; i++ {
+        @components.InputSelect(components.InputSelectParams{
+          Label: fmt.Sprintf("Pemain #%d", i+2),
+          Name: "[]player_uuids",
+          Options: optionPlayers(vmodel.Players),
+        })
+      }
+    }
+  </form>
+}
+
+func optionPlayers(players []entities.User) []components.InputSelectOption {
+  options := []components.InputSelectOption{}
+  for _, p := range players {
+    op := components.InputSelectOption{
+      Value: p.UUID.String(),
+      Text: fmt.Sprintf("%s - %s", p.Name, p.Gender),
+    }
+    options = append(options, op)
+  }
+
+  return options
+}

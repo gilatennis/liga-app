@@ -1,0 +1,106 @@
+package league
+
+import (
+  "liga-app/infra/http/htmx/common/layouts"
+  "strconv"
+  "liga-app/entities"
+  "liga-app/enums"
+  "time"
+  "liga-app/infra/http/htmx/common/utils"
+	"liga-app/infra/http/htmx/common/components"
+  "fmt"
+)
+
+templ PageLeagueDetail(vmodel VModelPageLeagueDetail) {
+  @layouts.AdminDashboardLayout("Dashboard", vmodel.User) {
+    <div class="flex flex-col space-y-4">
+      @ViewLeagueDetail(vmodel.League, true)
+      @components.PageHeader(vmodel.League.Name, "")
+      <div>
+        <div class="grid grid-cols-2 gap-2">
+          // @ComponentCardButton(fmt.Sprintf("/dashboard/leagues/%s/teams", vmodel.League.UUID)) {
+          @components.CardButton(fmt.Sprintf("/admin/dashboard/leagues/%s/teams", vmodel.League.UUID)) {
+            <div class="grid grid-row-2 gap-4 p-4">
+              <div class="flex justify-center text-primary">
+                <i data-feather="users" width="32" height="32"></i>
+              </div>
+              if vmodel.League.ParticipationCategory == enums.CATEGORY_PARTICIPATION_SINGLES {
+                <h3 class="text-center">Daftar Pemain</h3>
+              } else {
+                <h3 class="text-center">Daftar Tim</h3>
+              }
+            </div>
+          }
+          @components.CardButton(fmt.Sprintf("/dashboard/leagues/%s/matches", vmodel.League.UUID)) {
+            <div class="grid grid-row-2 gap-4 p-4">
+              <div class="flex justify-center text-primary">
+                <i data-feather="list" width="32" height="32"></i>
+              </div>
+              <h3 class="text-center">Daftar Pertandingan</h3>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+}
+
+templ ViewLeagueDetail(league *entities.League, showTeamCount bool) {
+  <div class="card w-auto shadow-xl">
+    <div class="p-4 flex flex-col gap-2">
+      <div class="flex flex-row space-x-2">
+        <div class="badge badge-sm badge-primary">Season {strconv.Itoa(league.Season)}</div>
+        <div class="badge badge-sm badge-secondary">{string(league.Level)}</div>
+      </div>
+      <div class="text-3xl mt-2">
+        {league.Name}
+      </div>
+      <div class="grid grid-cols-2 gap-2 mt-4">
+        // Left
+        <div class="space-y-3">
+          <div class="flex flex-row items-center space-x-2">
+            <i data-feather="map-pin" width="16" height="16"></i>
+            <p class="text-lg">{league.Wilayah.Name}</p>
+          </div>
+          <div>
+            Start: {displayMaybeDate(league.LeagueStartAt)}
+          </div>
+          <div>
+            End: {displayMaybeDate(league.LeagueEndAt)}
+          </div>
+        </div>
+
+        // Right
+        <div class="space-y-2">
+          if showTeamCount {
+            if league.ParticipationCategory == enums.CATEGORY_PARTICIPATION_SINGLES {
+              <div class="text-lg">{strconv.Itoa(int(league.PlayerCount))} Pemain</div>
+            } else {
+              <div class="text-lg">{strconv.Itoa(int(league.TeamCount))} Tim</div>
+            }
+          }
+          <div>
+            <a href={templ.URL(league.LinkRuleBook)} target="_blank" class="btn btn-sm btn-outline btn-primary w-full">
+              <i data-feather="book-open" width="14" height="14"></i>
+              Rule Book
+            </a>
+          </div>
+          <div>
+            <a href={templ.URL(league.LinkWAGroup)} target="_blank" class="btn btn-sm btn-outline btn-secondary w-full">
+              <img src="/static/icons/whatsapp.png" class="w-4 h-4 mr-2" />
+              WA Group
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+func displayMaybeDate(date *time.Time) string {
+  if date == nil {
+    return "TBA"
+  }
+
+  return utils.DisplayDateHuman(*date)
+}

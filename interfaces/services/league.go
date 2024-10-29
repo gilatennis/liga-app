@@ -19,4 +19,5 @@ type ILeagueService interface {
 		paymentID string,
 		paymentAmount float64,
 	) (*uuid.UUID, error)
+	RegisterTeamToLeague(ctx context.Context, leagueReg *entities.LeagueRegistration, teamName string, playerUUIDs []uuid.UUID) (*uuid.UUID, error)
 }

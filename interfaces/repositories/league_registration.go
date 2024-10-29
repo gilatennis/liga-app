@@ -12,4 +12,5 @@ type ILeagueRegistrationRepository interface {
 	Update(ctx context.Context, leagueReg *entities.LeagueRegistration) (*uuid.UUID, error)
 	CompleteRegistration(ctx context.Context, leagueReg *entities.LeagueRegistration) (*uuid.UUID, error)
 	JoinExistingTeamInLeague(ctx context.Context, userUUID, leagueUUID, teamUUID uuid.UUID) error
+	RegisterTeamToLeague(ctx context.Context, leagueReg *entities.LeagueRegistration, team *entities.Team) (*uuid.UUID, error)
 }

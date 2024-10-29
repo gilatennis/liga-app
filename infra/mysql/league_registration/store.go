@@ -127,3 +127,58 @@ func (s *Store) JoinExistingTeamInLeague(ctx context.Context, userUUID, leagueUU
 
 	return nil
 }
+
+func (s *Store) RegisterTeamToLeague(ctx context.Context, leagueReg *entities.LeagueRegistration, team *entities.Team) (*uuid.UUID, error) {
+	tx := s.db.WithContext(ctx).Begin()
+
+	err := tx.
+		Omit(clause.Associations).
+		Create(leagueReg).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.Omit(clause.Associations).Save(&team).Error
+	if err != nil {
+		return nil, err
+	}
+
+	leagueTeam := entities.LeagueTeam{
+		LeagueUUID: leagueReg.LeagueUUID,
+		TeamUUID:   team.UUID,
+	}
+	err = tx.Omit(clause.Associations).Save(&leagueTeam).Error
+	if err != nil {
+		return nil, err
+	}
+
+	teamPlayers := []entities.TeamPlayer{}
+	leaguePlayers := []entities.LeaguePlayer{}
+	for _, p := range team.Players {
+		teamPlayers = append(teamPlayers, entities.TeamPlayer{
+			TeamUUID:   team.UUID,
+			PlayerUUID: p.UUID,
+		})
+		leaguePlayers = append(leaguePlayers, entities.LeaguePlayer{
+			LeagueUUID: leagueReg.LeagueUUID,
+			PlayerUUID: p.UUID,
+		})
+	}
+
+	err = tx.Omit(clause.Associations).Save(&teamPlayers).Error
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.Omit(clause.Associations).Save(&leaguePlayers).Error
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.Commit().Error
+	if err != nil {
+		return nil, err
+	}
+	return nil, nil
+}

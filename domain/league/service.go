@@ -181,3 +181,28 @@ func (s *Service) CompleteLeagueRegistrationPayment(
 
 	return updatedUUID, nil
 }
+
+func (s *Service) RegisterTeamToLeague(
+	ctx context.Context,
+	leagueReg *entities.LeagueRegistration,
+	teamName string,
+	playerUUIDs []uuid.UUID,
+) (*uuid.UUID, error) {
+	teamPlayers := []entities.User{}
+	for _, pUUID := range playerUUIDs {
+		u := entities.User{}
+		u.UUID = pUUID
+		teamPlayers = append(teamPlayers, u)
+	}
+	team := &entities.Team{
+		CaptainUserUUID: teamPlayers[0].UUID,
+		Players:         teamPlayers,
+	}
+
+	leagueRegUUID, err := s.leagueRegRepo.RegisterTeamToLeague(ctx, leagueReg, team)
+	if err != nil {
+		return nil, fmt.Errorf("s.leagueRegRepo.RegisterTeamToLeague(ctx, leagueReg, team) : %w", err)
+	}
+
+	return leagueRegUUID, nil
+}

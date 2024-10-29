@@ -119,6 +119,10 @@ func adminRoutes(admin *gin.RouterGroup, handlers *Handlers, middlewares *middle
 	adminDashboard.Use(middlewares.SessionMiddleware)
 	{
 		adminDashboard.GET("", handlers.HTMXHandlers.AdminDashHandler.Index)
+		adminDashboard.GET("/leagues/:league_uuid", handlers.HTMXHandlers.AdminLeagueHandler.GetLeagueDetailPage)
+		adminDashboard.GET("/leagues/:league_uuid/teams", handlers.HTMXHandlers.AdminLeagueTeamHandler.GetTeamListPage)
+		adminDashboard.GET("/leagues/:league_uuid/teams/add", handlers.HTMXHandlers.AdminLeagueTeamHandler.GetAddTeamPage)
+		adminDashboard.POST("/leagues/:league_uuid/teams/add", handlers.HTMXHandlers.AdminLeagueTeamHandler.PostAddTeam)
 	}
 }
 

@@ -23,8 +23,13 @@ func (s *Service) CreateUser(ctx context.Context, userUUID uuid.UUID, e *entitie
 	return uuid.Nil, errors.New("unimplemented")
 }
 
-func (s *Service) GetUsers(ctx context.Context, p *common.Pagination, f *repositories.GetUserListFilter) (*[]entities.User, int64, error) {
-	return nil, 0, errors.New("unimplemented")
+func (s *Service) GetUsers(ctx context.Context, p *common.Pagination, f *repositories.GetUserListFilter) ([]entities.User, int64, error) {
+	users, count, err := s.userRepo.GetUsers(ctx, p, f)
+	if err != nil {
+		return nil, 0, fmt.Errorf("s.userRepo.GetUsers(ctx, p, f): %w", err)
+	}
+
+	return users, count, err
 }
 
 func (s *Service) GetUserByUUID(ctx context.Context, userUUID uuid.UUID) (*entities.User, error) {

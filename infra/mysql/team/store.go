@@ -33,7 +33,8 @@ func (s *Store) Get(ctx context.Context, p *common.Pagination, f *repositories.T
 		Joins("JOIN league_teams ON league_teams.team_uuid = teams.uuid").
 		Joins("JOIN team_players ON team_players.team_uuid = teams.uuid").
 		Joins("JOIN league_registrations lr ON lr.league_uuid = league_teams.league_uuid").
-		Where("lr.payment_status = 'PAID'")
+		Where("lr.payment_status = 'PAID'").
+		Where("league_teams.deleted_at IS NULL")
 
 	if f != nil {
 		if f.LeagueUUID != nil {
@@ -55,7 +56,8 @@ func (s *Store) Get(ctx context.Context, p *common.Pagination, f *repositories.T
 		Joins("JOIN league_teams ON league_teams.team_uuid = teams.uuid").
 		Joins("JOIN team_players ON team_players.team_uuid = teams.uuid").
 		Joins("JOIN league_registrations lr ON lr.league_uuid = league_teams.league_uuid").
-		Where("lr.payment_status = 'PAID'")
+		Where("lr.payment_status = 'PAID'").
+		Where("league_teams.deleted_at IS NULL")
 
 	if f != nil {
 		if f.LeagueUUID != nil {

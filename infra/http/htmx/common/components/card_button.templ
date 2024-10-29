@@ -1,0 +1,9 @@
+package components
+
+templ CardButton(href string) {
+  <a href={templ.URL(href)}>
+    <div class="card w-auto btn h-full shadow-xl">
+      {children...}
+    </div>
+  </a>
+}

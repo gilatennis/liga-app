@@ -5,6 +5,8 @@ import (
   "strconv"
   "liga-app/entities"
   "liga-app/enums"
+	"fmt"
+  "github.com/google/uuid"
 )
 
 templ PageDashboard(vmodel VModelPageDashboard) {
@@ -16,7 +18,7 @@ templ PageDashboard(vmodel VModelPageDashboard) {
 templ ViewLeagueList(leagues []entities.League, nextPage int, showTeamCount bool) {
   <div class="card-group-match-list grid grid-cols-2 gap-4">
     for _, l := range leagues {
-      <a hx-boost="false" href="">
+      <a hx-boost="false" href={hrefLeagueDetail(l.UUID)}>
         <div class="card min-h-[320px] w-auto shadow-xl">
           <div class="card-body px-2 justify-between items-center space-y-2">
             <div class="flex flex-row space-x-2">
@@ -64,4 +66,8 @@ templ ViewLeagueList(leagues []entities.League, nextPage int, showTeamCount bool
 
 func urlLoadMore(nextPage int) string {
   return ""
+}
+
+func hrefLeagueDetail(leagueUUID uuid.UUID) templ.SafeURL {
+  return templ.URL(fmt.Sprintf("/admin/dashboard/leagues/%s", leagueUUID))
 }

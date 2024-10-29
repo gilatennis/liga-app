@@ -44,16 +44,22 @@ func (s *Store) GetUsers(
 	users := []entities.User{}
 	var count int64
 
-	if f.LoginMethod != nil {
-		dbHandle.Where("login_method = ?", *f.LoginMethod)
+	if f != nil {
+		if f.LoginMethod != nil {
+			dbHandle.Where("login_method = ?", *f.LoginMethod)
+		}
+
+		if f.Name != nil {
+			dbHandle.Where("name = ?", *f.Name)
+		}
+
+		if f.Email != nil {
+			dbHandle.Where("email = ?", *f.Email)
+		}
 	}
 
-	if f.Name != nil {
-		dbHandle.Where("name = ?", *f.Name)
-	}
-
-	if f.Email != nil {
-		dbHandle.Where("email = ?", *f.Email)
+	for _, o := range p.OrderBy {
+		dbHandle = dbHandle.Order(fmt.Sprintf("%s %s", o.Column, o.Direction))
 	}
 
 	err := dbHandle.Find(&users).Error
