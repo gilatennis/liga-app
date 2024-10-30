@@ -1,0 +1,47 @@
+package fixture
+
+import (
+  "liga-app/infra/http/htmx/common/layouts"
+  // "strconv"
+  // "liga-app/entities"
+  // "liga-app/enums"
+  // "time"
+  // "liga-app/infra/http/htmx/common/utils"
+	"liga-app/infra/http/htmx/common/components"
+	"liga-app/infra/http/htmx/admin/league"
+  "fmt"
+  "github.com/google/uuid"
+)
+
+templ PageFixtureDetail(vmodel VModelPageFixtureDetail) {
+  @layouts.AdminDashboardLayout(vmodel.Fixture.Name, vmodel.User) {
+    <div class="flex flex-col space-y-4">
+      @league.ViewLeagueDetail(vmodel.League, true)
+      @components.PageHeader(vmodel.Fixture.Name, "")
+      <div class="text-xl">Daftar Grup</div>
+      <div>
+        <a href={hrefAddGroup(vmodel.League.UUID, vmodel.Fixture.UUID)} class="btn btn-primary w-full">
+          <i data-feather="plus" class="w-4 h-4"></i>
+          Tambah Group
+        </a>
+      </div>
+      @ViewGroupList(vmodel)
+    </div>
+  }
+}
+
+func hrefAddGroup(leagueUUID, fixtureUUID uuid.UUID) templ.SafeURL {
+  return templ.URL(fmt.Sprintf("/admin/dashboard/leagues/%s/fixtures/%s/groups/add", leagueUUID, fixtureUUID))
+}
+
+templ ViewGroupList(vmodel VModelPageFixtureDetail) {
+  <div class="grid grid-cols-2 gap-2">
+    for _, g := range vmodel.Fixture.Groups {
+      @components.CardButton(fmt.Sprintf("/admin/dashboard/leagues/%s/fixtures/%s/groups/%s", vmodel.League.UUID, vmodel.Fixture.UUID, g.UUID)) {
+        <div class="p-4">
+          <h3 class="text-center">{g.Name}</h3>
+        </div>
+      }
+    }
+  </div>
+}

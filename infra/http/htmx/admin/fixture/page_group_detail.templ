@@ -1,0 +1,184 @@
+package fixture
+
+import (
+  "liga-app/infra/http/htmx/common/layouts"
+  // "strconv"
+  // "liga-app/entities"
+  // "liga-app/enums"
+  // "time"
+  // "liga-app/infra/http/htmx/common/utils"
+	"liga-app/infra/http/htmx/common/components"
+	"liga-app/infra/http/htmx/admin/league"
+  "fmt"
+  "github.com/google/uuid"
+	"liga-app/entities"
+  "strconv"
+)
+
+templ PageGroupDetail(vmodel VModelPageGroupDetail) {
+  @layouts.AdminDashboardLayout("Add Group", vmodel.User) {
+    <div class="flex flex-col space-y-4">
+      @league.ViewLeagueDetail(vmodel.League, true)
+      @components.PageHeader(fmt.Sprintf("Group %s", vmodel.Group.Name), "")
+
+      <div class="grid grid-cols-2 gap-2">
+        @components.CardButtonPost(fmt.Sprintf("/admin/dashboard/leagues/%s/fixtures/%s/groups/%s/generate-matches", vmodel.League.UUID, vmodel.Fixture.UUID, vmodel.Group.UUID)) {
+          <div class="grid grid-row-2 gap-4 p-4">
+            <div class="flex justify-center text-primary">
+              <i data-feather="loader" width="32" height="32"></i>
+            </div>
+            <h3 class="text-center">Generate Pertandingan</h3>
+          </div>
+        }
+        @components.CardButtonPost(fmt.Sprintf("/admin/dashboard/leagues/%s/fixtures/%s/groups/%s/generate-matches?home_and_away=true", vmodel.League.UUID, vmodel.Fixture.UUID, vmodel.Group.UUID)) {
+          <div class="grid grid-row-2 gap-4 p-4">
+            <div class="flex justify-center text-primary">
+              <i data-feather="loader" width="32" height="32"></i>
+            </div>
+            <h3 class="text-center">Generate Pertandingan Home & Away</h3>
+          </div>
+        }
+        @components.CardButton(fmt.Sprintf("/dashboard/leagues/%s/matches", vmodel.League.UUID)) {
+          <div class="grid grid-row-2 gap-4 p-4">
+            <div class="flex justify-center text-primary">
+              <i data-feather="list" width="32" height="32"></i>
+            </div>
+            <h3 class="text-center">Daftar Pertandingan</h3>
+          </div>
+        }
+      </div>
+
+      @ViewGroupDetail(vmodel)
+    </div>
+  }
+}
+
+templ ViewGroupDetail(vmodel VModelPageGroupDetail) {
+  @ViewFormAddTeamToGroup(vmodel)
+}
+
+templ ViewFormAddTeamToGroup(vmodel VModelPageGroupDetail) {
+  <div id="form-add-team-to-group">
+    <div class="text-lg">Daftar Tim</div>
+    <form
+      hx-post={urlPostAddTeam(vmodel.League.UUID, vmodel.Fixture.UUID, vmodel.Group.UUID)}
+      hx-swap="outerHTML"
+      hx-target="#form-add-team-to-group"
+      hx-target-4xx="#form-add-team-to-group"
+      hx-target-5xx="#form-add-team-to-group"
+    >
+      @components.InputSelect(components.InputSelectParams{
+        Label: "Tambah Tim",
+        Name: "team_uuid",
+        Options: optionsAddTeam(vmodel.TeamsAvailable),
+      })
+      <div class="pt-8">
+        if vmodel.VModelFormAddTeam.base.ServerError != "" {
+          <p class="text-error mt-1">{ vmodel.VModelFormAddTeam.base.ServerError }</p>
+        }
+        <button class="btn btn-primary w-full">Add to Group</button>
+      </div>
+    </form>
+
+    @ViewTeamList(vmodel.League.UUID, vmodel.Fixture.UUID, vmodel.Group.UUID, vmodel.Group.Teams, 0)
+  </div>
+}
+
+func urlPostAddTeam(leagueUUID, fixtureUUID, groupUUID uuid.UUID) string {
+  return fmt.Sprintf("/admin/dashboard/leagues/%s/fixtures/%s/groups/%s/teams/add", leagueUUID, fixtureUUID, groupUUID)
+}
+
+func optionsAddTeam(teams []entities.Team) []components.InputSelectOption {
+  opts := []components.InputSelectOption{}
+  for _, t := range teams {
+    opts = append(opts, components.InputSelectOption{Value: t.UUID.String(), Text: t.Name})
+  }
+
+  return opts
+}
+
+templ ViewTeamList(leagueUUID, fixtureUUID, groupUUID  uuid.UUID, teams []entities.Team, nextPage int) {
+  <div class="flex flex-col space-y-4">
+    for _, t := range teams {
+      <div class="flex flex-row items-center space-x-2">
+        <div class="collapse shadow-xl collapse-arrow">
+          <input type="checkbox" />
+          <div class="collapse-title">
+            <div class="flex items-center space-x-4 justify-start w-full">
+              <div class="avatar placeholder">
+                <div class="bg-primary text-neutral-content w-10 rounded-full">
+                  if t.Name == "" {
+                    <span class="text-3xl">-</span>
+                  } else {
+                    <span class="text-3xl">{string(t.Name[0])}</span>
+                  }
+                </div>
+              </div>
+              <div class="w-full text-left">
+                <h3 class="text-2xl">Tim {t.Name}</h3>
+                <h3>{strconv.Itoa(len(t.Players))} Pemain</h3>
+              </div>
+            </div>
+          </div>
+          <div class="collapse-content">
+            for _, p := range t.Players {
+              @ComponentPlayer(p, false)
+            }
+          </div>
+        </div>
+        <div>
+          <button 
+           hx-delete={urlDeleteRemoveTeam(leagueUUID, fixtureUUID, groupUUID, t.UUID)}
+           hx-swap="outerHTML"
+           hx-target="#form-add-team-to-group"
+           hx-target-4xx="#form-add-team-to-group"
+           hx-target-5xx="#form-add-team-to-group"
+           class="btn btn-error text-white"
+          >
+            <i data-feather="trash" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+    }
+    if nextPage > 0 {
+      <div id="load-more-replace" class="mt-8 flex flex-row justify-center"> 
+        <button
+          class="btn btn-primary btn-wide"
+          hx-get={urlLoadMoreTeams_ViewTeamList(leagueUUID, nextPage)}
+          hx-target="#load-more-replace"
+          hx-swap="outerHTML"
+          hx-include=""
+        >
+          Load More
+        </button>
+      </div>
+    }
+  </div>
+
+}
+
+func urlDeleteRemoveTeam(leagueUUID, fixtureUUID, groupUUID, teamUUID uuid.UUID) string {
+  return fmt.Sprintf("/admin/dashboard/leagues/%s/fixtures/%s/groups/%s/teams/%s/remove", leagueUUID, fixtureUUID, groupUUID, teamUUID)
+}
+
+func urlLoadMoreTeams_ViewTeamList(leagueUUID uuid.UUID, nextPage int) string {
+  return fmt.Sprintf("/dashboard/leagues/%s/teams/view?page=%d&view=teams", leagueUUID, nextPage)
+}
+
+templ ComponentPlayer(player entities.User, isCaptain bool) {
+  <div class="flex items-center space-x-4 p-4 justify-start w-full border-b-2">
+    <div class="avatar placeholder">
+      <div class="bg-primary text-neutral-content w-7 rounded-full">
+        <span class="text-xl">{string(player.Name[0])}</span>
+      </div>
+    </div>
+    <div>
+      <div class="w-full text-left">
+        <h3 class="text-lg">{player.Name}</h3>
+      </div>
+      <div>
+        {player.GetLatestRatingString()}
+      </div>
+    </div>
+  </div>
+}

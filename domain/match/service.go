@@ -20,6 +20,7 @@ type Service struct {
 	courtTimeSlotRepo        iRepo.ICourtTimeSlotRepository
 	matchScheduleRequestRepo iRepo.IMatchScheduleRequestRepository
 	matchSetRepo             iRepo.IMatchSetRepository
+	groupRepo                iRepo.IGroupRepository
 }
 
 func NewService(
@@ -27,12 +28,14 @@ func NewService(
 	courtTimeSlotRepo iRepo.ICourtTimeSlotRepository,
 	matchScheduleRequestRepo iRepo.IMatchScheduleRequestRepository,
 	matchSetRepo iRepo.IMatchSetRepository,
+	groupRepo iRepo.IGroupRepository,
 ) *Service {
 	return &Service{
 		matchRepo:                matchRepo,
 		courtTimeSlotRepo:        courtTimeSlotRepo,
 		matchScheduleRequestRepo: matchScheduleRequestRepo,
 		matchSetRepo:             matchSetRepo,
+		groupRepo:                groupRepo,
 	}
 }
 
@@ -297,4 +300,151 @@ func (s *Service) ConfirmCompleteMatch(ctx context.Context, userUUID, matchUUID 
 	}
 
 	return updatedUUID, nil
+}
+
+func (s *Service) GenerateRoundRobinMatches(ctx context.Context, groupUUID uuid.UUID, isHomeAndAway bool) error {
+	g, err := s.groupRepo.GetByUUID(ctx, groupUUID)
+	if err != nil {
+		return fmt.Errorf("s.groupRepo.GetByUUID(ctx, groupUUID=%s): %w", groupUUID, err)
+	}
+
+	teamCount := len(g.Teams)
+
+	teamIDs := make([]string, teamCount)
+	for i, team := range g.Teams {
+		teamIDs[i] = team.UUID.String()
+	}
+
+	if len(teamIDs) < teamCount {
+		for i := len(teamIDs); i < teamCount; i++ {
+			teamIDs = append(teamIDs, "TBA")
+		}
+	}
+
+	// assign number to teamIDs
+	numToTeamID := make(map[int]string)
+	var teamNums []int
+	const BYE = "BYE"
+
+	if len(teamIDs)%2 != 0 {
+		teamNums = make([]int, len(teamIDs)+1)
+		teamIDs = append(teamIDs, BYE)
+	} else {
+		teamNums = make([]int, len(teamIDs))
+	}
+
+	for i, teamID := range teamIDs {
+		numToTeamID[i] = teamID
+		teamNums[i] = i
+	}
+
+	numRounds := len(teamIDs) - 1
+
+	if isHomeAndAway {
+		numRounds = numRounds * 2
+	}
+	fmt.Println("numRounds", numRounds)
+
+	rounds := []entities.Round{}
+	for i := 0; i < numRounds; i++ {
+		r := entities.Round{
+			Base: entities.Base{
+				UUID: uuid.New(),
+			},
+			GroupUUID: groupUUID,
+			Number:    i + 1,
+		}
+
+		for j := 0; j < len(teamNums)/2; j++ {
+			left := teamNums[j]
+			right := teamNums[len(teamNums)-j-1]
+
+			opp1ID := numToTeamID[left]
+			opp2ID := numToTeamID[right]
+
+			match := entities.Match{
+				Base: entities.Base{
+					UUID: uuid.New(),
+				},
+				Number:    j + 1,
+				RoundUUID: r.UUID,
+				// RoundNumber: r.Number,
+				Status: string(enums.MATCH_STATUS_WAITING),
+			}
+
+			oppIDs := []string{opp1ID, opp2ID}
+			for i := 0; i < 2; i++ {
+				oppID := oppIDs[i]
+
+				if i == 0 {
+					if oppID == BYE {
+						match.IsByeTeamA = true
+						continue
+					}
+
+					if oppID == "TBA" {
+						continue
+					}
+
+					oppUUID, err := uuid.Parse(oppID)
+					if err != nil {
+						err = fmt.Errorf("uuid.Parse(oppID=%s): %w", oppID, err)
+						return err
+					}
+
+					match.TeamAUUID = &oppUUID
+				}
+
+				if i == 1 {
+					if oppID == BYE {
+						match.IsByeTeamB = true
+						continue
+					}
+
+					if oppID == "TBA" {
+						continue
+					}
+
+					oppUUID, err := uuid.Parse(oppID)
+					if err != nil {
+						err = fmt.Errorf("uuid.Parse(oppID=%s): %w", oppID, err)
+						return err
+					}
+
+					match.TeamBUUID = &oppUUID
+				}
+			}
+
+			r.Matches = append(r.Matches, match)
+		}
+
+		rounds = append(rounds, r)
+
+		if i == numRounds-1 {
+			break
+		}
+		// rotate teamIDs
+		rTemp := 0
+		for k := 0; k < len(teamNums); k++ {
+			// keep first idx
+			if k == 0 {
+				continue
+			}
+			if k == 1 {
+				rTemp = teamNums[k]
+				teamNums[k] = teamNums[len(teamNums)-1]
+				continue
+			}
+			temp := teamNums[k]
+			teamNums[k] = rTemp
+			rTemp = temp
+		}
+	}
+
+	err = s.matchRepo.CreateGeneratedMatches(ctx, rounds, g.Fixture.LeagueUUID, g.UUID)
+	if err != nil {
+		return fmt.Errorf("s.matchRepo.CreateGeneratedMatches(ctx, rounds, g.Fixture.LeagueUUID, g.UUID) : %w", err)
+	}
+
+	return nil
 }

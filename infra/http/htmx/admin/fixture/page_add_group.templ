@@ -1,0 +1,51 @@
+package fixture
+
+import (
+  "liga-app/infra/http/htmx/common/layouts"
+  // "strconv"
+  // "liga-app/entities"
+  // "liga-app/enums"
+  // "time"
+  // "liga-app/infra/http/htmx/common/utils"
+	"liga-app/infra/http/htmx/common/components"
+	"liga-app/infra/http/htmx/admin/league"
+  "fmt"
+  "github.com/google/uuid"
+)
+
+templ PageAddGroup(vmodel VModelPageAddGroup) {
+  @layouts.AdminDashboardLayout("Add Group", vmodel.User) {
+    <div class="flex flex-col space-y-4">
+      @league.ViewLeagueDetail(vmodel.League, true)
+      @components.PageHeader("Add Group", "")
+      @ViewFormAddGroup(vmodel)
+    </div>
+  }
+}
+
+templ ViewFormAddGroup(vmodel VModelPageAddGroup) {
+  <form
+    id="form-add-group"
+    class="flex flex-col space-y-4"
+    hx-post={urlPostAddGroup(vmodel.League.UUID, vmodel.Fixture.UUID)}
+    hx-swap="outerHTML"
+    hx-target="#form-add-group"
+    hx-target-4xx="#form-add-group"
+    hx-target-5xx="#form-add-group"
+  >
+    @components.InputText(components.InputTextParams{
+      Label: "Group Name",
+      Name: "name",
+    })
+    <div class="pt-8">
+      if vmodel.VModelFormAddGroup.base.ServerError != "" {
+        <p class="text-error mt-1">{ vmodel.VModelFormAddGroup.base.ServerError }</p>
+      }
+      <button class="btn btn-primary w-full">Submit</button>
+    </div>
+  </form>
+}
+
+func urlPostAddGroup(leagueUUID, fixtureUUID uuid.UUID) string {
+  return fmt.Sprintf("/admin/dashboard/leagues/%s/fixtures/%s/groups/add", leagueUUID, fixtureUUID)
+}

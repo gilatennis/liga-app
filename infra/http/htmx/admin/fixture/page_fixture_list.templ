@@ -1,0 +1,34 @@
+package fixture
+
+import (
+  "liga-app/infra/http/htmx/common/layouts"
+  // "strconv"
+  // "liga-app/entities"
+  // "liga-app/enums"
+  // "time"
+  // "liga-app/infra/http/htmx/common/utils"
+	"liga-app/infra/http/htmx/common/components"
+	"liga-app/infra/http/htmx/admin/league"
+  "fmt"
+)
+
+templ PageFixtureList(vmodel VModelPageFixtureList) {
+  @layouts.AdminDashboardLayout("Fixtures", vmodel.User) {
+    <div class="flex flex-col space-y-4">
+      @league.ViewLeagueDetail(vmodel.League, true)
+      @components.PageHeader("Daftar Fixture", "")
+      <div>
+        <div class="grid grid-cols-2 gap-2">
+          for _, f := range vmodel.Fixtures {
+            @components.CardButton(fmt.Sprintf("/admin/dashboard/leagues/%s/fixtures/%s", vmodel.League.UUID, f.UUID)) {
+              <div class="p-4">
+                <h3 class="text-center">{f.Name}</h3>
+              </div>
+            }
+          }
+        </div>
+      </div>
+    </div>
+  }
+}
+

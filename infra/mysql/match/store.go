@@ -105,3 +105,35 @@ func (s *Store) Update(ctx context.Context, match *entities.Match) (*uuid.UUID, 
 
 	return &match.UUID, nil
 }
+
+func (s *Store) CreateGeneratedMatches(ctx context.Context, rounds []entities.Round, leagueUUID, groupUUID uuid.UUID) error {
+	tx := s.db.WithContext(ctx).Begin()
+
+	for _, r := range rounds {
+		r.GroupUUID = groupUUID
+
+		err := tx.Omit(clause.Associations).Create(&r).Error
+		if err != nil {
+			return fmt.Errorf("tx.Omit(clause.Associations).Create(r).Error: %w", err)
+		}
+
+		for j, m := range r.Matches {
+			m.LeagueUUID = leagueUUID
+			m.RoundUUID = r.UUID
+
+			r.Matches[j] = m
+		}
+
+		err = tx.Omit(clause.Associations).Create(r.Matches).Error
+		if err != nil {
+			return fmt.Errorf("tx.Omit(clause.Associations).Create(r.Matches).Error : %w", err)
+		}
+	}
+
+	err := tx.Commit().Error
+	if err != nil {
+		return fmt.Errorf("tx.Commit(): %w", err)
+	}
+
+	return nil
+}

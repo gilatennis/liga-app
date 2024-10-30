@@ -23,7 +23,7 @@ func (s *Store) Get(ctx context.Context, p *common.Pagination, f *repositories.T
 	teams := []entities.Team{}
 	var count int64
 
-	db := s.db.WithContext(ctx).Session(&gorm.Session{}).
+	db := s.db.WithContext(ctx).Session(&gorm.Session{}).Debug().
 		Distinct().
 		Preload("Captain").
 		Preload("Players").
@@ -33,6 +33,7 @@ func (s *Store) Get(ctx context.Context, p *common.Pagination, f *repositories.T
 		Joins("JOIN league_teams ON league_teams.team_uuid = teams.uuid").
 		Joins("JOIN team_players ON team_players.team_uuid = teams.uuid").
 		Joins("JOIN league_registrations lr ON lr.league_uuid = league_teams.league_uuid").
+		Joins("LEFT JOIN group_teams gt ON gt.team_uuid = teams.uuid").
 		Where("lr.payment_status = 'PAID'").
 		Where("league_teams.deleted_at IS NULL")
 
@@ -42,6 +43,9 @@ func (s *Store) Get(ctx context.Context, p *common.Pagination, f *repositories.T
 		}
 		if f.PlayerUUID != nil {
 			db = db.Where("team_players.player_uuid = ?", *f.PlayerUUID)
+		}
+		if f.NotGroupUUID != nil {
+			db = db.Where("(gt.group_uuid IS NULL OR gt.group_uuid != ?)", *f.NotGroupUUID)
 		}
 	}
 
@@ -56,6 +60,7 @@ func (s *Store) Get(ctx context.Context, p *common.Pagination, f *repositories.T
 		Joins("JOIN league_teams ON league_teams.team_uuid = teams.uuid").
 		Joins("JOIN team_players ON team_players.team_uuid = teams.uuid").
 		Joins("JOIN league_registrations lr ON lr.league_uuid = league_teams.league_uuid").
+		Joins("LEFT JOIN group_teams gt ON gt.team_uuid = teams.uuid").
 		Where("lr.payment_status = 'PAID'").
 		Where("league_teams.deleted_at IS NULL")
 
@@ -65,6 +70,9 @@ func (s *Store) Get(ctx context.Context, p *common.Pagination, f *repositories.T
 		}
 		if f.PlayerUUID != nil {
 			dbCount = dbCount.Where("team_players.player_uuid = ?", *f.PlayerUUID)
+		}
+		if f.NotGroupUUID != nil {
+			dbCount = dbCount.Where("(gt.group_uuid IS NULL OR gt.group_uuid != ?)", *f.NotGroupUUID)
 		}
 	}
 

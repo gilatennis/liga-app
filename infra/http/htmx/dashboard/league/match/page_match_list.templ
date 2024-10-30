@@ -132,7 +132,12 @@ templ ViewMoreMatches(leagueUUID uuid.UUID, matches []entities.Match, nextPage i
 }
 
 templ ViewMatchCard(m entities.Match) {
-  <a hx-boost="false" href={hrefMatchDetail(m.LeagueUUID, m.UUID)}>
+  <a
+    hx-boost="false"
+    if m.TeamA != nil && m.TeamB != nil {
+      href={hrefMatchDetail(m.LeagueUUID, m.UUID)}
+    }
+  >
     <div class="card w-auto shadow-xl">
       <div class="p-4 space-y-4">
         <div class="flex flex-row">
@@ -145,7 +150,9 @@ templ ViewMatchCard(m entities.Match) {
           }
           <div class="flex-1">
             <div class="text-left text-secondary font-bold">Pertandingan ke {strconv.Itoa(m.Round.Number)}</div>
-            <div class="text-xs">{monday.Format(*m.Round.Start, "02/01/2006", monday.LocaleIdID)} - {monday.Format(*m.Round.End, "02/01/2006", monday.LocaleIdID)}</div>
+            if m.Round.Start != nil && m.Round.End != nil {
+              <div class="text-xs">{monday.Format(*m.Round.Start, "02/01/2006", monday.LocaleIdID)} - {monday.Format(*m.Round.End, "02/01/2006", monday.LocaleIdID)}</div>
+            }
           </div>
         </div>
         <div class="flex flex-row justify-between space-x-6 items-center">

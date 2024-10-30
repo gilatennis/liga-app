@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"liga-app/cmd/seed/court_time_slots"
+	"liga-app/cmd/seed/fixtures"
 	"liga-app/cmd/seed/leagues"
 	"liga-app/cmd/seed/matches"
 	"liga-app/cmd/seed/round_schedule"
@@ -177,6 +178,11 @@ func main() {
 				Name:        "update-user-ratings",
 				Description: "Update user ratings from gsheet",
 				Action:      user_ratings.UpdateUserRatings(db, gsheetAPI),
+			},
+			{
+				Name:        "seed-round-robin-fixtures",
+				Description: "Seed round robin fixtures to all leagues if not exist",
+				Action:      fixtures.SeedRoundRobinFixtures(db),
 			},
 		},
 	}

@@ -30,4 +30,5 @@ type IMatchService interface {
 	SaveMatchSet(ctx context.Context, userUUID uuid.UUID, matchSet *entities.MatchSet) (*uuid.UUID, error)
 	CompleteMatch(ctx context.Context, userUUID, matchUUID uuid.UUID) (*uuid.UUID, error)
 	ConfirmCompleteMatch(ctx context.Context, userUUID, matchUUID uuid.UUID) (*uuid.UUID, error)
+	GenerateRoundRobinMatches(ctx context.Context, groupUUID uuid.UUID, isHomeAndAway bool) error
 }

@@ -7,3 +7,11 @@ templ CardButton(href string) {
     </div>
   </a>
 }
+
+templ CardButtonPost(url string) {
+  <button hx-post={url} hx-swap="none">
+    <div class="card w-auto btn h-full shadow-xl">
+      {children...}
+    </div>
+  </button>
+}

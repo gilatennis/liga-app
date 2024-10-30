@@ -123,6 +123,16 @@ func adminRoutes(admin *gin.RouterGroup, handlers *Handlers, middlewares *middle
 		adminDashboard.GET("/leagues/:league_uuid/teams", handlers.HTMXHandlers.AdminLeagueTeamHandler.GetTeamListPage)
 		adminDashboard.GET("/leagues/:league_uuid/teams/add", handlers.HTMXHandlers.AdminLeagueTeamHandler.GetAddTeamPage)
 		adminDashboard.POST("/leagues/:league_uuid/teams/add", handlers.HTMXHandlers.AdminLeagueTeamHandler.PostAddTeam)
+
+		adminDashboard.GET("/leagues/:league_uuid/fixtures", handlers.HTMXHandlers.AdminLeagueFixtureHandler.GetFixtureListPage)
+		adminDashboard.GET("/leagues/:league_uuid/fixtures/:fixture_uuid", handlers.HTMXHandlers.AdminLeagueFixtureHandler.GetFixtureDetailPage)
+		adminDashboard.GET("/leagues/:league_uuid/fixtures/:fixture_uuid/groups/add", handlers.HTMXHandlers.AdminLeagueFixtureHandler.GetFixtureAddGroupPage)
+		adminDashboard.POST("/leagues/:league_uuid/fixtures/:fixture_uuid/groups/add", handlers.HTMXHandlers.AdminLeagueFixtureHandler.PostAddGroup)
+		adminDashboard.GET("/leagues/:league_uuid/fixtures/:fixture_uuid/groups/:group_uuid", handlers.HTMXHandlers.AdminLeagueFixtureHandler.GetGroupDetailPage)
+		adminDashboard.POST("/leagues/:league_uuid/fixtures/:fixture_uuid/groups/:group_uuid/teams/add", handlers.HTMXHandlers.AdminLeagueFixtureHandler.PostAddTeamToGroup)
+		adminDashboard.DELETE("/leagues/:league_uuid/fixtures/:fixture_uuid/groups/:group_uuid/teams/:team_uuid/remove", handlers.HTMXHandlers.AdminLeagueFixtureHandler.DeleteRemoveTeamFromGroup)
+
+		adminDashboard.POST("/leagues/:league_uuid/fixtures/:fixture_uuid/groups/:group_uuid/generate-matches", handlers.HTMXHandlers.AdminLeagueFixtureHandler.GenerateMatches)
 	}
 }
 

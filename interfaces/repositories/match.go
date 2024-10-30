@@ -21,4 +21,5 @@ type IMatchRepository interface {
 	Get(ctx context.Context, p *common.Pagination, f *MatchFilter) ([]entities.Match, int64, error)
 	GetByUUID(ctx context.Context, matchUUID uuid.UUID) (*entities.Match, error)
 	Update(ctx context.Context, m *entities.Match) (*uuid.UUID, error)
+	CreateGeneratedMatches(ctx context.Context, rounds []entities.Round, leagueUUID, groupUUID uuid.UUID) error
 }

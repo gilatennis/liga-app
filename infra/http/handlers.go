@@ -5,6 +5,7 @@ import (
 	admin "liga-app/infra/http/htmx/admin"
 	adminAuth "liga-app/infra/http/htmx/admin/auth"
 	adminDash "liga-app/infra/http/htmx/admin/dashboard"
+	adminLeagueFixture "liga-app/infra/http/htmx/admin/fixture"
 	adminLeague "liga-app/infra/http/htmx/admin/league"
 	adminLeagueTeam "liga-app/infra/http/htmx/admin/league/team"
 	"liga-app/infra/http/htmx/auth"
@@ -22,6 +23,8 @@ import (
 
 	domainAuth "liga-app/domain/auth"
 	domainCourt "liga-app/domain/court"
+	domainFixture "liga-app/domain/fixture"
+	domainGroup "liga-app/domain/group"
 	domainInvite "liga-app/domain/invite"
 	domainLeague "liga-app/domain/league"
 	domainMatch "liga-app/domain/match"
@@ -34,6 +37,8 @@ import (
 	dbAuth "liga-app/infra/mysql/auth"
 	dbCourt "liga-app/infra/mysql/court"
 	dbCourtTimeSlot "liga-app/infra/mysql/court_time_slot"
+	dbFixture "liga-app/infra/mysql/fixture"
+	dbGroup "liga-app/infra/mysql/group"
 	dbLeague "liga-app/infra/mysql/league"
 	dbLeagueReg "liga-app/infra/mysql/league_registration"
 	dbMatch "liga-app/infra/mysql/match"
@@ -71,6 +76,7 @@ type HTMXHandlers struct {
 	AdminAuthHandler            *adminAuth.Handler
 	AdminLeagueHandler          *adminLeague.Handler
 	AdminLeagueTeamHandler      *adminLeagueTeam.Handler
+	AdminLeagueFixtureHandler   *adminLeagueFixture.Handler
 }
 
 type JSONHandlers struct {
@@ -111,6 +117,8 @@ func setupHandlers(
 	matchSchedReqStore := dbMatchSchedReq.NewStore(db)
 	matchSetStore := dbMatchSet.NewStore(db)
 	adminStore := dbAdmin.NewStore(db)
+	fixtureStore := dbFixture.NewStore(db)
+	groupStore := dbGroup.NewStore(db)
 
 	authService := domainAuth.NewService(
 		cfg,
@@ -138,9 +146,11 @@ func setupHandlers(
 	teamService := domainTeam.NewService(cfg, teamStore, minioClient)
 	inviteService := domainInvite.NewService(leagueRegStore, leagueStore, teamStore)
 	ruleBookService := domainRuleBook.NewService(gormStore)
-	matchService := domainMatch.NewService(matchStore, courtTimeSlotStore, matchSchedReqStore, matchSetStore)
+	matchService := domainMatch.NewService(matchStore, courtTimeSlotStore, matchSchedReqStore, matchSetStore, groupStore)
 	venueService := domainVenue.NewService(venueStore)
 	courtService := domainCourt.NewService(courtStore, courtTimeSlotStore)
+	fixtureService := domainFixture.NewService(fixtureStore)
+	groupService := domainGroup.NewService(groupStore)
 
 	HTMXHandlers := HTMXHandlers{
 		AuthHandler:                 auth.NewHandler(cfg, authService, userService),
@@ -156,6 +166,7 @@ func setupHandlers(
 		AdminAuthHandler:            adminAuth.NewHandler(cfg, authService, userService),
 		AdminLeagueHandler:          adminLeague.NewHandler(leagueService),
 		AdminLeagueTeamHandler:      adminLeagueTeam.NewHandler(leagueService, teamService, userService),
+		AdminLeagueFixtureHandler:   adminLeagueFixture.NewHandler(fixtureService, leagueService, groupService, teamService, matchService),
 	}
 
 	JSONHandlers := JSONHandlers{
