@@ -32,7 +32,7 @@ type League struct {
 
 func (l *League) IsNTRPRatingTooHigh(rating float32) bool {
 	if l.Level == enums.CATEGORY_LEVEL_BEGINNER {
-		return rating > 3
+		return rating > 3.5
 	}
 
 	if l.Level == enums.CATEGORY_LEVEL_INTERMEDIATE {
