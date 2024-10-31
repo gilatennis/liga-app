@@ -252,7 +252,8 @@ func (h *Handler) GetGroupDetailPage(c *gin.Context) {
 	}
 
 	p := iCommon.NewPagination(1, 500, []iCommon.OrderBy{{Column: "name", Direction: "asc"}})
-	f := &repositories.TeamFilter{LeagueUUID: &leagueUUID, NotGroupUUID: &groupUUID}
+	notingroup := true
+	f := &repositories.TeamFilter{LeagueUUID: &leagueUUID, NotInGroup: &notingroup}
 	teamsAvailable, _, err := h.teamService.Get(c, p, f)
 	if err != nil {
 		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
@@ -305,7 +306,8 @@ func (h *Handler) PostAddTeamToGroup(c *gin.Context) {
 	}
 
 	p := iCommon.NewPagination(1, 500, []iCommon.OrderBy{{Column: "name", Direction: "asc"}})
-	f := &repositories.TeamFilter{LeagueUUID: &leagueUUID, NotGroupUUID: &groupUUID}
+	notingroup := true
+	f := &repositories.TeamFilter{LeagueUUID: &leagueUUID, NotInGroup: &notingroup}
 	teamsAvailable, _, err := h.teamService.Get(c, p, f)
 	if err != nil {
 		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
@@ -346,7 +348,8 @@ func (h *Handler) PostAddTeamToGroup(c *gin.Context) {
 	}
 
 	p = iCommon.NewPagination(1, 500, []iCommon.OrderBy{{Column: "name", Direction: "asc"}})
-	f = &repositories.TeamFilter{LeagueUUID: &leagueUUID, NotGroupUUID: &groupUUID}
+	notingroup = true
+	f = &repositories.TeamFilter{LeagueUUID: &leagueUUID, NotInGroup: &notingroup}
 	vmodel.TeamsAvailable, _, err = h.teamService.Get(c, p, f)
 	if err != nil {
 		view := ViewFormAddTeamToGroup(vmodel)
@@ -402,7 +405,8 @@ func (h *Handler) DeleteRemoveTeamFromGroup(c *gin.Context) {
 	}
 
 	p := iCommon.NewPagination(1, 500, []iCommon.OrderBy{{Column: "name", Direction: "asc"}})
-	f := &repositories.TeamFilter{LeagueUUID: &leagueUUID, NotGroupUUID: &groupUUID}
+	notingroup := true
+	f := &repositories.TeamFilter{LeagueUUID: &leagueUUID, NotInGroup: &notingroup}
 	teamsAvailable, _, err := h.teamService.Get(c, p, f)
 	if err != nil {
 		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
@@ -427,7 +431,8 @@ func (h *Handler) DeleteRemoveTeamFromGroup(c *gin.Context) {
 	}
 
 	p = iCommon.NewPagination(1, 500, []iCommon.OrderBy{{Column: "name", Direction: "asc"}})
-	f = &repositories.TeamFilter{LeagueUUID: &leagueUUID, NotGroupUUID: &groupUUID}
+	notingroup = true
+	f = &repositories.TeamFilter{LeagueUUID: &leagueUUID, NotInGroup: &notingroup}
 	vmodel.TeamsAvailable, _, err = h.teamService.Get(c, p, f)
 	if err != nil {
 		view := ViewFormAddTeamToGroup(vmodel)

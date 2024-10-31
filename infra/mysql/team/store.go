@@ -44,8 +44,8 @@ func (s *Store) Get(ctx context.Context, p *common.Pagination, f *repositories.T
 		if f.PlayerUUID != nil {
 			db = db.Where("team_players.player_uuid = ?", *f.PlayerUUID)
 		}
-		if f.NotGroupUUID != nil {
-			db = db.Where("(gt.group_uuid IS NULL OR gt.group_uuid != ?)", *f.NotGroupUUID)
+		if f.NotInGroup != nil && *f.NotInGroup {
+			db = db.Where("(gt.group_uuid IS NULL)")
 		}
 	}
 
@@ -71,8 +71,8 @@ func (s *Store) Get(ctx context.Context, p *common.Pagination, f *repositories.T
 		if f.PlayerUUID != nil {
 			dbCount = dbCount.Where("team_players.player_uuid = ?", *f.PlayerUUID)
 		}
-		if f.NotGroupUUID != nil {
-			dbCount = dbCount.Where("(gt.group_uuid IS NULL OR gt.group_uuid != ?)", *f.NotGroupUUID)
+		if f.NotInGroup != nil && *f.NotInGroup {
+			dbCount = dbCount.Where("(gt.group_uuid IS NULL)")
 		}
 	}
 
