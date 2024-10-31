@@ -44,7 +44,12 @@ templ ViewMatchDetail(vmodel VModelPageMatchDetail) {
         } else {
           <div class="flex-1 text-left text-primary font-bold">{vmodel.Match.FilterStatus}</div>
         }
-        <div class="flex-1 text-left text-secondary font-bold">Pertandingan ke {strconv.Itoa(vmodel.Match.Round.Number)}</div>
+        <div class="flex-1">
+          <div class="text-left text-secondary font-bold">Pertandingan ke {strconv.Itoa(vmodel.Match.Round.Number)}</div>
+          if vmodel.Match.Round.Start != nil && vmodel.Match.Round.End != nil {
+            <div class="text-xs">{monday.Format(*vmodel.Match.Round.Start, "02/01/2006", monday.LocaleIdID)} - {monday.Format(*vmodel.Match.Round.End, "02/01/2006", monday.LocaleIdID)}</div>
+          }
+        </div>
       </div>
       <div class="flex flex-row justify-between space-x-6 items-center">
         <div class="flex-3 text-sm">{vmodel.Match.TeamA.Name}</div>
@@ -56,7 +61,15 @@ templ ViewMatchDetail(vmodel VModelPageMatchDetail) {
       if vmodel.Match.MatchScheduleRequest == nil &&
         isMatchParticipantCaptain(vmodel.User, vmodel.Match) &&
         IsMatchScheduleable(vmodel.Match) {
-        <div class="pt-4">
+        <div class="pt-4 flex flex-col space-y-4">
+          <a href={hrefWAContactOpponent(vmodel.User, vmodel.Match, vmodel.WebsiteBaseURL)} target="_blank" class="btn btn-secondary btn-sm">
+            <img alt="whatsapp" src="/static/icons/whatsapp.png" class="w-4 h-4" />
+            Kontak Lawan
+          </a>
+          <a href={hrefWAContactUs()} target="_blank" class="btn btn-secondary btn-sm">
+            <img alt="whatsapp" src="/static/icons/whatsapp.png" class="w-4 h-4" />
+            Kontak Admin
+          </a>
           <a hx-boost="false" href={hrefScheduleMatch(vmodel.Match)} class="btn btn-primary w-full">
             Atur Jadwal Pertandingan
           </a>
@@ -280,12 +293,31 @@ func IsPreviousRound(match *entities.Match) bool {
   return match.Round.End.Before(time.Now())
 }
 
+func hrefWAContactOpponent(user *entities.User, match *entities.Match, webBaseURL string) templ.SafeURL {
+  var opponentCaptain entities.User 
+  if match.TeamA.CaptainUserUUID == user.UUID {
+    opponentCaptain = match.TeamB.Captain
+  } else {
+    opponentCaptain = match.TeamA.Captain
+  }
+  text := fmt.Sprintf("Halo %s saya ingin menjadwalkan pertandingan berikut %s",
+    opponentCaptain.Name,
+    fmt.Sprintf("%s/dashboard/leagues/%s/matches/%s", webBaseURL, match.LeagueUUID, match.UUID),
+  )
+  params := url.Values{}
+  params.Add("text", text)
+  if strings.HasPrefix(opponentCaptain.Phone, "0") {
+    opponentCaptain.Phone = strings.Replace(opponentCaptain.Phone, "0", "+62", 1)
+  }
+  return templ.URL(fmt.Sprintf("https://wa.me/%s?%s", opponentCaptain.Phone, params.Encode()))
+}
+
 func hrefWAContactOpponentForConfirmation(user *entities.User, match *entities.Match, webBaseURL string) templ.SafeURL {
   var opponentCaptain entities.User 
   if match.TeamA.CaptainUserUUID == user.UUID {
     opponentCaptain = match.TeamB.Captain
   } else {
-    opponentCaptain = match.TeamB.Captain
+    opponentCaptain = match.TeamA.Captain
   }
 
   text := fmt.Sprintf("Halo %s saya sudah menjadwalkan pertandingan. Mohon konfirmasi pertandingan di %s",
