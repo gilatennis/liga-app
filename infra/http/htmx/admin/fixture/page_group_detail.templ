@@ -90,8 +90,14 @@ func urlPostAddTeam(leagueUUID, fixtureUUID, groupUUID uuid.UUID) string {
 
 func optionsAddTeam(teams []entities.Team) []components.InputSelectOption {
   opts := []components.InputSelectOption{}
+
   for _, t := range teams {
-    opts = append(opts, components.InputSelectOption{Value: t.UUID.String(), Text: t.Name})
+    text := t.Name
+    if len(t.Players) == 1 {
+      text = fmt.Sprintf("%s - %s", t.Name, t.Players[0].GetLatestRatingString())
+    }
+
+    opts = append(opts, components.InputSelectOption{Value: t.UUID.String(), Text: text})
   }
 
   return opts
