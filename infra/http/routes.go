@@ -133,6 +133,8 @@ func adminRoutes(admin *gin.RouterGroup, handlers *Handlers, middlewares *middle
 		adminDashboard.DELETE("/leagues/:league_uuid/fixtures/:fixture_uuid/groups/:group_uuid/teams/:team_uuid/remove", handlers.HTMXHandlers.AdminLeagueFixtureHandler.DeleteRemoveTeamFromGroup)
 
 		adminDashboard.POST("/leagues/:league_uuid/fixtures/:fixture_uuid/groups/:group_uuid/generate-matches", handlers.HTMXHandlers.AdminLeagueFixtureHandler.GenerateMatches)
+		adminDashboard.GET("/leagues/:league_uuid/fixtures/:fixture_uuid/groups/:group_uuid/matches", handlers.HTMXHandlers.AdminLeagueFixtureHandler.GetGroupMatchesPage)
+		adminDashboard.GET("/leagues/:league_uuid/fixtures/:fixture_uuid/groups/:group_uuid/matches/view", handlers.HTMXHandlers.AdminLeagueFixtureHandler.GetGroupMatchesView)
 	}
 }
 

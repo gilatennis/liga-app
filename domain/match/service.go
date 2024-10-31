@@ -41,7 +41,8 @@ func NewService(
 
 func (s *Service) Get(ctx context.Context, p *common.Pagination, f *iService.MatchFilter) ([]entities.Match, int64, error) {
 	repoFilter := &iRepo.MatchFilter{
-		UserUUID: f.UserUUID,
+		UserUUID:  f.UserUUID,
+		GroupUUID: f.GroupUUID,
 	}
 
 	startOfWeek := s.getStartOfWeek()

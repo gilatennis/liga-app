@@ -17,8 +17,9 @@ const (
 )
 
 type MatchFilter struct {
-	Status   *MATCH_FILTER_STATUS
-	UserUUID *uuid.UUID
+	Status    *MATCH_FILTER_STATUS
+	UserUUID  *uuid.UUID
+	GroupUUID *uuid.UUID
 }
 
 type IMatchService interface {

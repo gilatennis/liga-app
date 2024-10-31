@@ -50,6 +50,10 @@ func (s *Store) Get(ctx context.Context, p *common.Pagination, f *repositories.M
 		if f.Status != nil {
 			queryDB = queryDB.Where("status = ?", *f.Status)
 		}
+
+		if f.GroupUUID != nil {
+			queryDB = queryDB.Where("`groups`.uuid = ?", *f.GroupUUID)
+		}
 	}
 
 	err := queryDB.Debug().

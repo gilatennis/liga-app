@@ -38,7 +38,7 @@ templ PageGroupDetail(vmodel VModelPageGroupDetail) {
             <h3 class="text-center">Generate Pertandingan Home & Away</h3>
           </div>
         }
-        @components.CardButton(fmt.Sprintf("/dashboard/leagues/%s/matches", vmodel.League.UUID)) {
+        @components.CardButton(fmt.Sprintf("/admin/dashboard/leagues/%s/fixtures/%s/groups/%s/matches", vmodel.League.UUID, vmodel.Fixture.UUID, vmodel.Group.UUID)) {
           <div class="grid grid-row-2 gap-4 p-4">
             <div class="flex justify-center text-primary">
               <i data-feather="list" width="32" height="32"></i>

@@ -8,6 +8,7 @@ import (
 	"liga-app/interfaces/repositories"
 	"liga-app/interfaces/services"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -478,4 +479,164 @@ func (h *Handler) GenerateMatches(c *gin.Context) {
 	}
 
 	h.ResponseAlertSuccess(c, "round robin matches generated")
+}
+
+func (h *Handler) GetGroupMatchesPage(c *gin.Context) {
+	user, err := h.GetAuthenticatedUser(c)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	params, err := h.GetURLUUIDParams(c, []string{"league_uuid", "fixture_uuid", "group_uuid"})
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	leagueUUID, fixtureUUID, groupUUID := params[0], params[1], params[2]
+	_, _, _ = leagueUUID, fixtureUUID, groupUUID
+
+	league, err := h.leagueService.GetByUUID(c, leagueUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	fixture, err := h.fixtureService.GetByUUID(c, fixtureUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	group, err := h.groupService.GetByUUID(c, groupUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	p := iCommon.NewPagination(1, 10, []iCommon.OrderBy{{Column: "rounds.number", Direction: "asc"}})
+	f := &services.MatchFilter{GroupUUID: &groupUUID}
+
+	matchStatus := c.Query("match_status")
+	// matchParticipant := c.Query("match_participant")
+
+	if matchStatus != "" && matchStatus != "ALL" {
+		status := services.MATCH_FILTER_STATUS(matchStatus)
+		f.Status = &status
+	}
+
+	/*
+		if matchParticipant == "" || matchParticipant == "ME" {
+			f.UserUUID = &user.UUID
+		}
+	*/
+
+	matches, count, err := h.matchService.Get(c, p, f)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	p.SetTotalPageByTotalItems(int(count))
+	// pp.Println(matches)
+	fmt.Println("p.Limit", p.Limit)
+
+	vmodel := VModelPageGroupMatches{
+		User:            user,
+		League:          league,
+		Fixture:         fixture,
+		Group:           group,
+		Matches:         matches,
+		MatchesNextPage: p.GetNextPage(),
+	}
+	page := PageGroupMatches(vmodel)
+
+	h.RenderView(c, page)
+}
+
+func (h *Handler) GetGroupMatchesView(c *gin.Context) {
+	user, err := h.GetAuthenticatedUser(c)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	params, err := h.GetURLUUIDParams(c, []string{"league_uuid", "fixture_uuid", "group_uuid"})
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	leagueUUID, fixtureUUID, groupUUID := params[0], params[1], params[2]
+	_, _, _ = leagueUUID, fixtureUUID, groupUUID
+
+	league, err := h.leagueService.GetByUUID(c, leagueUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	fixture, err := h.fixtureService.GetByUUID(c, fixtureUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	group, err := h.groupService.GetByUUID(c, groupUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	page := 1
+	pageStr := c.Query("page")
+	if pageStr != "" {
+		page, _ = strconv.Atoi(pageStr)
+	}
+	p := iCommon.NewPagination(page, 10, []iCommon.OrderBy{{Column: "rounds.number", Direction: "asc"}})
+	f := &services.MatchFilter{GroupUUID: &groupUUID}
+
+	matchStatus := c.Query("match_status")
+	// matchParticipant := c.Query("match_participant")
+
+	if matchStatus != "" && matchStatus != "ALL" {
+		status := services.MATCH_FILTER_STATUS(matchStatus)
+		f.Status = &status
+	}
+
+	/*
+		if matchParticipant == "ME" {
+			f.UserUUID = &user.UUID
+		}
+	*/
+
+	matches, count, err := h.matchService.Get(c, p, f)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	p.SetTotalPageByTotalItems(int(count))
+
+	fmt.Println("page", page)
+	fmt.Println("count", count)
+	vmodel := VModelPageGroupMatches{
+		User:            user,
+		League:          league,
+		Fixture:         fixture,
+		Group:           group,
+		Matches:         matches,
+		MatchesNextPage: p.GetNextPage(),
+	}
+
+	if page == 1 {
+		view := ViewMatchList(vmodel)
+		h.RenderView(c, view)
+		return
+	}
+
+	if page > 1 {
+		view := ViewMoreMatches(vmodel)
+		h.RenderView(c, view)
+		return
+	}
 }
