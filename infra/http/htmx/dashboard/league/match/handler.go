@@ -66,7 +66,7 @@ func (h *Handler) GetMatchListPage(c *gin.Context) {
 	}
 
 	p := iCommon.NewPagination(1, 10, []iCommon.OrderBy{{Column: "rounds.number", Direction: "asc"}})
-	f := &services.MatchFilter{}
+	f := &services.MatchFilter{LeagueUUID: &leagueUUID}
 
 	matchStatus := c.Query("match_status")
 	matchParticipant := c.Query("match_participant")
@@ -121,7 +121,7 @@ func (h *Handler) GetMatchListView(c *gin.Context) {
 		page, _ = strconv.Atoi(pageStr)
 	}
 	p := iCommon.NewPagination(page, 10, []iCommon.OrderBy{{Column: "rounds.number", Direction: "asc"}})
-	f := &services.MatchFilter{}
+	f := &services.MatchFilter{LeagueUUID: &leagueUUID}
 
 	matchStatus := c.Query("match_status")
 	matchParticipant := c.Query("match_participant")

@@ -16,6 +16,7 @@ type MatchFilter struct {
 	UserUUID      *uuid.UUID
 	Status        *enums.MATCH_STATUS
 	GroupUUID     *uuid.UUID
+	LeagueUUID    *uuid.UUID
 }
 
 type IMatchRepository interface {

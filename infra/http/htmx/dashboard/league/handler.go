@@ -14,15 +14,18 @@ type Handler struct {
 	common.BaseHandler
 	leagueService iService.ILeagueService
 	teamService   iService.ITeamService
+	matchService  iService.IMatchService
 }
 
 func NewHandler(
 	leagueService iService.ILeagueService,
 	teamService iService.ITeamService,
+	matchService iService.IMatchService,
 ) *Handler {
 	return &Handler{
 		leagueService: leagueService,
 		teamService:   teamService,
+		matchService:  matchService,
 	}
 }
 
@@ -105,6 +108,20 @@ func (h *Handler) GetLeagueDetailPage(c *gin.Context) {
 		}
 	}
 
+	p := iCommon.NewPagination(1, 1, []iCommon.OrderBy{{Column: "rounds.number", Direction: "asc"}})
+	currentRound := iService.MATCH_FILTER_STATUS_CURRENT_ROUND
+	f := &iService.MatchFilter{LeagueUUID: &leagueUUID, UserUUID: &user.UUID, Status: &currentRound}
+	matches, _, err := h.matchService.Get(c, p, f)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	var currentMatch *entities.Match
+	if len(matches) > 0 {
+		currentMatch = &matches[0]
+	}
+
 	vmodel := &VModelPageLeagueDetail{
 		User:                     user,
 		League:                   league,
@@ -112,6 +129,7 @@ func (h *Handler) GetLeagueDetailPage(c *gin.Context) {
 		IsRatingRequired:         isRatingRequired,
 		PlayersWithRatingTooHigh: playersWithRatingTooHigh,
 		PlayersWithRatingTooLow:  playersWithRatingTooLow,
+		CurrentMatch:             currentMatch,
 	}
 
 	page := PageLeagueDetail(vmodel)

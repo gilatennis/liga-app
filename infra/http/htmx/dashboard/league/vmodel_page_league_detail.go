@@ -10,4 +10,5 @@ type VModelPageLeagueDetail struct {
 	IsRatingRequired         bool
 	PlayersWithRatingTooHigh []entities.User
 	PlayersWithRatingTooLow  []entities.User
+	CurrentMatch             *entities.Match
 }

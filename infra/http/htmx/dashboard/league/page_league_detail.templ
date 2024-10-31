@@ -8,6 +8,7 @@ import (
   "strconv"
   "liga-app/entities"
 	"liga-app/enums"
+  "github.com/goodsign/monday"
 )
 
 templ PageLeagueDetail(vmodel *VModelPageLeagueDetail) {
@@ -141,6 +142,12 @@ templ PageLeagueDetail(vmodel *VModelPageLeagueDetail) {
         }
       }
 
+      if vmodel.CurrentMatch != nil {
+        <div class="mt-4">
+          @ViewMatchCard(*vmodel.CurrentMatch)
+        </div>
+      }
+
       <div>
         <div class="grid grid-cols-2 gap-2">
           // @ComponentCardButton(fmt.Sprintf("/dashboard/leagues/%s/teams", vmodel.League.UUID)) {
@@ -197,4 +204,50 @@ func hrefWAAssessmentRequest(league *entities.League, team *entities.Team) templ
   params := url.Values{}
   params.Add("text", text)
   return templ.URL(fmt.Sprintf("https://wa.me/%s?%s", league.LinkWARatingAdmin, params.Encode()))
+}
+
+templ ViewMatchCard(m entities.Match) {
+  <a
+    hx-boost="false"
+    if m.TeamA != nil && m.TeamB != nil {
+      href={hrefMatchDetail(m.LeagueUUID, m.UUID)}
+    }
+  >
+    <div class="card w-auto shadow-xl">
+      <div class="p-4 space-y-4">
+        <div class="flex flex-row">
+          if m.FilterStatus == "COMPLETED" {
+            <div class="flex-1 text-left text-success font-bold">{m.FilterStatus}</div>
+          } else if m.FilterStatus == "NO SCHEDULE" {
+            <div class="flex-1 text-left text-secondary font-bold">{m.FilterStatus}</div>
+          } else {
+            <div class="flex-1 text-left text-primary font-bold">{m.FilterStatus}</div>
+          }
+          <div class="flex-1">
+            <div class="text-left text-secondary font-bold">Pertandingan ke {strconv.Itoa(m.Round.Number)}</div>
+            if m.Round.Start != nil && m.Round.End != nil {
+              <div class="text-xs">{monday.Format(*m.Round.Start, "02/01/2006", monday.LocaleIdID)} - {monday.Format(*m.Round.End, "02/01/2006", monday.LocaleIdID)}</div>
+            }
+          </div>
+        </div>
+        <div class="flex flex-row justify-between space-x-6 items-center">
+          if m.TeamA == nil {
+            <div class="w-48 text-sm">-</div>
+          } else {
+            <div class="flex-3 text-sm">{m.TeamA.Name}</div>
+          }
+          <div class="flex-1">VS</div>
+          if m.TeamB == nil {
+            <div class="w-48 text-sm">-</div>
+          } else {
+            <div class="flex-3 text-sm">{m.TeamB.Name}</div>
+          }
+        </div>
+      </div>
+    </div>
+  </a>
+}
+
+func hrefMatchDetail(leagueUUID uuid.UUID, matchUUID uuid.UUID) templ.SafeURL {
+  return templ.URL(fmt.Sprintf("/dashboard/leagues/%s/matches/%s", leagueUUID, matchUUID))
 }

@@ -41,17 +41,25 @@ func NewService(
 
 func (s *Service) Get(ctx context.Context, p *common.Pagination, f *iService.MatchFilter) ([]entities.Match, int64, error) {
 	repoFilter := &iRepo.MatchFilter{
-		UserUUID:  f.UserUUID,
-		GroupUUID: f.GroupUUID,
+		UserUUID:   f.UserUUID,
+		GroupUUID:  f.GroupUUID,
+		LeagueUUID: f.LeagueUUID,
 	}
 
+	// INFO: Rounds start on wednesday
 	startOfWeek := s.getStartOfWeek()
+	wednesday := startOfWeek.Add(2 * 24 * time.Hour)
+	nextWeekTuesday := wednesday.Add(6 * 24 * time.Hour).Add(23 * time.Hour).Add(59 * time.Minute).Add(59 * time.Second)
 
 	if f != nil {
 		if f.Status != nil {
 			switch *f.Status {
+			case iService.MATCH_FILTER_STATUS_CURRENT_ROUND:
+				repoFilter.RoundIsAfter = &wednesday
+				repoFilter.RoundIsBefore = &nextWeekTuesday
+
 			case iService.MATCH_FILTER_STATUS_UPCOMING:
-				repoFilter.RoundIsAfter = &startOfWeek
+				repoFilter.RoundIsAfter = &wednesday
 
 			case iService.MATCH_FILTER_STATUS_COMPLETED:
 				status := enums.MATCH_STATUS_COMPLETED
@@ -60,7 +68,7 @@ func (s *Service) Get(ctx context.Context, p *common.Pagination, f *iService.Mat
 			case iService.MATCH_FILTER_STATUS_OVERDUE:
 				status := enums.MATCH_STATUS_WAITING
 				repoFilter.Status = &status
-				repoFilter.RoundIsBefore = &startOfWeek
+				repoFilter.RoundIsBefore = &wednesday
 
 			}
 		}
@@ -74,18 +82,6 @@ func (s *Service) Get(ctx context.Context, p *common.Pagination, f *iService.Mat
 	for i, m := range matches {
 		s.setMatchFilterStatus(&m)
 		matches[i] = m
-		/*
-			if m.Round.End != nil && startOfWeek.Before(*m.Round.End) && m.Status == string(enums.MATCH_STATUS_WAITING) {
-				m.FilterStatus = string(iService.MATCH_FILTER_STATUS_UPCOMING)
-				matches[i] = m
-			} else if m.Round.End != nil && startOfWeek.After(*m.Round.End) && m.Status == string(enums.MATCH_STATUS_WAITING) {
-				m.FilterStatus = string(iService.MATCH_FILTER_STATUS_OVERDUE)
-				matches[i] = m
-			} else {
-				m.FilterStatus = string(m.Status)
-				matches[i] = m
-			}
-		*/
 	}
 
 	return matches, count, nil
@@ -105,8 +101,32 @@ func (s *Service) setMatchFilterStatus(m *entities.Match) {
 		return
 	}
 
-	startOfWeek := s.getStartOfWeek()
-	if m.Round.End != nil && startOfWeek.Before(*m.Round.End) && m.Status == string(enums.MATCH_STATUS_WAITING) {
+	// INFO: rounds start on wednesday
+	startOfWeek := s.getStartOfWeek().Add(2 * 24 * time.Hour)
+	endOfWeek := startOfWeek.Add(6 * 24 * time.Hour).Add(23 * time.Hour).Add(59 * time.Minute).Add(59 * time.Second)
+
+	loc, _ := time.LoadLocation("Asia/Jakarta")
+	/*
+		fmt.Println("startOfWeek", startOfWeek)
+		fmt.Println("endOfWeek", endOfWeek)
+		fmt.Println("m.Round.Start", m.Round.Start.In(loc))
+		fmt.Println("m.Round.End", m.Round.End.In(loc))
+		fmt.Println("m.Round.End.Before(endOfWeek)", m.Round.End.Before(endOfWeek))
+	*/
+
+	if m.Round.Start != nil {
+		localTime := m.Round.Start.In(loc)
+		m.Round.Start = &localTime
+	}
+
+	if m.Round.End != nil {
+		localTime := m.Round.End.In(loc)
+		m.Round.End = &localTime
+	}
+
+	if m.Round.Start != nil && m.Round.Start.Equal(startOfWeek) && m.Round.End != nil && m.Round.End.Equal(endOfWeek) {
+		m.FilterStatus = string(iService.MATCH_FILTER_STATUS_CURRENT_ROUND)
+	} else if m.Round.End != nil && startOfWeek.Before(*m.Round.End) && m.Status == string(enums.MATCH_STATUS_WAITING) {
 		m.FilterStatus = string(iService.MATCH_FILTER_STATUS_UPCOMING)
 	} else if m.Round.End != nil && startOfWeek.After(*m.Round.End) && m.Status == string(enums.MATCH_STATUS_WAITING) {
 		m.FilterStatus = string(iService.MATCH_FILTER_STATUS_OVERDUE)

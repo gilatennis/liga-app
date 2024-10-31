@@ -17,7 +17,7 @@ templ PageMatchList(vmodel *VModelPageMatchList) {
   @layouts.DashboardLayout("Tim", vmodel.User, layouts.FOOTER_MENU_LEAGUE) {
     <div class="space-y-8">
       @league.ViewLeagueDetail(vmodel.League, false)
-      @components.PageHeader("Daftar Pertandingan", "")
+      @components.PageHeader("Daftar Pertandingan", fmt.Sprintf("/dashboard/leagues/%s", vmodel.League.UUID))
       @ViewFilterMatchList()
       @ViewMatchList(vmodel.League.UUID, vmodel.Matches, vmodel.MatchesNextPage)
     </div>
@@ -41,6 +41,10 @@ templ ViewFilterMatchList() {
         {
           Text: "Semua",
           Value: "ALL",
+        },
+        {
+          Text: "Ronde Ini",
+          Value: "CURRENT_ROUND",
         },
         {
           Text: "Akan Datang",
