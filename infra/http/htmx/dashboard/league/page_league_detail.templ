@@ -17,7 +17,9 @@ templ PageLeagueDetail(vmodel *VModelPageLeagueDetail) {
       <!-- Join Button -->
       if vmodel.Team == nil {
         <div>
+          /*
           <a href={hrefLeagueRegistration(vmodel.League.UUID)} class="btn btn-primary w-full btn-lg">Daftar ke liga ini!</a>
+          */
         </div>
       } else if vmodel.League.ParticipationCategory != enums.CATEGORY_PARTICIPATION_SINGLES {
         <div class="grid grid-cols-1 gap-2">
