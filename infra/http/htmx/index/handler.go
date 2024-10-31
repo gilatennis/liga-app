@@ -4,11 +4,8 @@ import (
 	"liga-app/entities"
 	"liga-app/infra/http/htmx/common"
 	iService "liga-app/interfaces/services"
-	"net/http"
 
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/k0kubun/pp"
 )
 
 type Handler struct {
@@ -27,14 +24,16 @@ func (h *Handler) Index(c *gin.Context) {
 	}
 
 	// INFO: for getting into a user's account, for debugging
-	session := sessions.Default(c)
-	session.Set("user_uuid", "29538d36-7c2f-48b5-9d15-b1ccd0f393bd")
-	pp.Println(session)
+	/*
+		session := sessions.Default(c)
+		session.Set("user_uuid", "29538d36-7c2f-48b5-9d15-b1ccd0f393bd")
+		pp.Println(session)
 
-	if err := session.Save(); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+		if err := session.Save(); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	*/
 
 	vmodel := &VModelPageIndex{
 		RuleBook: ruleBook,
