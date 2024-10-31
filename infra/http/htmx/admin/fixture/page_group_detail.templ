@@ -22,6 +22,7 @@ templ PageGroupDetail(vmodel VModelPageGroupDetail) {
       @components.PageHeader(fmt.Sprintf("Group %s", vmodel.Group.Name), "")
 
       <div class="grid grid-cols-2 gap-2">
+        /* INFO: disable for now, so we don't accidentally generate additional matches
         @components.CardButtonPost(fmt.Sprintf("/admin/dashboard/leagues/%s/fixtures/%s/groups/%s/generate-matches", vmodel.League.UUID, vmodel.Fixture.UUID, vmodel.Group.UUID)) {
           <div class="grid grid-row-2 gap-4 p-4">
             <div class="flex justify-center text-primary">
@@ -38,6 +39,7 @@ templ PageGroupDetail(vmodel VModelPageGroupDetail) {
             <h3 class="text-center">Generate Pertandingan Home & Away</h3>
           </div>
         }
+        */
         @components.CardButton(fmt.Sprintf("/admin/dashboard/leagues/%s/fixtures/%s/groups/%s/matches", vmodel.League.UUID, vmodel.Fixture.UUID, vmodel.Group.UUID)) {
           <div class="grid grid-row-2 gap-4 p-4">
             <div class="flex justify-center text-primary">
