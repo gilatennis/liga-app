@@ -608,8 +608,7 @@ func (h *Handler) PostRequestMatchSchedule(c *gin.Context) {
 
 	scheduleRequestUUID, err := h.matchService.RequestMatchSchedule(c, user.UUID, matchUUID, timeslotUUIDs)
 	if err != nil {
-		fmt.Println(err)
-		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		h.ResponseAlertError(c, err.Error())
 		return
 	}
 	_ = scheduleRequestUUID

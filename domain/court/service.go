@@ -6,6 +6,7 @@ import (
 	"liga-app/entities"
 	"liga-app/interfaces/repositories"
 	"liga-app/utils"
+	"sort"
 	"time"
 
 	"github.com/google/uuid"
@@ -49,19 +50,29 @@ func (s *Service) GetCourtAvailableDays(c context.Context, courtUUID uuid.UUID) 
 		return nil, fmt.Errorf("s.courtRepo.GetByUUID(c, courtUUID): %w", err)
 	}
 
-	startOfWeek := s.getStartOfWeek()
-	sixDays := 6 * 24 * time.Hour
-	twentyThreeHours := (23 * time.Hour) + (59 * time.Minute) + (59 * time.Second)
-	endOfWeek := startOfWeek.Add(sixDays).Add(twentyThreeHours)
-
-	timeslots, err := s.courtTimeSlotRepo.GetByCourtSlug(c, court.Slug, startOfWeek, endOfWeek)
-	if err != nil {
-		return nil, fmt.Errorf("s.courtTimeSlotRepo.GetByCourtSlug(c, court.Slug, *rangeStart, *rangeEnd): %w", err)
-	}
-
 	loc, err := time.LoadLocation("Asia/Jakarta")
 	if err != nil {
 		return nil, fmt.Errorf("time.LoadLocation(\"Asia/Jakarta\")")
+	}
+
+	now := time.Now().In(loc)
+	beginningOfToday := utils.GetBeginningOfDay(now)
+	beginningOfTomorrow := beginningOfToday.Add(24 * time.Hour)
+	endOfLeague := time.Date(2025, 1, 15, 23, 59, 59, 59, now.Location())
+
+	fmt.Println("beginningOfToday", beginningOfToday)
+	fmt.Println("beginningOfTomorrow", beginningOfTomorrow)
+
+	/*
+		startOfWeek := s.getStartOfWeek()
+		sixDays := 6 * 24 * time.Hour
+		twentyThreeHours := (23 * time.Hour) + (59 * time.Minute) + (59 * time.Second)
+		endOfWeek := startOfWeek.Add(sixDays).Add(twentyThreeHours)
+	*/
+
+	timeslots, err := s.courtTimeSlotRepo.GetByCourtSlug(c, court.Slug, beginningOfTomorrow, endOfLeague)
+	if err != nil {
+		return nil, fmt.Errorf("s.courtTimeSlotRepo.GetByCourtSlug(c, court.Slug, *rangeStart, *rangeEnd): %w", err)
 	}
 
 	daysMap := make(map[int]time.Time)
@@ -76,6 +87,9 @@ func (s *Service) GetCourtAvailableDays(c context.Context, courtUUID uuid.UUID) 
 	for _, d := range daysMap {
 		daysSlice = append(daysSlice, d)
 	}
+	sort.Slice(daysSlice, func(i, j int) bool {
+		return daysSlice[i].Before(daysSlice[j])
+	})
 
 	return daysSlice, nil
 }

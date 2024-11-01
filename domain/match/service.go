@@ -164,12 +164,20 @@ func (s *Service) RequestMatchSchedule(ctx context.Context, userUUID uuid.UUID, 
 
 	courtUUID := timeslots[0].CourtUUID
 
+	loc, _ := time.LoadLocation("Asia/Jakarta")
+
 	for _, ts := range timeslots {
 		if ts.CourtUUID != courtUUID {
 			return nil, &domainErrors.ErrBadRequest{Message: "timeslots have to be for 1 court only"}
 		}
 		if ts.Match != nil {
 			return nil, &domainErrors.ErrConflict{Message: "timeslots requested already have match(es) assigned"}
+		}
+
+		timeslotDay := utils.GetBeginningOfDay(ts.Start.In(loc))
+		today := utils.GetBeginningOfDay(time.Now().In(loc))
+		if today.Equal(timeslotDay) {
+			return nil, &domainErrors.ErrConflict{Message: "can only book timeslot 1 day before"}
 		}
 	}
 
