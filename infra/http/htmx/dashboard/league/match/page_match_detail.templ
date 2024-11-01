@@ -274,9 +274,12 @@ func hrefScheduleMatch(m *entities.Match) templ.SafeURL {
 }
 
 func IsMatchScheduleable(match *entities.Match) bool {
+  return match.Status == string(enums.MATCH_STATUS_WAITING)
+  /*
   return match.Status == string(enums.MATCH_STATUS_WAITING) &&
     match.TimeStart == nil &&
     (IsCurrentRound(match) || IsPreviousRound(match))
+  */
 }
 
 func IsCurrentRound(match *entities.Match) bool {
