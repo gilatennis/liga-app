@@ -102,6 +102,21 @@ templ ViewMatchDetail(vmodel VModelPageMatchDetail) {
                 <img alt="whatsapp" src="/static/icons/whatsapp.png" class="w-4 h-4" />
                 Kontak Lawan untuk konfirmasi jadwal
               </a>
+              /*
+              if canCancelSchedule(vmodel.User, vmodel.Match) {
+                <div class="pt-4">
+                  <button
+                    class="btn btn-error w-full btn-sm text-white"
+                    hx-delete={hrefDeleteCancelMatchSchedule(vmodel.League.UUID, vmodel.Match.UUID, *vmodel.Match.MatchScheduleRequestUUID)}
+                    hx-swap="none"
+                    hx-confirm="Cancel jadwal pertandingan?"
+                  >
+                    <i data-feather="trash" class="w-3 h-3"></i>
+                    Cancel Jadwal Pertandingan
+                  </button>
+                </div>
+              }
+              */
             </div>
           }
           if isMatchScheduleConfirmer(vmodel.User, vmodel.Match) {
@@ -137,10 +152,12 @@ templ ViewMatchDetail(vmodel VModelPageMatchDetail) {
               <img alt="whatsapp" src="/static/icons/whatsapp.png" class="w-4 h-4" />
               Kontak Admin
             </a>
-            <a href={hrefWAContactOpponentForConfirmation(vmodel.User, vmodel.Match, vmodel.WebsiteBaseURL)} target="_blank" class="btn btn-secondary btn-sm">
-              <img alt="whatsapp" src="/static/icons/whatsapp.png" class="w-4 h-4" />
-              Kontak Lawan
-            </a>
+            if isMatchParticipantCaptain(vmodel.User, vmodel.Match) {
+              <a href={hrefWAContactOpponentForConfirmation(vmodel.User, vmodel.Match, vmodel.WebsiteBaseURL)} target="_blank" class="btn btn-secondary btn-sm">
+                <img alt="whatsapp" src="/static/icons/whatsapp.png" class="w-4 h-4" />
+                Kontak Lawan
+              </a>
+            }
           </div>
 
           // Match Score Input
@@ -195,6 +212,10 @@ func isMatchScheduleConfirmer(user *entities.User, match *entities.Match) bool {
   return isMatchParticipantCaptain(user, match) && user.UUID != match.MatchScheduleRequest.CreatedBy
 }
 
+func canCancelSchedule(user *entities.User, match *entities.Match) bool {
+  return isMatchScheduleCreator(user, match) && match.MatchScheduleRequest != nil
+}
+
 func isMatchParticipantCaptain(user *entities.User, match *entities.Match) bool {
   return user.UUID == match.TeamA.CaptainUserUUID || user.UUID == match.TeamB.CaptainUserUUID
 }
@@ -207,6 +228,10 @@ func getMatchScheduleCreator(match *entities.Match) *entities.User {
     return &match.TeamB.Captain
   }
   return nil
+}
+
+func hrefDeleteCancelMatchSchedule(leagueUUID, matchUUID, matchScheduleRequestUUID uuid.UUID) string {
+  return fmt.Sprintf("/dashboard/leagues/%s/matches/%s/schedule/requests/%s/cancel", leagueUUID, matchUUID, matchScheduleRequestUUID)
 }
 
 func hrefPutConfirmMatchSchedule(leagueUUID, matchUUID, matchScheduleRequestUUID uuid.UUID) string {

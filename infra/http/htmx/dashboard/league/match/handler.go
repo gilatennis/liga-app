@@ -723,7 +723,7 @@ func (h *Handler) PostMatchSet(c *gin.Context) {
 		return
 	}
 
-	view := ViewMatchSet(p.PartaiName, leagueUUID, match, p.MatchSetNumber, true)
+	view := ViewMatchSet(user, p.PartaiName, leagueUUID, match, p.MatchSetNumber, true)
 
 	h.ResponseAlertSuccess(c, "Skor berhasil di update")
 	h.RenderView(c, view)
@@ -830,4 +830,22 @@ func (h *Handler) PutMatchConfirmComplete(c *gin.Context) {
 	view := ViewMatchDetailIndividuals(user, league, match)
 	h.ResponseAlertSuccess(c, "Pertandingan berhasil di update")
 	h.RenderView(c, view)
+}
+
+func (h *Handler) DeleteCancelMatchSchedule(c *gin.Context) {
+	user, err := h.GetAuthenticatedUser(c)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusUnauthorized, err.Error())
+		return
+	}
+	_ = user
+
+	params, err := h.GetURLUUIDParams(c, []string{"league_uuid", "match_uuid", "schedule_request_uuid"})
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	leagueUUID, matchUUID, scheduleRequestUUID := params[0], params[1], params[2]
+	_, _, _ = leagueUUID, matchUUID, scheduleRequestUUID
 }

@@ -3992,6 +3992,10 @@ html:has(.drawer-toggle:checked) {
   height: 6rem;
 }
 
+.h-3 {
+  height: 0.75rem;
+}
+
 .h-32 {
   height: 8rem;
 }
@@ -4054,6 +4058,10 @@ html:has(.drawer-toggle:checked) {
 
 .w-24 {
   width: 6rem;
+}
+
+.w-3 {
+  width: 0.75rem;
 }
 
 .w-36 {

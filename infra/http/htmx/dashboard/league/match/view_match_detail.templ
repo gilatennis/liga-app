@@ -16,13 +16,13 @@ templ ViewMatchDetailTeams(user *entities.User, league *entities.League, match *
       <div class="w-16 text-center font-bold">Skor</div>
     </div>
 
-    @ViewMatchSet("Doubles #1", league.UUID, match, 1, false)
-    @ViewMatchSet("Doubles #2", league.UUID, match, 2, false)
+    @ViewMatchSet(user, "Doubles #1", league.UUID, match, 1, false)
+    @ViewMatchSet(user, "Doubles #2", league.UUID, match, 2, false)
     if league.GenderCategory == enums.CATEGORY_GENDER_FEMALE {
-      @ViewMatchSet("Doubles #3", league.UUID, match, 3, false)
+      @ViewMatchSet(user, "Doubles #3", league.UUID, match, 3, false)
     }
     if league.GenderCategory == enums.CATEGORY_GENDER_MALE {
-      @ViewMatchSet("Singles", league.UUID, match, 3, false)
+      @ViewMatchSet(user, "Singles", league.UUID, match, 3, false)
     }
 
     if canCompleteMatch(user.UUID, match) {
@@ -92,7 +92,7 @@ func canConfirmCompleteMatch(userUUID uuid.UUID, match *entities.Match) bool {
     match.IsCompletedBy != userUUID
 }
 
-templ ViewMatchSet(partaiName string, leagueUUID uuid.UUID, match *entities.Match, matchSetNumber int, isOpen bool) {
+templ ViewMatchSet(user *entities.User, partaiName string, leagueUUID uuid.UUID, match *entities.Match, matchSetNumber int, isOpen bool) {
   <div id={"match-set-" + strconv.Itoa(matchSetNumber)} class="collapse collapse-arrow bg-base-200">
     <input type="radio" name="my-accordion-2" checked?={isOpen} />
     <div class="collapse-title">
@@ -121,7 +121,7 @@ templ ViewMatchSet(partaiName string, leagueUUID uuid.UUID, match *entities.Matc
             Value: teamAScore(match.GetMatchSetByNumber(matchSetNumber)),
             Name: "team_a_score",
             Placeholder: "0",
-            Readonly: match.IsComplete && match.IsCompleteConfirmed,
+            Readonly: (match.IsComplete && match.IsCompleteConfirmed && isMatchParticipantCaptain(user, match)) || !isMatchParticipantCaptain(user, match),
           })
           <div class="w-16"> </div>
           @components.InputText(components.InputTextParams{
@@ -129,10 +129,10 @@ templ ViewMatchSet(partaiName string, leagueUUID uuid.UUID, match *entities.Matc
             Value: teamBScore(match.GetMatchSetByNumber(matchSetNumber)),
             Name: "team_b_score",
             Placeholder: "0",
-            Readonly: match.IsComplete && match.IsCompleteConfirmed,
+            Readonly: (match.IsComplete && match.IsCompleteConfirmed && isMatchParticipantCaptain(user, match)) || !isMatchParticipantCaptain(user, match),
           })
         </div>
-        if !match.IsCompleteConfirmed {
+        if !match.IsCompleteConfirmed && isMatchParticipantCaptain(user, match) {
           <div class="w-full pt-8 px-2">
             <button class="btn btn-primary w-full btn-sm">
               Update Skor
@@ -185,7 +185,7 @@ func getMatchSetTitle(league *entities.League) string {
 templ ViewMatchDetailIndividuals(user *entities.User, league *entities.League, match *entities.Match) {
   <div id="match-detail" class="flex flex-col">
 
-    @ViewMatchSet(getMatchSetTitle(league), league.UUID, match, 1, true)
+    @ViewMatchSet(user, getMatchSetTitle(league), league.UUID, match, 1, true)
 
     if canCompleteMatch(user.UUID, match) {
       <div class="pt-8">
