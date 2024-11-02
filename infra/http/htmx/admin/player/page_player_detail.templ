@@ -82,6 +82,7 @@ templ ViewFormEditProfile(vmodel VModelFormPlayer, playerUUID uuid.UUID) {
           })
           @components.InputText(components.InputTextParams{
             Type: "number",
+            Step: "0.5",
             Label: "Rating Season 1",
             Name: "rating_season_1",
             Value: parsePlayerRating(vmodel.RatingSeason1),

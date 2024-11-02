@@ -4,6 +4,7 @@ type InputTextParams struct {
   Label string
   Name string
   Type string
+  Step string
   Value string
   Readonly bool
   Placeholder string
@@ -17,6 +18,9 @@ templ InputText(params InputTextParams) {
     <input
       name={params.Name}
       type={params.Type}
+      if params.Type == "number" {
+        step={params.Step}
+      }
       value={params.Value}
       placeholder={params.Placeholder}
       class="input input-bordered w-full placeholder:text-slate-700"
