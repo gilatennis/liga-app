@@ -25,17 +25,24 @@ templ PageMatchDetail(vmodel VModelPageMatchDetail) {
     <div class="space-y-8">
       @league.ViewLeagueDetail(vmodel.League, false)
       @components.PageHeader("Detail Pertandingan", fmt.Sprintf("/dashboard/leagues/%s/matches", vmodel.League.UUID))
+
+      @ViewMatchResultUpdatedCheck(vmodel.League.UUID, vmodel.Match.UUID, vmodel.Match.UpdatedAt)
       @ViewMatchDetail(vmodel)
     </div>
   }
 }
 
-templ ViewMatchDetail(vmodel VModelPageMatchDetail) {
+// INFO: this checks if match result is updated and trigger match-update in @ViewMatchDetail
+templ ViewMatchResultUpdatedCheck(leagueUUID, matchUUID uuid.UUID, matchUpdatedAt time.Time) {
   <div
     class="hidden"
+    hx-swap="outerHTML"
     hx-trigger="every 5s"
-    hx-get={string(urlMatchResultUpdated(vmodel.League.UUID, vmodel.Match.UUID, vmodel.Match.UpdatedAt))}>
+    hx-get={string(urlMatchResultUpdated(leagueUUID, matchUUID, matchUpdatedAt))}>
   </div>
+}
+
+templ ViewMatchDetail(vmodel VModelPageMatchDetail) {
   <div
     class="card w-auto shadow-xl"
     hx-get={string(urlMatchDetailView(vmodel.League.UUID, vmodel.Match.UUID))}

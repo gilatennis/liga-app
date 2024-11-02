@@ -247,7 +247,7 @@ func (h *Handler) GetIsMatchResultUpdated(c *gin.Context) {
 		return
 	}
 
-	_, matchUUID := params[0], params[1]
+	leagueUUID, matchUUID := params[0], params[1]
 
 	match, err := h.matchService.GetByUUID(c, matchUUID)
 	if err != nil {
@@ -270,9 +270,11 @@ func (h *Handler) GetIsMatchResultUpdated(c *gin.Context) {
 	fmt.Println("lastUpdate", lastUpdate)
 	fmt.Println("match.UpdatedAt", match.UpdatedAt)
 
-	if match.UpdatedAt.After(lastUpdate) {
+	if match.UpdatedAt.Sub(lastUpdate) > (5 * time.Second) {
 		c.Header("HX-Trigger", "match-update")
 	}
+	view := ViewMatchResultUpdatedCheck(leagueUUID, matchUUID, match.UpdatedAt)
+	h.RenderView(c, view)
 }
 
 func (h *Handler) GetMatchScheduleVenueListPage(c *gin.Context) {
