@@ -5,6 +5,7 @@ import (
 	iCommon "liga-app/interfaces/common"
 	"liga-app/interfaces/services"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -76,5 +77,51 @@ func (h *Handler) GetCourtDetailPage(c *gin.Context) {
 	}
 
 	page := PageCourtDetail(vmodel)
+	h.RenderView(c, page)
+}
+
+func (h *Handler) GetCourtTimesPage(c *gin.Context) {
+	user, err := h.GetAuthenticatedUser(c)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	params, err := h.GetURLUUIDParams(c, []string{"court_uuid"})
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	courtUUID := params[0]
+
+	court, err := h.courtService.GetByUUID(c, courtUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	day := c.Query("day")
+
+	t, err := time.Parse(time.RFC3339, day)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	timeslots, err := h.courtService.GetCourtTimeSlotsByDay(c, courtUUID, t)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	vmodel := VModelPageCourtTimes{
+		User:      user,
+		Court:     court,
+		Day:       t,
+		TimeSlots: timeslots,
+	}
+	_ = vmodel
+
+	page := PageCourtTimes(vmodel)
 	h.RenderView(c, page)
 }
