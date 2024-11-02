@@ -32,9 +32,14 @@ templ PageMatchDetail(vmodel VModelPageMatchDetail) {
 
 templ ViewMatchDetail(vmodel VModelPageMatchDetail) {
   <div
+    class="hidden"
+    hx-trigger="every 5s"
+    hx-get={string(urlMatchResultUpdated(vmodel.League.UUID, vmodel.Match.UUID, vmodel.Match.UpdatedAt))}>
+  </div>
+  <div
     class="card w-auto shadow-xl"
     hx-get={string(urlMatchDetailView(vmodel.League.UUID, vmodel.Match.UUID))}
-    hx-trigger="every 10s"
+    hx-trigger="match-update from:body"
     hx-swap="outerHTML"
   >
     <div class="p-4 space-y-4">
@@ -176,6 +181,10 @@ templ ViewMatchDetail(vmodel VModelPageMatchDetail) {
       // Match schedule requested end ============================================
     </div>
   </div>
+}
+ func urlMatchResultUpdated(leagueUUID, matchUUID uuid.UUID, lastUpdate time.Time) templ.SafeURL {
+  // loc, _ := time.LoadLocation("Asia/Jakarta")
+  return templ.URL(fmt.Sprintf("/dashboard/leagues/%s/matches/%s/is-updated?last-update=%s", leagueUUID, matchUUID, url.QueryEscape(lastUpdate.Format(time.RFC3339))))
 }
 
 func urlMatchDetailView(leagueUUID, matchUUID uuid.UUID) templ.SafeURL {

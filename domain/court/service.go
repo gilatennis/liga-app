@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"liga-app/entities"
+	"liga-app/interfaces/common"
 	"liga-app/interfaces/repositories"
 	"liga-app/utils"
 	"sort"
@@ -25,6 +26,15 @@ func NewService(
 		courtRepo:         courtRepo,
 		courtTimeSlotRepo: courtTimeSlotRepo,
 	}
+}
+
+func (s *Service) Get(c context.Context, p *common.Pagination) ([]entities.Court, error) {
+	courts, err := s.courtRepo.Get(c, p)
+	if err != nil {
+		return nil, fmt.Errorf("s.courtRepo.Get(c, p) : %w", err)
+	}
+
+	return courts, nil
 }
 
 func (s *Service) GetByUUID(c context.Context, courtUUID uuid.UUID) (*entities.Court, error) {
@@ -71,6 +81,45 @@ func (s *Service) GetCourtAvailableDays(c context.Context, courtUUID uuid.UUID) 
 	*/
 
 	timeslots, err := s.courtTimeSlotRepo.GetByCourtSlug(c, court.Slug, beginningOfTomorrow, endOfLeague)
+	if err != nil {
+		return nil, fmt.Errorf("s.courtTimeSlotRepo.GetByCourtSlug(c, court.Slug, *rangeStart, *rangeEnd): %w", err)
+	}
+
+	daysMap := make(map[int]time.Time)
+	for _, ts := range timeslots {
+		day := ts.Start.Day()
+		if _, ok := daysMap[day]; !ok {
+			daysMap[day] = ts.Start.Truncate(24 * time.Hour).In(loc)
+		}
+	}
+
+	daysSlice := []time.Time{}
+	for _, d := range daysMap {
+		daysSlice = append(daysSlice, d)
+	}
+	sort.Slice(daysSlice, func(i, j int) bool {
+		return daysSlice[i].Before(daysSlice[j])
+	})
+
+	return daysSlice, nil
+}
+
+func (s *Service) GetAdminCourtAvailableDays(c context.Context, courtUUID uuid.UUID) ([]time.Time, error) {
+	court, err := s.courtRepo.GetByUUID(c, courtUUID)
+	if err != nil {
+		return nil, fmt.Errorf("s.courtRepo.GetByUUID(c, courtUUID): %w", err)
+	}
+
+	loc, err := time.LoadLocation("Asia/Jakarta")
+	if err != nil {
+		return nil, fmt.Errorf("time.LoadLocation(\"Asia/Jakarta\")")
+	}
+
+	now := time.Now().In(loc)
+	endOfLeague := time.Date(2025, 1, 15, 23, 59, 59, 59, now.Location())
+	start := time.Date(2024, 1, 1, 0, 0, 0, 0, now.Location())
+
+	timeslots, err := s.courtTimeSlotRepo.GetByCourtSlug(c, court.Slug, start, endOfLeague)
 	if err != nil {
 		return nil, fmt.Errorf("s.courtTimeSlotRepo.GetByCourtSlug(c, court.Slug, *rangeStart, *rangeEnd): %w", err)
 	}

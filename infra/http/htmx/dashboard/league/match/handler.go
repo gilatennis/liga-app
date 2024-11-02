@@ -234,6 +234,47 @@ func (h *Handler) GetMatchDetailView(c *gin.Context) {
 	h.RenderView(c, view)
 }
 
+func (h *Handler) GetIsMatchResultUpdated(c *gin.Context) {
+	user, err := h.GetAuthenticatedUser(c)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	params, err := h.GetURLUUIDParams(c, []string{"league_uuid", "match_uuid"})
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	_, matchUUID := params[0], params[1]
+
+	match, err := h.matchService.GetByUUID(c, matchUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	lastUpdateStr := c.Query("last-update")
+
+	fmt.Println("lastUpdateStr", lastUpdateStr)
+	_ = user
+	_ = match
+
+	lastUpdate, err := time.Parse(time.RFC3339, lastUpdateStr)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	fmt.Println("lastUpdate", lastUpdate)
+	fmt.Println("match.UpdatedAt", match.UpdatedAt)
+
+	if match.UpdatedAt.After(lastUpdate) {
+		c.Header("HX-Trigger", "match-update")
+	}
+}
+
 func (h *Handler) GetMatchScheduleVenueListPage(c *gin.Context) {
 	user, err := h.GetAuthenticatedUser(c)
 	if err != nil {

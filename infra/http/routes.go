@@ -90,6 +90,7 @@ func dashboardRoutes(dashboard *gin.RouterGroup, handlers *Handlers, middlewares
 		leagues.GET("/:league_uuid/matches/view", handlers.HTMXHandlers.DashboardLeagueMatchHandler.GetMatchListView)
 		leagues.GET("/:league_uuid/matches/:match_uuid", handlers.HTMXHandlers.DashboardLeagueMatchHandler.GetMatchDetailPage)
 		leagues.GET("/:league_uuid/matches/:match_uuid/view", handlers.HTMXHandlers.DashboardLeagueMatchHandler.GetMatchDetailView)
+		leagues.GET("/:league_uuid/matches/:match_uuid/is-updated", handlers.HTMXHandlers.DashboardLeagueMatchHandler.GetIsMatchResultUpdated)
 		leagues.GET("/:league_uuid/matches/:match_uuid/schedule/venues", handlers.HTMXHandlers.DashboardLeagueMatchHandler.GetMatchScheduleVenueListPage)
 		leagues.GET("/:league_uuid/matches/:match_uuid/schedule/venues/:venue_uuid/courts", handlers.HTMXHandlers.DashboardLeagueMatchHandler.GetMatchScheduleCourtListPage)
 		leagues.GET("/:league_uuid/matches/:match_uuid/schedule/venues/:venue_uuid/courts/:court_uuid/days", handlers.HTMXHandlers.DashboardLeagueMatchHandler.GetMatchScheduleCourtDaysPage)
@@ -136,6 +137,9 @@ func adminRoutes(admin *gin.RouterGroup, handlers *Handlers, middlewares *middle
 		adminDashboard.POST("/leagues/:league_uuid/fixtures/:fixture_uuid/groups/:group_uuid/generate-matches", handlers.HTMXHandlers.AdminLeagueFixtureHandler.GenerateMatches)
 		adminDashboard.GET("/leagues/:league_uuid/fixtures/:fixture_uuid/groups/:group_uuid/matches", handlers.HTMXHandlers.AdminLeagueFixtureHandler.GetGroupMatchesPage)
 		adminDashboard.GET("/leagues/:league_uuid/fixtures/:fixture_uuid/groups/:group_uuid/matches/view", handlers.HTMXHandlers.AdminLeagueFixtureHandler.GetGroupMatchesView)
+
+		adminDashboard.GET("/courts", handlers.HTMXHandlers.AdminCourtHandler.GetCourtListPage)
+		adminDashboard.GET("/courts/:court_uuid", handlers.HTMXHandlers.AdminCourtHandler.GetCourtDetailPage)
 	}
 }
 

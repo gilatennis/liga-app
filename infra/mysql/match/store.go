@@ -6,6 +6,7 @@ import (
 	"liga-app/entities"
 	"liga-app/interfaces/common"
 	"liga-app/interfaces/repositories"
+	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -108,6 +109,7 @@ func (s *Store) GetByUUID(ctx context.Context, matchUUID uuid.UUID) (*entities.M
 }
 
 func (s *Store) Update(ctx context.Context, match *entities.Match) (*uuid.UUID, error) {
+	match.UpdatedAt = time.Now()
 	err := s.db.WithContext(ctx).Omit(clause.Associations).Save(match).Error
 	if err != nil {
 		return nil, fmt.Errorf("s.db.Save(match).Error : %w", err)

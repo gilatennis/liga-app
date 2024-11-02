@@ -1,0 +1,48 @@
+package court
+
+import (
+  "liga-app/infra/http/htmx/common/layouts"
+  // "liga-app/infra/http/htmx/common/components"
+  // "liga-app/infra/http/htmx/dashboard/league"
+  // "liga-app/entities"
+  // "liga-app/enums"
+  // "strconv"
+	"github.com/google/uuid"
+  "fmt"
+	"liga-app/infra/http/htmx/common/components"
+	"liga-app/entities"
+)
+
+templ PageCourtList(vmodel VModelPageCourtList) {
+  @layouts.AdminDashboardLayout("Tim", vmodel.User) {
+    <div class="space-y-8">
+      @components.PageHeader("Pilih Lapangan", "")
+      @ViewCourtList(vmodel)
+    </div>
+  }
+}
+
+templ ViewCourtList(vmodel VModelPageCourtList) {
+  <div class="flex flex-col space-y-8">
+    for _, c := range vmodel.Courts {
+      @ViewCourtCard(&c)
+    }
+  </div>
+}
+
+templ ViewCourtCard(court *entities.Court) {
+  <a hx-boost="false" href={hrefSelectCourtDays(court.UUID)}>
+    <div class="card h-24 card-side bg-base-100 shadow-xl w-auto">
+      <figure>
+        <img class="h-full object-cover" src={court.Image} alt={court.Name} />
+      </figure>
+      <div class="p-4">
+        <h2 class="card-title">{court.Name}</h2>
+      </div>
+    </div>
+  </a>
+}
+
+func hrefSelectCourtDays(courtUUID uuid.UUID) templ.SafeURL {
+  return templ.URL(fmt.Sprintf("/admin/dashboard/courts/%s", courtUUID))
+}

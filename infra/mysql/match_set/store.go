@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"liga-app/entities"
+	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -54,6 +55,18 @@ func (s *Store) SaveMatchSet(ctx context.Context, userUUID uuid.UUID, matchSet *
 	err = tx.Save(&existingMatchSet).Error
 	if err != nil {
 		return nil, fmt.Errorf("tx.Save(&existingMatchSet).Error : %w", err)
+	}
+
+	match := entities.Match{}
+	err = tx.First(&match, "uuid = ?", matchSet.MatchUUID).Error
+	if err != nil {
+		return nil, fmt.Errorf("tx.First(&match, \"uuid = ?\", matchSet.MatchUUID).Error")
+	}
+
+	match.UpdatedAt = time.Now()
+	err = tx.Save(&match).Error
+	if err != nil {
+		return nil, fmt.Errorf("tx.Save(&match).Error")
 	}
 
 	err = tx.Commit().Error

@@ -18,7 +18,7 @@ templ AdminDashboardLayout(title string, user *entities.User) {
       class="h-screen flex flex-col"
     >
       @Navbar(user)
-      @DashboardDrawer(user) {
+      @AdminDashboardDrawer(user) {
         { children... }
       }
       @DashboardFooter()
@@ -26,4 +26,38 @@ templ AdminDashboardLayout(title string, user *entities.User) {
       @ScriptFeatherIcons()
     </body>
   </html>
+}
+
+templ AdminDashboardDrawer(user *entities.User) {
+  <div class="drawer">
+    <input id="my-drawer" type="checkbox" class="drawer-toggle" />
+    <div class="drawer-content min-h-full flex-grow overflow-auto mb-8 p-4 mt-12">
+      @AlertSuccess()
+      @AlertError()
+      <!-- Page content here -->
+      { children...}
+    </div>
+    // z index need to be more than footer
+    // dropdown > drawer > footer
+    <!-- INFO: do not add bg-base-200 or any color to drawer-side. for some reason, the drawer will be full screen on mobile view -->
+    <div class="drawer-side z-20">
+      <label for="my-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+      <div class="bg-base-200 min-h-full">
+        <!-- Sidebar content here -->
+        <div class="px-8 pt-8 w-80 bg-base-200 text-base-content flex items-center space-x-2">
+          <div class="pb-4 flex justify-center space-x-2">
+            <span><h1 class="text-3xl text-primary">Liga</h1></span>
+            <h1 class="text-3xl text-primary font-bold">Gilatennis</h1>
+          </div>
+        </div>
+        <div class="px-8 pt-8 w-80 bg-base-200 text-base-content flex items-center space-x-2">
+          <i data-feather="user" width="18" height="18" stroke-width="2"></i>
+          <p class="font-bold text-sm">{user.Email}</p>
+        </div>
+        <ul class="menu p-4 w-80 bg-base-200 text-base-content">
+          <li><a hx-boost="true" href="/admin/dashboard/courts">Daftar Lapangan</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
 }

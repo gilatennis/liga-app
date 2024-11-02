@@ -1,0 +1,53 @@
+package court
+
+import (
+  "liga-app/infra/http/htmx/common/layouts"
+  // "liga-app/infra/http/htmx/common/components"
+  // "liga-app/infra/http/htmx/dashboard/league"
+  // "liga-app/entities"
+  // "liga-app/enums"
+  // "strconv"
+  "fmt"
+	"liga-app/infra/http/htmx/common/components"
+	// "liga-app/entities"
+  "time"
+	// "liga-app/enums"
+	"github.com/google/uuid"
+  "github.com/goodsign/monday"
+  "net/url"
+)
+
+templ PageCourtDetail(vmodel VModelPageCourtDetail) {
+  @layouts.AdminDashboardLayout("Pilih Venue", vmodel.User) {
+    <div class="space-y-8">
+      @components.PageHeader("Pilih Hari Bertanding", "")
+      <div class="space-y-4">
+        <h1 class="text-xl font-bold">{vmodel.Court.Venue.Name}</h1>
+        <h2 class="text-lg font-bold mt-4">{vmodel.Court.Name}</h2>
+      </div>
+      @ViewSelectDays(vmodel)
+    </div>
+  }
+}
+
+templ ViewSelectDays(vmodel VModelPageCourtDetail) {
+  <div class="flex flex-col space-y-8">
+    for _, d := range vmodel.AvailableDays {
+      <a href={hrefScheduleTimes(vmodel.Court.UUID, d)}>
+        <div class="card w-auto shadow-xl ">
+          <div class="p-4">
+            {monday.Format(d, "Monday 2 January 2006", monday.LocaleIdID)}
+          </div>
+        </div>
+      </a>
+    }
+  </div>
+}
+
+func hrefScheduleTimes(courtUUID uuid.UUID, day time.Time) templ.SafeURL {
+  return templ.URL(fmt.Sprintf(
+    "/admin/dashboard/courts/%s/times?day=%s",
+    courtUUID,
+    url.QueryEscape(day.Format(time.RFC3339)),
+  ))
+}
