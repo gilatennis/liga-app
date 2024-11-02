@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Store struct {
@@ -77,7 +78,7 @@ func (s *Store) GetUsers(
 
 func (s *Store) GetUserByUUID(ctx context.Context, tUUID uuid.UUID) (*entities.User, error) {
 	user := entities.User{}
-	err := s.db.Where("uuid = ?", tUUID).First(&user).Error
+	err := s.db.Preload("Ratings").Where("uuid = ?", tUUID).First(&user).Error
 	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, &domainErrors.ErrNotFound{
 			Message: fmt.Sprintf("s.db.Where(\"uuid = ?\", %s).First(&user).Error: %v\n", tUUID, err.Error()),
@@ -90,9 +91,23 @@ func (s *Store) GetUserByUUID(ctx context.Context, tUUID uuid.UUID) (*entities.U
 }
 
 func (s *Store) UpdateUser(ctx context.Context, t *entities.User) (*uuid.UUID, error) {
-	err := s.db.Save(t).Error
+	tx := s.db.WithContext(ctx).Begin()
+
+	err := tx.Omit(clause.Associations).Save(t).Error
 	if err != nil {
 		return nil, err
+	}
+
+	if len(t.Ratings) > 0 {
+		err = tx.Omit(clause.Associations).Save(t.Ratings).Error
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err = tx.Commit().Error
+	if err != nil {
+		return nil, fmt.Errorf("tx.Commit().Error")
 	}
 
 	return &t.UUID, nil

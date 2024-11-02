@@ -31,3 +31,13 @@ func (u *User) GetLatestRatingString() string {
 
 	return fmt.Sprintf("NTRP %.1f", u.Ratings[0].NTRPRating)
 }
+
+func (u *User) GetRatingBySeason(season int) *float32 {
+	var rating *float32
+	for _, r := range u.Ratings {
+		if r.Season == season {
+			rating = &r.NTRPRating
+		}
+	}
+	return rating
+}

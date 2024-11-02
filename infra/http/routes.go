@@ -140,6 +140,9 @@ func adminRoutes(admin *gin.RouterGroup, handlers *Handlers, middlewares *middle
 
 		adminDashboard.GET("/courts", handlers.HTMXHandlers.AdminCourtHandler.GetCourtListPage)
 		adminDashboard.GET("/courts/:court_uuid", handlers.HTMXHandlers.AdminCourtHandler.GetCourtDetailPage)
+
+		adminDashboard.GET("/players/:player_uuid", handlers.HTMXHandlers.AdminPlayerHandler.GetPlayerDetailPage)
+		adminDashboard.PUT("/players/:player_uuid/edit", handlers.HTMXHandlers.AdminPlayerHandler.PutPlayerDetail)
 	}
 }
 

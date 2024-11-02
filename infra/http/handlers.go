@@ -9,6 +9,7 @@ import (
 	adminLeagueFixture "liga-app/infra/http/htmx/admin/fixture"
 	adminLeague "liga-app/infra/http/htmx/admin/league"
 	adminLeagueTeam "liga-app/infra/http/htmx/admin/league/team"
+	adminPlayer "liga-app/infra/http/htmx/admin/player"
 	"liga-app/infra/http/htmx/auth"
 	"liga-app/infra/http/htmx/dashboard"
 	dashLeague "liga-app/infra/http/htmx/dashboard/league"
@@ -79,6 +80,7 @@ type HTMXHandlers struct {
 	AdminLeagueTeamHandler      *adminLeagueTeam.Handler
 	AdminLeagueFixtureHandler   *adminLeagueFixture.Handler
 	AdminCourtHandler           *adminCourt.Handler
+	AdminPlayerHandler          *adminPlayer.Handler
 }
 
 type JSONHandlers struct {
@@ -170,6 +172,7 @@ func setupHandlers(
 		AdminLeagueTeamHandler:      adminLeagueTeam.NewHandler(leagueService, teamService, userService),
 		AdminLeagueFixtureHandler:   adminLeagueFixture.NewHandler(fixtureService, leagueService, groupService, teamService, matchService),
 		AdminCourtHandler:           adminCourt.NewHandler(courtService),
+		AdminPlayerHandler:          adminPlayer.NewHandler(userService, userInfoService),
 	}
 
 	JSONHandlers := JSONHandlers{

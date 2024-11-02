@@ -96,19 +96,21 @@ templ ViewListPlayers(players []entities.User, isCaptain bool) {
 }
 
 templ ComponentPlayer(player entities.User, isCaptain bool) {
-  <div class="flex items-center space-x-4 p-4 justify-start w-full border-b-2">
-    <div class="avatar placeholder">
-      <div class="bg-primary text-neutral-content w-7 rounded-full">
-        <span class="text-xl">{string(player.Name[0])}</span>
-      </div>
-    </div>
-    <div>
-      <div class="w-full text-left">
-        <h3 class="text-lg">{player.Name}</h3>
+  <a href={templ.URL(fmt.Sprintf("/admin/dashboard/players/%s", player.UUID))}>
+    <div class="flex items-center space-x-4 p-4 justify-start w-full border-b-2">
+      <div class="avatar placeholder">
+        <div class="bg-primary text-neutral-content w-7 rounded-full">
+          <span class="text-xl">{string(player.Name[0])}</span>
+        </div>
       </div>
       <div>
-        {player.GetLatestRatingString()}
+        <div class="w-full text-left">
+          <h3 class="text-lg">{player.Name}</h3>
+        </div>
+        <div>
+          {player.GetLatestRatingString()}
+        </div>
       </div>
     </div>
-  </div>
+  </a>
 }

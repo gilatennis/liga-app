@@ -1,0 +1,130 @@
+package player
+
+import (
+  "liga-app/infra/http/htmx/common/layouts"
+  // "liga-app/infra/http/htmx/admin/league"
+  // "liga-app/entities"
+  // "strconv"
+	"github.com/google/uuid"
+  "fmt"
+	"liga-app/infra/http/htmx/common/components"
+	// "strconv"
+	"github.com/dustin/go-humanize"
+)
+
+templ PagePlayerDetail(vmodel VModelPagePlayerDetail) {
+  @layouts.AdminDashboardLayout("Tim", vmodel.User) {
+    <div class="space-y-8 pt-4">
+      @components.PageHeader("Informasi Pemain", "")
+      @ViewFormEditProfile(*vmodel.VModelFormPlayer, vmodel.Player.UUID)
+    </div>
+  }
+}
+
+templ ViewFormEditProfile(vmodel VModelFormPlayer, playerUUID uuid.UUID) {
+    <div id="form-edit-profile"  class="card w-96 bg-base-100 shadow-xl">
+      <div class="card-body space-y-6">
+        <form
+          method="PUT"
+          hx-put={urlPutEditPlayer(playerUUID)}
+          hx-encoding='multipart/form-data'
+          hx-swap="outerHTML"
+          hx-target="#form-edit-profile"
+          hx-target-400="#form-edit-profile"
+          hx-target-5**="#form-edit-profile"
+          class="space-y-4"
+          x-data="window.imgPreview()"
+        >
+          <div class="flex justify-center">
+            <template x-if="imgPreviewSrc">
+              <img :src="imgPreviewSrc" class="w-36 rounded-full" />
+            </template>
+            if vmodel.ProfilePictureCurrent == "" {
+              <div x-show="!imgPreviewSrc" class="avatar placeholder">
+                <div class="bg-primary text-neutral-content w-36 rounded-full">
+                  <span class="text-5xl">{string(vmodel.Name[0])}</span>
+                </div>
+              </div>
+            } else {
+              <div x-show="!imgPreviewSrc" class="avatar">
+                <div class="w-36 rounded-full">
+                  <img src={vmodel.ProfilePictureCurrent} />
+                </div>
+              </div>
+            }
+          </div>
+          <input
+            type="file"
+            name="profile_picture"
+            class="file-input file-input-bordered file-input-secondary file-input-xs w-full max-w-xs"
+            accept="image/*"
+            x-ref="profilePictureFile"
+            @change="previewFile"
+          />
+          @components.InputText(components.InputTextParams{
+            Label: "Nama",
+            Name: "name",
+            Value: vmodel.Name,
+            Error: vmodel.base.FormErrors["name"],
+          })
+          @components.InputText(components.InputTextParams{
+            Label: "No. WA",
+            Name: "phone",
+            Value: vmodel.Phone,
+            Error: vmodel.base.FormErrors["phone"],
+          })
+          @components.InputSelect(components.InputSelectParams{
+            Label: "Asal Daerah",
+            Name: "province",
+            Options: vmodel.ProvinceOptions,
+            SelectedValue: vmodel.Province,
+            Error: vmodel.base.FormErrors["province"],
+          })
+          @components.InputText(components.InputTextParams{
+            Type: "number",
+            Label: "Rating Season 1",
+            Name: "rating_season_1",
+            Value: parsePlayerRating(vmodel.RatingSeason1),
+          })
+
+          <div class="pt-8">
+            if vmodel.base.ServerError != "" {
+              <p class="text-error mt-1">{ vmodel.base.ServerError }</p>
+            }
+            <button class="btn btn-primary w-full">Submit</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <script>
+      window.imgPreview = () => {
+        return {
+          imgPreviewSrc: null,
+          previewFile() {
+            let file = this.$refs.profilePictureFile.files[0];
+            if(!file || file.type.indexOf('image/') === -1) return;
+            this.imgPreviewSrc = null;
+            let reader = new FileReader();
+
+            reader.onload = e => {
+                this.imgPreviewSrc = e.target.result;
+                console.log('this.imgPreviewSrc', this.imgPreviewSrc);
+            }
+
+            reader.readAsDataURL(file);
+          }
+        }
+      }
+    </script>
+}
+
+func urlPutEditPlayer(userUUID uuid.UUID) string {
+  return fmt.Sprintf("/admin/dashboard/players/%s/edit", userUUID)
+}
+
+func parsePlayerRating(rating *float32) string {
+  if rating == nil {
+    return ""
+  }
+  return humanize.FormatFloat("#.#", float64(*rating))
+}
