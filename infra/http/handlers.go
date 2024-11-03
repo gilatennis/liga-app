@@ -156,7 +156,7 @@ func setupHandlers(
 	venueService := domainVenue.NewService(venueStore)
 	courtService := domainCourt.NewService(courtStore, courtTimeSlotStore)
 	fixtureService := domainFixture.NewService(fixtureStore)
-	groupService := domainGroup.NewService(groupStore)
+	groupService := domainGroup.NewService(groupStore, fixtureStore, matchStore)
 
 	HTMXHandlers := HTMXHandlers{
 		AuthHandler:                 auth.NewHandler(cfg, authService, userService),

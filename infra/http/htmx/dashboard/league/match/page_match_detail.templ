@@ -387,7 +387,6 @@ func hrefWAContactOpponentForScheduleChange(
   )
   params := url.Values{}
   params.Add("text", text)
-  captainScheduleCreator.Phone = "08159239794"
   if strings.HasPrefix(captainScheduleCreator.Phone, "0") {
     captainScheduleCreator.Phone = strings.Replace(captainScheduleCreator.Phone, "0", "+62", 1)
   }

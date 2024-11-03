@@ -645,3 +645,29 @@ func (h *Handler) GetGroupMatchesView(c *gin.Context) {
 		return
 	}
 }
+
+func (h *Handler) GenerateGroupResults(c *gin.Context) {
+	user, err := h.GetAuthenticatedUser(c)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusUnauthorized, err.Error())
+		return
+	}
+	_ = user
+
+	params, err := h.GetURLUUIDParams(c, []string{"league_uuid", "fixture_uuid", "group_uuid"})
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	leagueUUID, fixtureUUID, groupUUID := params[0], params[1], params[2]
+	_, _, _ = leagueUUID, fixtureUUID, groupUUID
+
+	err = h.groupService.GenerateGroupResults(c, groupUUID)
+	if err != nil {
+		h.ResponseAlertError(c, err.Error())
+		return
+	}
+
+	h.ResponseAlertSuccess(c, "hasil klasemen berhasil di update")
+}

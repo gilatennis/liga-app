@@ -12,4 +12,5 @@ type IGroupService interface {
 	Create(ctx context.Context, group *entities.Group) (*uuid.UUID, error)
 	AddTeam(ctx context.Context, groupUUID uuid.UUID, teamUUID uuid.UUID) (*uuid.UUID, error)
 	RemoveTeam(ctx context.Context, groupUUID uuid.UUID, teamUUID uuid.UUID) (*uuid.UUID, error)
+	GenerateGroupResults(ctx context.Context, groupUUID uuid.UUID) error
 }

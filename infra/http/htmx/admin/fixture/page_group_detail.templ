@@ -48,6 +48,14 @@ templ PageGroupDetail(vmodel VModelPageGroupDetail) {
             <h3 class="text-center">Daftar Pertandingan</h3>
           </div>
         }
+        @components.CardButtonPost(fmt.Sprintf("/admin/dashboard/leagues/%s/fixtures/%s/groups/%s/generate-results", vmodel.League.UUID, vmodel.Fixture.UUID, vmodel.Group.UUID)) {
+          <div class="grid grid-row-2 gap-4 p-4">
+            <div class="flex justify-center text-primary">
+              <i data-feather="loader" width="32" height="32"></i>
+            </div>
+            <h3 class="text-center">Update Klasemen</h3>
+          </div>
+        }
       </div>
 
       @ViewGroupDetail(vmodel)

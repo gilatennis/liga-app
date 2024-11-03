@@ -81,3 +81,18 @@ func (s *Store) RemoveTeam(ctx context.Context, groupUUID uuid.UUID, teamUUID uu
 	}
 	return nil, nil
 }
+
+func (s *Store) GetGroupTeams(ctx context.Context, groupUUID uuid.UUID) ([]entities.Team, error) {
+	teams := []entities.Team{}
+	err := s.db.WithContext(ctx).
+		Preload("Captain").
+		Preload("Players").
+		Joins("JOIN group_teams on group_teams.team_uuid = teams.uuid").
+		Find(&teams, "group_teams.group_uuid = ?", groupUUID).
+		Error
+	if err != nil {
+		return nil, fmt.Errorf("s.db...Find(&teams, \"group_teams.group_uuid = ?\", groupUUID=%s) : %w", groupUUID, err)
+	}
+
+	return teams, nil
+}

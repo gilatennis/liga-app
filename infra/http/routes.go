@@ -138,6 +138,8 @@ func adminRoutes(admin *gin.RouterGroup, handlers *Handlers, middlewares *middle
 		adminDashboard.GET("/leagues/:league_uuid/fixtures/:fixture_uuid/groups/:group_uuid/matches", handlers.HTMXHandlers.AdminLeagueFixtureHandler.GetGroupMatchesPage)
 		adminDashboard.GET("/leagues/:league_uuid/fixtures/:fixture_uuid/groups/:group_uuid/matches/view", handlers.HTMXHandlers.AdminLeagueFixtureHandler.GetGroupMatchesView)
 
+		adminDashboard.POST("/leagues/:league_uuid/fixtures/:fixture_uuid/groups/:group_uuid/generate-results", handlers.HTMXHandlers.AdminLeagueFixtureHandler.GenerateGroupResults)
+
 		// Courts
 		adminDashboard.GET("/courts", handlers.HTMXHandlers.AdminCourtHandler.GetCourtListPage)
 		adminDashboard.GET("/courts/:court_uuid", handlers.HTMXHandlers.AdminCourtHandler.GetCourtDetailPage)
