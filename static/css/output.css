@@ -4402,6 +4402,10 @@ html:has(.drawer-toggle:checked) {
   overflow: auto;
 }
 
+.overflow-x-auto {
+  overflow-x: auto;
+}
+
 .rounded-box {
   border-radius: var(--rounded-box, 1rem);
 }

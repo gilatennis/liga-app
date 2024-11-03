@@ -96,3 +96,59 @@ func (s *Store) GetGroupTeams(ctx context.Context, groupUUID uuid.UUID) ([]entit
 
 	return teams, nil
 }
+
+func (s *Store) SaveGroupRoundRobinResults(
+	ctx context.Context,
+	groupUUID uuid.UUID,
+	groupRoundRobinResults []entities.GroupRoundRobinTeamResult,
+	groupRoundRobinHeadToHeadResults []entities.GroupRoundRobinHeadToHeadResult,
+) error {
+	tx := s.db.WithContext(ctx).Begin()
+
+	err := tx.Unscoped().Delete(&entities.GroupRoundRobinTeamResult{}, "group_uuid = ?", groupUUID).Error
+	if err != nil {
+		return fmt.Errorf("tx.Unscoped().Delete(&entities.GroupRoundRobinTeamResult{}, \"group_uuid = ?\", groupUUID).Error : %w", err)
+	}
+
+	err = tx.Unscoped().Delete(&entities.GroupRoundRobinHeadToHeadResult{}, "group_uuid = ?", groupUUID).Error
+	if err != nil {
+		return fmt.Errorf("tx.Unscoped().Delete(&entities.GroupRoundRobinHeadToHeadResult{}, \"group_uuid = ?\", groupUUID).Error : %w", err)
+	}
+
+	err = tx.Save(groupRoundRobinResults).Error
+	if err != nil {
+		return fmt.Errorf("tx.Save(groupRoundRobinResults).Error : %w", err)
+	}
+
+	if len(groupRoundRobinHeadToHeadResults) > 0 {
+		err = tx.Save(groupRoundRobinHeadToHeadResults).Error
+		if err != nil {
+			return fmt.Errorf("tx.Save(groupRoundRobinHeadToHeadResults).Error : %w", err)
+		}
+	}
+
+	err = tx.Commit().Error
+	if err != nil {
+		return fmt.Errorf("tx.Commit().Error : %w", err)
+	}
+
+	return nil
+}
+
+func (s *Store) GetGroupRoundRobinResults(ctx context.Context, groupUUID uuid.UUID) ([]entities.GroupRoundRobinTeamResult, error) {
+	results := []entities.GroupRoundRobinTeamResult{}
+
+	err := s.db.WithContext(ctx).
+		Debug().
+		Preload("Group").
+		Preload("Team").
+		Where("group_uuid = ?", groupUUID).
+		Order("`rank` ASC").
+		Find(&results).
+		Error
+	if err != nil {
+		return nil, fmt.Errorf("s.db...Find(&results, \"group_uuid = %s): %w\"", groupUUID, err)
+	}
+
+	return results, nil
+}

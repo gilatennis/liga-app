@@ -32,6 +32,8 @@ func GormMigrate(db *gorm.DB) error {
 		&entities.GroupTeam{},
 		&entities.Round{},
 		&entities.Admin{},
+		&entities.GroupRoundRobinTeamResult{},
+		&entities.GroupRoundRobinHeadToHeadResult{},
 	)
 
 	if errMigrate != nil {

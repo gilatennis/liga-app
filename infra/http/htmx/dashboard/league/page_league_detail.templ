@@ -173,6 +173,8 @@ templ PageLeagueDetail(vmodel *VModelPageLeagueDetail) {
           }
         </div>
       </div>
+
+      @ViewGroupStandings(vmodel.GroupStandings)
     </div>
 
   }
@@ -250,4 +252,38 @@ templ ViewMatchCard(m entities.Match) {
 
 func hrefMatchDetail(leagueUUID uuid.UUID, matchUUID uuid.UUID) templ.SafeURL {
   return templ.URL(fmt.Sprintf("/dashboard/leagues/%s/matches/%s", leagueUUID, matchUUID))
+}
+
+templ ViewGroupStandings(groupStandings map[string][]entities.GroupRoundRobinTeamResult) {
+  <div class="text-xl font-bold">Klasemen</div>
+  for groupName, results := range groupStandings {
+    <div class="card shadow-xl">
+      <div class="text-lg pl-4">Grup {groupName}</div>
+      <div class="overflow-x-auto">
+        <table class="table">
+          <!-- head -->
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Team Name</th>
+              <th>Played</th>
+              <th>W</th>
+              <th>L</th>
+            </tr>
+          </thead>
+          <tbody>
+            for _, r := range results {
+              <tr>
+                <th>{strconv.Itoa(r.Rank)}</th>
+                <td>{r.Team.Name}</td>
+                <td>{strconv.Itoa(r.MatchPlayed)}</td>
+                <td>{strconv.Itoa(r.MatchWon)}</td>
+                <td>{strconv.Itoa(r.MatchLost)}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
 }

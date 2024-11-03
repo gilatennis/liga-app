@@ -2,10 +2,12 @@ package league
 
 import (
 	"liga-app/entities"
+	"liga-app/enums"
 	"liga-app/infra/http/htmx/common"
 	iCommon "liga-app/interfaces/common"
 	iService "liga-app/interfaces/services"
 	"net/http"
+	"sort"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,17 +17,20 @@ type Handler struct {
 	leagueService iService.ILeagueService
 	teamService   iService.ITeamService
 	matchService  iService.IMatchService
+	groupService  iService.IGroupService
 }
 
 func NewHandler(
 	leagueService iService.ILeagueService,
 	teamService iService.ITeamService,
 	matchService iService.IMatchService,
+	groupService iService.IGroupService,
 ) *Handler {
 	return &Handler{
 		leagueService: leagueService,
 		teamService:   teamService,
 		matchService:  matchService,
+		groupService:  groupService,
 	}
 }
 
@@ -122,6 +127,22 @@ func (h *Handler) GetLeagueDetailPage(c *gin.Context) {
 		currentMatch = &matches[0]
 	}
 
+	groupStandings := make(map[string][]entities.GroupRoundRobinTeamResult)
+	for _, f := range league.Fixtures {
+		if f.Format == enums.FIXTURE_FORMAT_ROUND_ROBIN {
+			sort.Slice(f.Groups, func(i, j int) bool {
+				return f.Groups[i].Name[0] < f.Groups[j].Name[0]
+			})
+			for _, g := range f.Groups {
+				standings, err := h.groupService.GetGroupRoundRobinResults(c, g.UUID)
+				if err != nil {
+					h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+				}
+				groupStandings[g.Name] = standings
+			}
+		}
+	}
+
 	vmodel := &VModelPageLeagueDetail{
 		User:                     user,
 		League:                   league,
@@ -130,6 +151,7 @@ func (h *Handler) GetLeagueDetailPage(c *gin.Context) {
 		PlayersWithRatingTooHigh: playersWithRatingTooHigh,
 		PlayersWithRatingTooLow:  playersWithRatingTooLow,
 		CurrentMatch:             currentMatch,
+		GroupStandings:           groupStandings,
 	}
 
 	page := PageLeagueDetail(vmodel)

@@ -13,4 +13,5 @@ type IGroupService interface {
 	AddTeam(ctx context.Context, groupUUID uuid.UUID, teamUUID uuid.UUID) (*uuid.UUID, error)
 	RemoveTeam(ctx context.Context, groupUUID uuid.UUID, teamUUID uuid.UUID) (*uuid.UUID, error)
 	GenerateGroupResults(ctx context.Context, groupUUID uuid.UUID) error
+	GetGroupRoundRobinResults(ctx context.Context, groupUUID uuid.UUID) ([]entities.GroupRoundRobinTeamResult, error)
 }

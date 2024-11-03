@@ -7,10 +7,12 @@ import (
 )
 
 type GroupRoundRobinTeamResult struct {
+	Base
+	GroupUUID   uuid.UUID `gorm:"type:CHAR(36)"`
+	Group       Group     `gorm:"ForeignKey:GroupUUID;References:UUID"`
+	TeamUUID    uuid.UUID `gorm:"type:CHAR(36)"`
+	Team        Team      `gorm:"ForeignKey:TeamUUID;References:UUID"`
 	Rank        int
-	GroupUUID   uuid.UUID
-	TeamUUID    uuid.UUID
-	Players     []User
 	Score       int
 	MatchPlayed int
 	MatchWon    int
@@ -18,8 +20,12 @@ type GroupRoundRobinTeamResult struct {
 }
 
 type GroupRoundRobinHeadToHeadResult struct {
-	GroupUUID        uuid.UUID
-	TeamUUID         uuid.UUID
+	Base
+	GroupUUID        uuid.UUID `gorm:"type:CHAR(36)"`
+	Group            Group     `gorm:"ForeignKey:GroupUUID;References:UUID"`
+	TeamUUID         uuid.UUID `gorm:"type:CHAR(36)"`
+	Team             Team      `gorm:"ForeignKey:TeamUUID;References:UUID"`
 	TeamOpponentUUID uuid.UUID
+	TeamOpponent     Team `gorm:"ForeignKey:TeamOpponentUUID;References:UUID"`
 	Result           enums.MatchResult
 }

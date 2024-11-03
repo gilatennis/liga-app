@@ -87,6 +87,8 @@ func (s *Store) GetByUUID(ctx context.Context, leagueUUID uuid.UUID) (*entities.
 	league := entities.League{}
 	err := s.db.Where("uuid = ?", leagueUUID).
 		Preload("Wilayah").
+		Preload("Fixtures").
+		Preload("Fixtures.Groups").
 		First(&league).
 		Error
 	if err != nil {

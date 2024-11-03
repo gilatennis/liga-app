@@ -94,10 +94,10 @@ func (s *Service) GenerateGroupResults(ctx context.Context, groupUUID uuid.UUID)
 
 		for _, t := range teams {
 			teamResultByTeamUUID[t.UUID] = &entities.GroupRoundRobinTeamResult{
-				Rank:        0,
-				GroupUUID:   groupUUID,
-				TeamUUID:    t.UUID,
-				Players:     t.Players,
+				Rank:      0,
+				GroupUUID: groupUUID,
+				TeamUUID:  t.UUID,
+				// Players:     t.Players,
 				Score:       0,
 				MatchPlayed: 0,
 				MatchWon:    0,
@@ -231,15 +231,13 @@ func (s *Service) GenerateGroupResults(ctx context.Context, groupUUID uuid.UUID)
 
 		for i, res := range groupRoundRobinResults {
 			groupRoundRobinResults[i].Rank = i + 1
-			fmt.Printf("%s & %s - rank: %d matchPlayed: %d\n", res.Players[0].Name, res.Players[1].Name, i+1, res.MatchPlayed)
+			fmt.Printf("rank: %d matchPlayed: %d\n", i+1, res.MatchPlayed)
 		}
 
-		/*
-			err = s.groupRepo.SaveGroupRoundRobinResults(ctx, groupUUID, groupRoundRobinResults, groupRoundRobinHeadToHeadResults)
-			if err != nil {
-				return fmt.Errorf("s.groupRepo.SaveGroupRoundRobinResults(ctx, groupUUID, groupRoundRobinResults, groupRoundRobinHeadToHeadResults): %w", err)
-			}
-		*/
+		err = s.groupRepo.SaveGroupRoundRobinResults(ctx, groupUUID, groupRoundRobinResults, groupRoundRobinHeadToHeadResults)
+		if err != nil {
+			return fmt.Errorf("s.groupRepo.SaveGroupRoundRobinResults(ctx, groupUUID, groupRoundRobinResults, groupRoundRobinHeadToHeadResults): %w", err)
+		}
 
 		return nil
 	}
@@ -254,4 +252,13 @@ func (s *Service) GenerateGroupResults(ctx context.Context, groupUUID uuid.UUID)
 	}
 
 	return nil
+}
+
+func (s *Service) GetGroupRoundRobinResults(ctx context.Context, groupUUID uuid.UUID) ([]entities.GroupRoundRobinTeamResult, error) {
+	results, err := s.groupRepo.GetGroupRoundRobinResults(ctx, groupUUID)
+	if err != nil {
+		return nil, fmt.Errorf("s.groupRepo.GetGroupRoundRobinResults(ctx, groupUUID = %s) : %w", groupUUID, err)
+	}
+
+	return results, nil
 }
