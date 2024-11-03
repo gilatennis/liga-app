@@ -61,10 +61,16 @@ func (s *Store) Get(ctx context.Context, p *common.Pagination, f *repositories.M
 		if f.LeagueUUID != nil {
 			queryDB = queryDB.Where("leagues.uuid = ?", *f.LeagueUUID)
 		}
+
+		if f.IsScheduleConfirmed != nil {
+			queryDB = queryDB.
+				Joins("LEFT JOIN match_schedule_requests on matches.uuid = match_schedule_requests.match_uuid").
+				Where("match_schedule_requests.is_accepted = ?", *f.IsScheduleConfirmed)
+		}
 	}
 
 	err := queryDB.Debug().
-		Preload("League").Preload("TeamA").Preload("TeamB").Preload("Round").
+		Preload("League").Preload("TeamA").Preload("TeamB").Preload("Round").Preload("MatchScheduleRequest").
 		Offset(p.Offset).
 		Limit(p.Limit).
 		Find(&matches).

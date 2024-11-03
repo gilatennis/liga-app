@@ -54,8 +54,10 @@ templ AdminDashboardDrawer(user *entities.User) {
           <i data-feather="user" width="18" height="18" stroke-width="2"></i>
           <p class="font-bold text-sm">{user.Email}</p>
         </div>
+        // MENUs
         <ul class="menu p-4 w-80 bg-base-200 text-base-content">
           <li><a hx-boost="true" href="/admin/dashboard/courts">Daftar Lapangan</a></li>
+          <li><a hx-boost="true" href="/admin/dashboard/matches">Daftar Pertandingan</a></li>
         </ul>
       </div>
     </div>

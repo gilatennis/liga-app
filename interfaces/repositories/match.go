@@ -11,12 +11,13 @@ import (
 )
 
 type MatchFilter struct {
-	RoundIsAfter  *time.Time
-	RoundIsBefore *time.Time
-	UserUUID      *uuid.UUID
-	Status        *enums.MATCH_STATUS
-	GroupUUID     *uuid.UUID
-	LeagueUUID    *uuid.UUID
+	RoundIsAfter        *time.Time
+	RoundIsBefore       *time.Time
+	UserUUID            *uuid.UUID
+	Status              *enums.MATCH_STATUS
+	GroupUUID           *uuid.UUID
+	LeagueUUID          *uuid.UUID
+	IsScheduleConfirmed *bool
 }
 
 type IMatchRepository interface {

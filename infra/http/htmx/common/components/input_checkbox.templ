@@ -11,6 +11,7 @@ type InputCheckboxParams struct {
   Options []InputCheckboxOption
   Readonly bool
   Error string
+  JS_OnChange templ.ComponentScript 
 }
 
 type InputCheckboxOption struct {
@@ -46,6 +47,7 @@ templ InputCheckbox(params InputCheckboxParams) {
             checked?={option.IsChecked}
             class="checkbox"
             x-model={option.JS_XModel}
+            onchange={params.JS_OnChange}
           />
         </label>
       }

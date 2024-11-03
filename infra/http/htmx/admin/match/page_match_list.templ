@@ -1,0 +1,196 @@
+package match
+
+import (
+  "liga-app/infra/http/htmx/common/layouts"
+  // "liga-app/infra/http/htmx/common/components"
+  // "liga-app/infra/http/htmx/dashboard/league"
+  // "liga-app/entities"
+  // "liga-app/enums"
+  "strconv"
+	"github.com/google/uuid"
+  "fmt"
+	"liga-app/infra/http/htmx/common/components"
+	"liga-app/entities"
+  "github.com/goodsign/monday"
+)
+
+templ PageMatchList(vmodel *VModelPageMatchList) {
+  @layouts.AdminDashboardLayout("Daftar Pertandingan", vmodel.User) {
+    <div class="space-y-8">
+      @components.PageHeader("Daftar Pertandingan", "")
+      @ViewFilterMatchList()
+      @ViewMatchList(vmodel.Matches, vmodel.MatchesNextPage)
+    </div>
+  }
+}
+
+script onOptionChange() {
+  const target = "#view-match-list"
+  const event = "refetch-list"
+  htmx.trigger(target, event)
+}
+
+templ ViewFilterMatchList() {
+  <div id="filter-match-list">
+    <div class="flex flex-row space-x-4">
+      @components.InputSelect(components.InputSelectParams{
+        Label: "Status Pertandingan",
+        Name: "match_status",
+        SelectedValue: "ALL",
+        JS_OnChange: onOptionChange(),
+        Options: []components.InputSelectOption{
+          {
+            Text: "Semua",
+            Value: "ALL",
+          },
+          {
+            Text: "Ronde Ini",
+            Value: "CURRENT_ROUND",
+          },
+          {
+            Text: "Akan Datang",
+            Value: "UPCOMING",
+          },
+          {
+            Text: "Selesai",
+            Value: "COMPLETED",
+          },
+          {
+            Text: "Overdue",
+            Value: "OVERDUE",
+          },
+        },
+      })
+      @components.InputSelect(components.InputSelectParams{
+        Label: "Peserta Pertandingan",
+        Name: "match_participant",
+        SelectedValue: "ALL",
+        JS_OnChange: onOptionChange(),
+        Options: []components.InputSelectOption{
+          {
+            Text: "Semua",
+            Value: "ALL",
+          },
+          /*
+          {
+            Text: "Pertandingan Saya",
+            Value: "ME",
+          },
+          */
+        },
+      })
+    </div>
+    <div>
+      @components.InputCheckbox(components.InputCheckboxParams{
+        Label: "Status Jadwal",
+        Name: "match_schedule_status",
+        JS_OnChange: onOptionChange(),
+        Options: []components.InputCheckboxOption{
+          {Label: "Jadwal Terkonfirmasi", Value: "is_confirmed"},
+        },
+      })
+    </div>
+  </div>
+}
+
+func urlGetMatchListView() string {
+  return fmt.Sprintf("/admin/dashboard/matches/view")
+}
+
+func urlLoadMoreMatches(page int) string {
+  return fmt.Sprintf("/admin/dashboard/matches/view?page=%d", page)
+}
+
+templ ViewMatchList(matches []entities.Match, nextPage int) {
+  <div
+    class="flex flex-col space-y-4"
+    id="view-match-list"
+    hx-trigger="refetch-list"
+    hx-get={urlGetMatchListView()}
+    hx-include="#filter-match-list"
+    hx-swap="outerHTML"
+  >
+    for _, m := range matches {
+      @ViewMatchCard(m)
+    }
+    if nextPage > 0 {
+      <div id="load-more-replace"> 
+        <button
+          class="btn btn-primary w-full"
+          hx-get={urlLoadMoreMatches(nextPage)}
+          hx-target="#load-more-replace"
+          hx-swap="outerHTML"
+          hx-include=""
+        >
+          Load More
+        </button>
+      </div>
+    }
+  </div>
+
+}
+
+templ ViewMoreMatches(matches []entities.Match, nextPage int) {
+  for _, m := range matches {
+    @ViewMatchCard(m)
+  }
+  if nextPage > 0 {
+    <div id="load-more-replace"> 
+      <button
+        class="btn btn-primary w-full"
+        hx-get={urlLoadMoreMatches(nextPage)}
+        hx-target="#load-more-replace"
+        hx-swap="outerHTML"
+        hx-include=""
+      >
+        Load More
+      </button>
+    </div>
+  }
+}
+
+templ ViewMatchCard(m entities.Match) {
+  <a
+    hx-boost="false"
+    if m.TeamA != nil && m.TeamB != nil {
+      href={hrefMatchDetail(m.LeagueUUID, m.UUID)}
+    }
+  >
+    <div class="card w-auto shadow-xl">
+      <div class="p-4 space-y-4">
+        <div class="flex flex-row">
+          if m.FilterStatus == "COMPLETED" {
+            <div class="flex-1 text-left text-success font-bold">{m.FilterStatus}</div>
+          } else if m.FilterStatus == "NO SCHEDULE" {
+            <div class="flex-1 text-left text-secondary font-bold">{m.FilterStatus}</div>
+          } else {
+            <div class="flex-1 text-left text-primary font-bold">{m.FilterStatus}</div>
+          }
+          <div class="flex-1">
+            <div class="text-left text-secondary font-bold">Pertandingan ke {strconv.Itoa(m.Round.Number)}</div>
+            if m.Round.Start != nil && m.Round.End != nil {
+              <div class="text-xs">{monday.Format(*m.Round.Start, "02/01/2006", monday.LocaleIdID)} - {monday.Format(*m.Round.End, "02/01/2006", monday.LocaleIdID)}</div>
+            }
+          </div>
+        </div>
+        <div class="flex flex-row justify-between space-x-6 items-center">
+          if m.TeamA == nil {
+            <div class="w-48 text-sm">-</div>
+          } else {
+            <div class="flex-3 text-sm">{m.TeamA.Name}</div>
+          }
+          <div class="flex-1">VS</div>
+          if m.TeamB == nil {
+            <div class="w-48 text-sm">-</div>
+          } else {
+            <div class="flex-3 text-sm">{m.TeamB.Name}</div>
+          }
+        </div>
+      </div>
+    </div>
+  </a>
+}
+
+func hrefMatchDetail(leagueUUID uuid.UUID, matchUUID uuid.UUID) templ.SafeURL {
+  return templ.URL(fmt.Sprintf("/dashboard/leagues/%s/matches/%s", leagueUUID, matchUUID))
+}

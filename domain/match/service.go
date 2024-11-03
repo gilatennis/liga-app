@@ -41,9 +41,10 @@ func NewService(
 
 func (s *Service) Get(ctx context.Context, p *common.Pagination, f *iService.MatchFilter) ([]entities.Match, int64, error) {
 	repoFilter := &iRepo.MatchFilter{
-		UserUUID:   f.UserUUID,
-		GroupUUID:  f.GroupUUID,
-		LeagueUUID: f.LeagueUUID,
+		UserUUID:            f.UserUUID,
+		GroupUUID:           f.GroupUUID,
+		LeagueUUID:          f.LeagueUUID,
+		IsScheduleConfirmed: f.IsScheduleConfirmed,
 	}
 
 	// INFO: Rounds start on wednesday
