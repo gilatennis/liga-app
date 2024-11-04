@@ -26,6 +26,7 @@ type Handler struct {
 	matchService  services.IMatchService
 	venueService  services.IVenueService
 	courtService  services.ICourtService
+	groupService  services.IGroupService
 }
 
 func NewHandler(
@@ -34,6 +35,7 @@ func NewHandler(
 	matchService services.IMatchService,
 	venueService services.IVenueService,
 	courtService services.ICourtService,
+	groupService services.IGroupService,
 ) *Handler {
 	return &Handler{
 		cfg:           cfg,
@@ -41,6 +43,7 @@ func NewHandler(
 		matchService:  matchService,
 		venueService:  venueService,
 		courtService:  courtService,
+		groupService:  groupService,
 	}
 }
 
@@ -868,6 +871,11 @@ func (h *Handler) PutMatchConfirmComplete(c *gin.Context) {
 		h.ResponseAlertSuccess(c, "Pertandingan berhasil di update")
 		h.RenderView(c, view)
 		return
+	}
+
+	err = h.groupService.GenerateGroupResults(c, match.Round.GroupUUID)
+	if err != nil {
+		fmt.Printf("ERROR: h.groupService.GenerateGroupResults(c, match.Round.GroupUUID) : %+v \n", err)
 	}
 
 	view := ViewMatchDetailIndividuals(user, league, match)
