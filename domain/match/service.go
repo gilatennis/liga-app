@@ -45,6 +45,8 @@ func (s *Service) Get(ctx context.Context, p *common.Pagination, f *iService.Mat
 		GroupUUID:           f.GroupUUID,
 		LeagueUUID:          f.LeagueUUID,
 		IsScheduleConfirmed: f.IsScheduleConfirmed,
+		IsComplete:          f.IsComplete,
+		IsCompleteConfirmed: f.IsCompleteConfirmed,
 	}
 
 	// INFO: Rounds start on wednesday

@@ -114,18 +114,35 @@ func (h *Handler) GetLeagueDetailPage(c *gin.Context) {
 	}
 
 	p := iCommon.NewPagination(1, 1, []iCommon.OrderBy{{Column: "rounds.number", Direction: "asc"}})
-	currentRound := iService.MATCH_FILTER_STATUS_CURRENT_ROUND
-	f := &iService.MatchFilter{LeagueUUID: &leagueUUID, UserUUID: &user.UUID, Status: &currentRound}
+	isComplete := true
+	isCompleteConfirmed := false
+	f := &iService.MatchFilter{LeagueUUID: &leagueUUID, UserUUID: &user.UUID, IsComplete: &isComplete, IsCompleteConfirmed: &isCompleteConfirmed}
 	matches, _, err := h.matchService.Get(c, p, f)
 	if err != nil {
 		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	var currentMatch *entities.Match
+	var matchNeedsCompleteConfirmation *entities.Match
 	if len(matches) > 0 {
-		currentMatch = &matches[0]
+		matchNeedsCompleteConfirmation = &matches[0]
 	}
+
+	/*
+		p := iCommon.NewPagination(1, 1, []iCommon.OrderBy{{Column: "rounds.number", Direction: "asc"}})
+		currentRound := iService.MATCH_FILTER_STATUS_CURRENT_ROUND
+		f := &iService.MatchFilter{LeagueUUID: &leagueUUID, UserUUID: &user.UUID, Status: &currentRound}
+		matches, _, err := h.matchService.Get(c, p, f)
+		if err != nil {
+			h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		var currentMatch *entities.Match
+		if len(matches) > 0 {
+			currentMatch = &matches[0]
+		}
+	*/
 
 	groupStandings := make(map[string][]entities.GroupRoundRobinTeamResult)
 	for _, f := range league.Fixtures {
@@ -150,8 +167,9 @@ func (h *Handler) GetLeagueDetailPage(c *gin.Context) {
 		IsRatingRequired:         isRatingRequired,
 		PlayersWithRatingTooHigh: playersWithRatingTooHigh,
 		PlayersWithRatingTooLow:  playersWithRatingTooLow,
-		CurrentMatch:             currentMatch,
-		GroupStandings:           groupStandings,
+		// CurrentMatch:             currentMatch,
+		MatchNeedsCompleteConfirmation: matchNeedsCompleteConfirmation,
+		GroupStandings:                 groupStandings,
 	}
 
 	page := PageLeagueDetail(vmodel)

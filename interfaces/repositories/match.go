@@ -18,6 +18,8 @@ type MatchFilter struct {
 	GroupUUID           *uuid.UUID
 	LeagueUUID          *uuid.UUID
 	IsScheduleConfirmed *bool
+	IsComplete          *bool
+	IsCompleteConfirmed *bool
 }
 
 type IMatchRepository interface {

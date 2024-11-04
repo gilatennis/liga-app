@@ -148,6 +148,12 @@ templ PageLeagueDetail(vmodel *VModelPageLeagueDetail) {
         </div>
       }
 
+      if vmodel.MatchNeedsCompleteConfirmation != nil {
+        <div class="mt-4">
+          @ViewMatchCardWithAlert(*vmodel.MatchNeedsCompleteConfirmation, "Menunggu konfirmasi pertandingan selesai")
+        </div>
+      }
+
       <div>
         <div class="grid grid-cols-2 gap-2">
           // @ComponentCardButton(fmt.Sprintf("/dashboard/leagues/%s/teams", vmodel.League.UUID)) {
@@ -244,6 +250,52 @@ templ ViewMatchCard(m entities.Match) {
           } else {
             <div class="flex-3 text-sm">{m.TeamB.Name}</div>
           }
+        </div>
+      </div>
+    </div>
+  </a>
+}
+
+templ ViewMatchCardWithAlert(m entities.Match, message string) {
+  <a
+    hx-boost="false"
+    if m.TeamA != nil && m.TeamB != nil {
+      href={hrefMatchDetail(m.LeagueUUID, m.UUID)}
+    }
+  >
+    <div class="card w-auto shadow-xl">
+      <div class="p-4 space-y-4">
+        <div class="flex flex-row">
+          if m.FilterStatus == "COMPLETED" {
+            <div class="flex-1 text-left text-success font-bold">{m.FilterStatus}</div>
+          } else if m.FilterStatus == "NO SCHEDULE" {
+            <div class="flex-1 text-left text-secondary font-bold">{m.FilterStatus}</div>
+          } else {
+            <div class="flex-1 text-left text-primary font-bold">{m.FilterStatus}</div>
+          }
+          <div class="flex-1">
+            <div class="text-left text-secondary font-bold">Pertandingan ke {strconv.Itoa(m.Round.Number)}</div>
+            if m.Round.Start != nil && m.Round.End != nil {
+              <div class="text-xs">{monday.Format(*m.Round.Start, "02/01/2006", monday.LocaleIdID)} - {monday.Format(*m.Round.End, "02/01/2006", monday.LocaleIdID)}</div>
+            }
+          </div>
+        </div>
+        <div class="flex flex-row justify-between space-x-6 items-center">
+          if m.TeamA == nil {
+            <div class="w-48 text-sm">-</div>
+          } else {
+            <div class="flex-3 text-sm">{m.TeamA.Name}</div>
+          }
+          <div class="flex-1">VS</div>
+          if m.TeamB == nil {
+            <div class="w-48 text-sm">-</div>
+          } else {
+            <div class="flex-3 text-sm">{m.TeamB.Name}</div>
+          }
+        </div>
+        <div role="alert" class="alert alert-warning flex flex-row items-start">
+          <i data-feather="alert-triangle" class="w-4 h-4"></i>
+          <div class="text-left text-xs space-y-4">{message}</div>
         </div>
       </div>
     </div>

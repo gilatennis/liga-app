@@ -68,6 +68,14 @@ func (s *Store) Get(ctx context.Context, p *common.Pagination, f *repositories.M
 				Joins("LEFT JOIN match_schedule_requests on matches.uuid = match_schedule_requests.match_uuid").
 				Where("match_schedule_requests.is_accepted = ?", *f.IsScheduleConfirmed)
 		}
+
+		if f.IsComplete != nil {
+			queryDB = queryDB.Where("is_complete = ?", *f.IsComplete)
+		}
+
+		if f.IsCompleteConfirmed != nil {
+			queryDB = queryDB.Where("is_complete_confirmed = ?", *f.IsCompleteConfirmed)
+		}
 	}
 
 	err := queryDB.Debug().
