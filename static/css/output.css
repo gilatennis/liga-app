@@ -4214,8 +4214,16 @@ html:has(.drawer-toggle:checked) {
   width: 24rem;
 }
 
+.w-\[10\%\] {
+  width: 10%;
+}
+
 .w-\[350px\] {
   width: 350px;
+}
+
+.w-\[40\%\] {
+  width: 40%;
 }
 
 .w-auto {

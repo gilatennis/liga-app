@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
   "fmt"
 	"liga-app/infra/http/htmx/common/components"
-	"github.com/goodsign/monday"
+	// "github.com/goodsign/monday"
 )
 
 templ PageMatchList(vmodel *VModelPageMatchList) {
@@ -89,7 +89,7 @@ func urlLoadMoreMatches(leagueUUID uuid.UUID, page int) string {
 
 templ ViewMatchList(leagueUUID uuid.UUID, matches []entities.Match, nextPage int) {
   <div
-    class="flex flex-col space-y-4"
+    class="flex flex-col space-y-2"
     id="view-match-list"
     hx-trigger="refetch-list"
     hx-get={urlGetMatchListView(leagueUUID)}
@@ -143,7 +143,7 @@ templ ViewMatchCard(m entities.Match) {
     }
   >
     <div class="card w-auto shadow-xl">
-      <div class="p-4 space-y-4">
+      <div class="p-4 space-y-2">
         <div class="flex flex-row">
           if m.FilterStatus == "COMPLETED" {
             <div class="flex-1 text-left text-success font-bold">{m.FilterStatus}</div>
@@ -154,24 +154,43 @@ templ ViewMatchCard(m entities.Match) {
           }
           <div class="flex-1">
             <div class="text-left text-secondary font-bold">Pertandingan ke {strconv.Itoa(m.Round.Number)}</div>
+            /*
             if m.Round.Start != nil && m.Round.End != nil {
               <div class="text-xs">{monday.Format(*m.Round.Start, "02/01/2006", monday.LocaleIdID)} - {monday.Format(*m.Round.End, "02/01/2006", monday.LocaleIdID)}</div>
             }
+            */
           </div>
         </div>
-        <div class="flex flex-row justify-between space-x-6 items-center">
+        <div class="flex">
           if m.TeamA == nil {
-            <div class="w-48 text-sm">-</div>
+            <div class="w-[40%] text-sm">-</div>
           } else {
-            <div class="flex-3 text-sm">{m.TeamA.Name}</div>
+            <div class="w-[40%] text-sm">{m.TeamA.Name}</div>
           }
-          <div class="flex-1">VS</div>
+          <div class="w-[10%] text-center">VS</div>
           if m.TeamB == nil {
-            <div class="w-48 text-sm">-</div>
+            <div class="w-[40%] text-sm">-</div>
           } else {
-            <div class="flex-3 text-sm">{m.TeamB.Name}</div>
+            <div class="w-[40%] text-sm pl-2">{m.TeamB.Name}</div>
           }
         </div>
+        if m.FilterStatus == "COMPLETED" {
+          <div class="flex">
+            if matchTeamWinOrLose(&m, "A") == "W" {
+              <div class="w-[40%] text-left text-success font-bold">{matchTeamWinOrLose(&m, "A")}</div>
+            } else if matchTeamWinOrLose(&m, "A") == "L" {
+              <div class="w-[40%] text-left text-error font-bold">{matchTeamWinOrLose(&m, "A")}</div>
+            } 
+
+            <div class="w-[10%]"></div>
+
+            if matchTeamWinOrLose(&m, "B") == "W" {
+              <div class="w-[40%] text-left text-success font-bold pl-2">{matchTeamWinOrLose(&m, "B")}</div>
+            } else if matchTeamWinOrLose(&m, "B") == "L" {
+              <div class="w-[40%] text-left text-error font-bold pl-2">{matchTeamWinOrLose(&m, "B")}</div>
+            } 
+          </div>
+        }
       </div>
     </div>
   </a>
@@ -179,4 +198,37 @@ templ ViewMatchCard(m entities.Match) {
 
 func hrefMatchDetail(leagueUUID uuid.UUID, matchUUID uuid.UUID) templ.SafeURL {
   return templ.URL(fmt.Sprintf("/dashboard/leagues/%s/matches/%s", leagueUUID, matchUUID))
+}
+
+func matchTeamWinOrLose(match *entities.Match, aOrB string) string {
+  setsWonA := 0
+  setsWonB := 0
+  for _, s := range match.Sets {
+    if s.TeamAScore > s.TeamBScore {
+      setsWonA += 1
+    }
+    if s.TeamBScore > s.TeamAScore {
+      setsWonB += 1
+    }
+  }
+
+  if aOrB == "A" {
+    if setsWonA > setsWonB {
+      return "W"
+    }
+    if setsWonB > setsWonA {
+      return "L"
+    }
+  }
+
+  if aOrB == "B" {
+    if setsWonA > setsWonB {
+      return "L"
+    }
+    if setsWonB > setsWonA {
+      return "W"
+    }
+  }
+
+  return "-"
 }
