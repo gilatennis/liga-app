@@ -12,12 +12,17 @@ import (
 
 type Handler struct {
 	common.BaseHandler
-	matchService services.IMatchService
+	leagueService services.ILeagueService
+	matchService  services.IMatchService
 }
 
-func NewHandler(matchService services.IMatchService) *Handler {
+func NewHandler(
+	leagueService services.ILeagueService,
+	matchService services.IMatchService,
+) *Handler {
 	return &Handler{
-		matchService: matchService,
+		leagueService: leagueService,
+		matchService:  matchService,
 	}
 }
 
@@ -28,8 +33,17 @@ func (h *Handler) GetMatchListPage(c *gin.Context) {
 		return
 	}
 
-	p := iCommon.NewPagination(1, 10, []iCommon.OrderBy{})
-	f := &services.MatchFilter{}
+	params, err := h.GetURLUUIDParams(c, []string{"league_uuid", "fixture_uuid", "group_uuid"})
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	leagueUUID, fixtureUUID, groupUUID := params[0], params[1], params[2]
+	_, _, _ = leagueUUID, fixtureUUID, groupUUID
+
+	p := iCommon.NewPagination(1, 10, []iCommon.OrderBy{{Column: "rounds.number", Direction: "asc"}})
+	f := &services.MatchFilter{LeagueUUID: &leagueUUID}
 
 	matchStatus := c.Query("match_status")
 	// matchParticipant := c.Query("match_participant")
@@ -48,6 +62,9 @@ func (h *Handler) GetMatchListPage(c *gin.Context) {
 
 	vmodel := VModelPageMatchList{
 		User:            user,
+		LeagueUUID:      leagueUUID,
+		FixtureUUID:     fixtureUUID,
+		GroupUUID:       groupUUID,
 		Matches:         matches,
 		MatchesNextPage: p.GetNextPage(),
 	}
@@ -63,13 +80,22 @@ func (h *Handler) GetMatchListView(c *gin.Context) {
 		return
 	}
 
+	params, err := h.GetURLUUIDParams(c, []string{"league_uuid", "fixture_uuid", "group_uuid"})
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	leagueUUID, fixtureUUID, groupUUID := params[0], params[1], params[2]
+	_, _, _ = leagueUUID, fixtureUUID, groupUUID
+
 	page := 1
 	pageStr := c.Query("page")
 	if pageStr != "" {
 		page, _ = strconv.Atoi(pageStr)
 	}
 	p := iCommon.NewPagination(page, 10, []iCommon.OrderBy{{Column: "rounds.number", Direction: "asc"}})
-	f := &services.MatchFilter{}
+	f := &services.MatchFilter{LeagueUUID: &leagueUUID}
 
 	matchStatus := c.Query("match_status")
 	matchParticipant := c.Query("match_participant")
@@ -97,14 +123,52 @@ func (h *Handler) GetMatchListView(c *gin.Context) {
 	p.SetTotalPageByTotalItems(int(count))
 
 	if page == 1 {
-		view := ViewMatchList(matches, p.GetNextPage())
+		view := ViewMatchList(leagueUUID, fixtureUUID, groupUUID, matches, p.GetNextPage())
 		h.RenderView(c, view)
 		return
 	}
 
 	if page > 1 {
-		view := ViewMoreMatches(matches, p.GetNextPage())
+		view := ViewMoreMatches(leagueUUID, fixtureUUID, groupUUID, matches, p.GetNextPage())
 		h.RenderView(c, view)
 		return
 	}
+}
+
+func (h *Handler) GetMatchDetailPage(c *gin.Context) {
+	user, err := h.GetAuthenticatedUser(c)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	params, err := h.GetURLUUIDParams(c, []string{"league_uuid", "fixture_uuid", "group_uuid", "match_uuid"})
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	leagueUUID, fixtureUUID, groupUUID, matchUUID := params[0], params[1], params[2], params[3]
+	_, _, _, _ = leagueUUID, fixtureUUID, groupUUID, matchUUID
+
+	league, err := h.leagueService.GetByUUID(c, leagueUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	match, err := h.matchService.GetByUUID(c, matchUUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	vmodel := VModelPageMatchDetail{
+		User:   user,
+		League: league,
+		Match:  match,
+	}
+
+	page := PageMatchDetail(vmodel)
+	h.RenderView(c, page)
 }

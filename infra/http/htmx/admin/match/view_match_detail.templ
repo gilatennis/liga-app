@@ -1,0 +1,263 @@
+package match
+
+import (
+	"liga-app/infra/http/htmx/common/components"
+	"liga-app/entities"
+	"liga-app/enums"
+  "github.com/google/uuid"
+  "fmt"
+  "strconv"
+)
+
+templ ViewMatchDetailTeams(user *entities.User, league *entities.League, match *entities.Match) {
+  <div id="match-detail" class="flex flex-col">
+    <div class="bg-base-200 flex flex-row pl-4 pr-12 pb-2 pt-2">
+      <div class="w-24 font-bold">Partai</div>
+      <div class="w-16 text-center font-bold">Skor</div>
+    </div>
+
+    @ViewMatchSet(user, "Doubles #1", league.UUID, match, 1, false)
+    @ViewMatchSet(user, "Doubles #2", league.UUID, match, 2, false)
+    if league.GenderCategory == enums.CATEGORY_GENDER_FEMALE {
+      @ViewMatchSet(user, "Doubles #3", league.UUID, match, 3, false)
+    }
+    if league.GenderCategory == enums.CATEGORY_GENDER_MALE {
+      @ViewMatchSet(user, "Singles", league.UUID, match, 3, false)
+    }
+
+    if canCompleteMatch(user.UUID, match) {
+      <div class="pt-8">
+        <button
+          class="btn btn-primary w-full"
+          hx-put={urlPutCompleteMatch(league.UUID, match.UUID)}
+          hx-confirm="Buat pertandingan selesai? Lawan akan diberitahu untuk konfirmasi bahwa pertandingan selesai"
+          hx-swap="outerHTML"
+          hx-target="#match-detail"
+        >
+          Pertandingan Selesai
+        </button>
+      </div>
+    }
+
+    if match.IsComplete && !match.IsCompleteConfirmed {
+      @alertMatchCompleteConfirmation(user.UUID, match)
+    }
+
+    if canConfirmCompleteMatch(user.UUID, match) {
+      <div class="pt-8">
+        <button
+          class="btn btn-primary w-full"
+          hx-put={urlPutConfirmCompleteMatch(league.UUID, match.UUID)}
+          hx-confirm="Konfirmasi pertandingan selesai? skor tidak bisa di update lagi setelah pertandingan selesai"
+          hx-swap="outerHTML"
+          hx-target="#match-detail"
+        >
+          Konfirmasi Pertandingan Selesai
+        </button>
+      </div>
+    }
+  </div>
+}
+
+templ alertMatchCompleteConfirmation(userUUID uuid.UUID, match *entities.Match) {
+  <div role="alert" class="alert alert-warning flex flex-row items-start">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      class="h-6 w-6 shrink-0 stroke-current"
+      fill="none"
+      viewBox="0 0 24 24">
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+    </svg>
+    if canConfirmCompleteMatch(userUUID, match) {
+      <div class="text-left space-y-4">Mohon konfirmasi bahwa skor sudah sesuai dan pertandingan sudah selesai</div>
+    } else {
+      <div class="text-left space-y-4">Menunggu konfirmasi lawan bahwa skor sudah benar dan pertandingan selesai</div>
+    }
+  </div>
+}
+
+func canCompleteMatch(userUUID uuid.UUID, match *entities.Match) bool {
+  fmt.Println("match.IsComplete", match.IsComplete)
+  return !match.IsComplete &&
+    (userUUID == match.TeamA.CaptainUserUUID || userUUID == match.TeamB.CaptainUserUUID)
+}
+
+func canConfirmCompleteMatch(userUUID uuid.UUID, match *entities.Match) bool {
+  return match.IsComplete && !match.IsCompleteConfirmed &&
+    (userUUID == match.TeamA.CaptainUserUUID || userUUID == match.TeamB.CaptainUserUUID) &&
+    match.IsCompletedBy != userUUID
+}
+
+templ ViewMatchSet(user *entities.User, partaiName string, leagueUUID uuid.UUID, match *entities.Match, matchSetNumber int, isOpen bool) {
+  <div id={"match-set-" + strconv.Itoa(matchSetNumber)} class="collapse collapse-arrow bg-base-200">
+    <input type="radio" name="my-accordion-2" checked?={isOpen} />
+    <div class="collapse-title">
+      <div class="flex flex-row">
+        <div class="w-24">{partaiName}</div>
+        <div class="w-16 text-center">{teamAScore(match.GetMatchSetByNumber(matchSetNumber))}</div>
+        <div class="w-16 text-center">{teamBScore(match.GetMatchSetByNumber(matchSetNumber))}</div>
+      </div>
+    </div>
+    <div class="collapse-content">
+      <div class="flex flex-row justify-between px-2">
+        <div class="text-left text-sm">{match.TeamA.Name}</div>
+        <div>VS</div>
+        <div class="text-right text-sm pl-2">{match.TeamB.Name}</div>
+      </div>
+      <form
+        hx-post={urlPostMatchSet(leagueUUID, match.UUID)}
+        hx-swap="outerHTML"
+        hx-target={"#match-set-" + strconv.Itoa(matchSetNumber)}
+      >
+        <input type="hidden" name="match_set_number" value={strconv.Itoa(matchSetNumber)} />
+        <input type="hidden" name="partai_name" value={"Doubles #" + strconv.Itoa(matchSetNumber)} />
+        <div class="flex flex-row justify-between px-2">
+          @components.InputText(components.InputTextParams{
+            Label: " ",
+            Value: teamAScore(match.GetMatchSetByNumber(matchSetNumber)),
+            Name: "team_a_score",
+            Placeholder: "0",
+            Readonly: (match.IsComplete && match.IsCompleteConfirmed && isMatchParticipantCaptain(user, match)) || !isMatchParticipantCaptain(user, match),
+          })
+          <div class="w-16"> </div>
+          @components.InputText(components.InputTextParams{
+            Label: " ",
+            Value: teamBScore(match.GetMatchSetByNumber(matchSetNumber)),
+            Name: "team_b_score",
+            Placeholder: "0",
+            Readonly: (match.IsComplete && match.IsCompleteConfirmed && isMatchParticipantCaptain(user, match)) || !isMatchParticipantCaptain(user, match),
+          })
+        </div>
+        if !match.IsCompleteConfirmed && isMatchParticipantCaptain(user, match) {
+          <div class="w-full pt-8 px-2">
+            <button class="btn btn-primary w-full btn-sm">
+              Update Skor
+            </button>
+          </div>
+        }
+      </form>
+    </div>
+  </div>
+}
+
+func urlPostMatchSet(leagueUUID, matchUUID uuid.UUID) string {
+  return fmt.Sprintf("/dashboard/leagues/%s/matches/%s/match-set", leagueUUID, matchUUID)
+}
+
+func urlPutCompleteMatch(leagueUUID, matchUUID uuid.UUID) string {
+  return fmt.Sprintf("/dashboard/leagues/%s/matches/%s/complete", leagueUUID, matchUUID)
+}
+
+func urlPutConfirmCompleteMatch(leagueUUID, matchUUID uuid.UUID) string {
+  return fmt.Sprintf("/dashboard/leagues/%s/matches/%s/confirm-complete", leagueUUID, matchUUID)
+}
+
+func teamAScore(ms *entities.MatchSet) string {
+  if ms == nil {
+    return "0"
+  }
+  return strconv.Itoa(ms.TeamAScore)
+}
+
+func teamBScore(ms *entities.MatchSet) string {
+  if ms == nil {
+    return "0"
+  }
+  return strconv.Itoa(ms.TeamBScore)
+}
+
+func getMatchSetTitle(league *entities.League) string {
+  if league.ParticipationCategory == enums.CATEGORY_PARTICIPATION_DOUBLES {
+    return "Doubles"
+  }
+
+  if league.ParticipationCategory == enums.CATEGORY_PARTICIPATION_SINGLES {
+    return "Singles"
+  }
+
+  return ""
+}
+
+templ ViewMatchDetailIndividuals(user *entities.User, league *entities.League, match *entities.Match) {
+  <div id="match-detail" class="flex flex-col">
+
+    @ViewMatchSet(user, getMatchSetTitle(league), league.UUID, match, 1, true)
+
+    if canCompleteMatch(user.UUID, match) {
+      <div class="pt-8">
+        <button
+          class="btn btn-primary w-full"
+          hx-put={urlPutCompleteMatch(league.UUID, match.UUID)}
+          hx-confirm="Buat pertandingan selesai? Lawan akan diberitahu untuk konfirmasi bahwa pertandingan selesai"
+          hx-swap="outerHTML"
+          hx-target="#match-detail"
+        >
+          Pertandingan Selesai
+        </button>
+      </div>
+    }
+
+    if match.IsComplete && !match.IsCompleteConfirmed {
+      @alertMatchCompleteConfirmation(user.UUID, match)
+    }
+
+    if canConfirmCompleteMatch(user.UUID, match) {
+      <div class="pt-8">
+        <button
+          class="btn btn-primary w-full"
+          hx-put={urlPutConfirmCompleteMatch(league.UUID, match.UUID)}
+          hx-confirm="Konfirmasi pertandingan selesai? skor tidak bisa di update lagi setelah pertandingan selesai"
+          hx-swap="outerHTML"
+          hx-target="#match-detail"
+        >
+          Konfirmasi Pertandingan Selesai
+        </button>
+      </div>
+    }
+  </div>
+}
+
+templ ViewFormMatchSetIndividuals(vmodel VModelPageMatchDetail) {
+    <div id="match-set-1" class="bg-base-200 flex flex-col pl-4 pr-4 pb-2 pt-2">
+      <div class="flex flex-row justify-between px-2">
+        <div class="text-left text-sm">{vmodel.Match.TeamA.Name}</div>
+        <div>VS</div>
+        <div class="text-right text-sm pl-2">{vmodel.Match.TeamB.Name}</div>
+      </div>
+      <form
+        hx-post={urlPostMatchSet(vmodel.League.UUID, vmodel.Match.UUID)}
+        hx-swap="outerHTML"
+        hx-target={"#match-set-1"}
+      >
+        <input type="hidden" name="match_set_number" value={strconv.Itoa(1)} />
+        <div class="flex flex-row justify-between px-2">
+          @components.InputText(components.InputTextParams{
+            Label: " ",
+            Value: teamAScore(vmodel.Match.GetMatchSetByNumber(1)),
+            Name: "team_a_score",
+            Placeholder: "0",
+            Readonly: vmodel.Match.IsComplete && vmodel.Match.IsCompleteConfirmed,
+          })
+          <div class="w-16"> </div>
+          @components.InputText(components.InputTextParams{
+            Label: " ",
+            Value: teamBScore(vmodel.Match.GetMatchSetByNumber(1)),
+            Name: "team_b_score",
+            Placeholder: "0",
+            Readonly: vmodel.Match.IsComplete && vmodel.Match.IsCompleteConfirmed,
+          })
+        </div>
+        if !vmodel.Match.IsCompleteConfirmed {
+          <div class="w-full pt-8 px-2">
+            <button class="btn btn-primary w-full btn-sm">
+              Update Skor
+            </button>
+          </div>
+        }
+      </form>
+    </div>
+}

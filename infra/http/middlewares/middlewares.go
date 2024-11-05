@@ -12,6 +12,7 @@ import (
 type Middlewares struct {
 	// JwtMiddleware     *jwt.GinJWTMiddleware
 	SessionMiddleware gin.HandlerFunc
+	HistoryMiddleware gin.HandlerFunc
 }
 
 func SetupMiddlewares(config *config.Config, db *gorm.DB, fileStorage interfaces.IFileStorage) (*Middlewares, error) {
@@ -23,9 +24,11 @@ func SetupMiddlewares(config *config.Config, db *gorm.DB, fileStorage interfaces
 	*/
 
 	sessionMiddleware := NewSessionMiddleware(config, db, fileStorage)
+	historyMiddleWare := NewHistoryMiddleware()
 
 	return &Middlewares{
 		// JwtMiddleware:     jwtMiddleware,
 		SessionMiddleware: sessionMiddleware,
+		HistoryMiddleware: historyMiddleWare,
 	}, nil
 }

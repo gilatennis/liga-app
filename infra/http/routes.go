@@ -29,6 +29,9 @@ func setupHtxmRoutes(r *gin.Engine, handlers *Handlers, middlewares *middlewares
 	// ------------------
 	r.GET("/", handlers.HTMXHandlers.IndexHandler.Index)
 
+	// FIXME: Not working
+	// r.Use(middlewares.HistoryMiddleware)
+
 	public := r.Group("/")
 	publicRoutes(public, handlers, middlewares)
 
@@ -135,8 +138,13 @@ func adminRoutes(admin *gin.RouterGroup, handlers *Handlers, middlewares *middle
 		adminDashboard.DELETE("/leagues/:league_uuid/fixtures/:fixture_uuid/groups/:group_uuid/teams/:team_uuid/remove", handlers.HTMXHandlers.AdminLeagueFixtureHandler.DeleteRemoveTeamFromGroup)
 
 		adminDashboard.POST("/leagues/:league_uuid/fixtures/:fixture_uuid/groups/:group_uuid/generate-matches", handlers.HTMXHandlers.AdminLeagueFixtureHandler.GenerateMatches)
-		adminDashboard.GET("/leagues/:league_uuid/fixtures/:fixture_uuid/groups/:group_uuid/matches", handlers.HTMXHandlers.AdminLeagueFixtureHandler.GetGroupMatchesPage)
-		adminDashboard.GET("/leagues/:league_uuid/fixtures/:fixture_uuid/groups/:group_uuid/matches/view", handlers.HTMXHandlers.AdminLeagueFixtureHandler.GetGroupMatchesView)
+		/*
+			adminDashboard.GET("/leagues/:league_uuid/fixtures/:fixture_uuid/groups/:group_uuid/matches", handlers.HTMXHandlers.AdminLeagueFixtureHandler.GetGroupMatchesPage)
+			adminDashboard.GET("/leagues/:league_uuid/fixtures/:fixture_uuid/groups/:group_uuid/matches/view", handlers.HTMXHandlers.AdminLeagueFixtureHandler.GetGroupMatchesView)
+		*/
+		adminDashboard.GET("/leagues/:league_uuid/fixtures/:fixture_uuid/groups/:group_uuid/matches", handlers.HTMXHandlers.AdminMatchHandler.GetMatchListPage)
+		adminDashboard.GET("/leagues/:league_uuid/fixtures/:fixture_uuid/groups/:group_uuid/matches/view", handlers.HTMXHandlers.AdminMatchHandler.GetMatchListView)
+		adminDashboard.GET("/leagues/:league_uuid/fixtures/:fixture_uuid/groups/:group_uuid/matches/:match_uuid", handlers.HTMXHandlers.AdminMatchHandler.GetMatchDetailPage)
 
 		adminDashboard.POST("/leagues/:league_uuid/fixtures/:fixture_uuid/groups/:group_uuid/generate-results", handlers.HTMXHandlers.AdminLeagueFixtureHandler.GenerateGroupResults)
 

@@ -86,7 +86,7 @@ templ ViewMatchCard(m entities.Match) {
   <a
     hx-boost="false"
     if m.TeamA != nil && m.TeamB != nil {
-      href={hrefMatchDetail(m.LeagueUUID, m.UUID)}
+      href={hrefMatchDetail(m.LeagueUUID, m.Round.Group.FixtureUUID, m.Round.GroupUUID, m.UUID)}
     }
   >
     <div class="card w-auto shadow-xl">
@@ -124,6 +124,6 @@ templ ViewMatchCard(m entities.Match) {
   </a>
 }
 
-func hrefMatchDetail(leagueUUID uuid.UUID, matchUUID uuid.UUID) templ.SafeURL {
-  return templ.URL(fmt.Sprintf("/dashboard/leagues/%s/matches/%s", leagueUUID, matchUUID))
+func hrefMatchDetail(leagueUUID, fixtureUUID, groupUUID, matchUUID uuid.UUID) templ.SafeURL {
+  return templ.URL(fmt.Sprintf("/admin/dashboard/leagues/%s/fixtures/%s/groups/%s/matches/%s", leagueUUID, fixtureUUID, groupUUID, matchUUID))
 }

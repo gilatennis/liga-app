@@ -19,7 +19,7 @@ templ PageMatchList(vmodel *VModelPageMatchList) {
     <div class="space-y-8">
       @components.PageHeader("Daftar Pertandingan", "")
       @ViewFilterMatchList()
-      @ViewMatchList(vmodel.Matches, vmodel.MatchesNextPage)
+      @ViewMatchList(vmodel.LeagueUUID, vmodel.FixtureUUID, vmodel.GroupUUID, vmodel.Matches, vmodel.MatchesNextPage)
     </div>
   }
 }
@@ -93,20 +93,20 @@ templ ViewFilterMatchList() {
   </div>
 }
 
-func urlGetMatchListView() string {
-  return fmt.Sprintf("/admin/dashboard/matches/view")
+func urlGetMatchListView(leagueUUID, fixtureUUID, groupUUID uuid.UUID) string {
+  return fmt.Sprintf("/admin/dashboard/leagues/%s/fixtures/%s/groups/%s/matches/view", leagueUUID, fixtureUUID, groupUUID)
 }
 
-func urlLoadMoreMatches(page int) string {
-  return fmt.Sprintf("/admin/dashboard/matches/view?page=%d", page)
+func urlLoadMoreMatches(leagueUUID, fixtureUUID, groupUUID uuid.UUID, page int) string {
+  return fmt.Sprintf("/admin/dashboard/leagues/%s/fixtures/%s/groups/%s/matches/view?page=%d", leagueUUID, fixtureUUID, groupUUID, page)
 }
 
-templ ViewMatchList(matches []entities.Match, nextPage int) {
+templ ViewMatchList(leagueUUID, fixtureUUID, groupUUID uuid.UUID, matches []entities.Match, nextPage int) {
   <div
     class="flex flex-col space-y-4"
     id="view-match-list"
     hx-trigger="refetch-list"
-    hx-get={urlGetMatchListView()}
+    hx-get={urlGetMatchListView(leagueUUID, fixtureUUID, groupUUID)}
     hx-include="#filter-match-list"
     hx-swap="outerHTML"
   >
@@ -117,7 +117,7 @@ templ ViewMatchList(matches []entities.Match, nextPage int) {
       <div id="load-more-replace"> 
         <button
           class="btn btn-primary w-full"
-          hx-get={urlLoadMoreMatches(nextPage)}
+          hx-get={urlLoadMoreMatches(leagueUUID, fixtureUUID, groupUUID, nextPage)}
           hx-target="#load-more-replace"
           hx-swap="outerHTML"
           hx-include=""
@@ -130,7 +130,7 @@ templ ViewMatchList(matches []entities.Match, nextPage int) {
 
 }
 
-templ ViewMoreMatches(matches []entities.Match, nextPage int) {
+templ ViewMoreMatches(leagueUUID, fixtureUUID, groupUUID uuid.UUID, matches []entities.Match, nextPage int) {
   for _, m := range matches {
     @ViewMatchCard(m)
   }
@@ -138,7 +138,7 @@ templ ViewMoreMatches(matches []entities.Match, nextPage int) {
     <div id="load-more-replace"> 
       <button
         class="btn btn-primary w-full"
-        hx-get={urlLoadMoreMatches(nextPage)}
+        hx-get={urlLoadMoreMatches(leagueUUID, fixtureUUID, groupUUID, nextPage)}
         hx-target="#load-more-replace"
         hx-swap="outerHTML"
         hx-include=""
@@ -153,7 +153,7 @@ templ ViewMatchCard(m entities.Match) {
   <a
     hx-boost="false"
     if m.TeamA != nil && m.TeamB != nil {
-      href={hrefMatchDetail(m.LeagueUUID, m.UUID)}
+      href={hrefMatchDetail(m.LeagueUUID, m.Round.Group.FixtureUUID, m.Round.GroupUUID, m.UUID)}
     }
   >
     <div class="card w-auto shadow-xl">
@@ -186,11 +186,61 @@ templ ViewMatchCard(m entities.Match) {
             <div class="flex-3 text-sm">{m.TeamB.Name}</div>
           }
         </div>
+        if m.FilterStatus == "COMPLETED" {
+          <div class="flex">
+            if matchTeamWinOrLose(&m, "A") == "W" {
+              <div class="w-[40%] text-left text-success font-bold">{matchTeamWinOrLose(&m, "A")}</div>
+            } else if matchTeamWinOrLose(&m, "A") == "L" {
+              <div class="w-[40%] text-left text-error font-bold">{matchTeamWinOrLose(&m, "A")}</div>
+            } 
+
+            <div class="w-[10%]"></div>
+
+            if matchTeamWinOrLose(&m, "B") == "W" {
+              <div class="w-[40%] text-left text-success font-bold pl-2">{matchTeamWinOrLose(&m, "B")}</div>
+            } else if matchTeamWinOrLose(&m, "B") == "L" {
+              <div class="w-[40%] text-left text-error font-bold pl-2">{matchTeamWinOrLose(&m, "B")}</div>
+            } 
+          </div>
+        }
       </div>
     </div>
   </a>
 }
 
-func hrefMatchDetail(leagueUUID uuid.UUID, matchUUID uuid.UUID) templ.SafeURL {
-  return templ.URL(fmt.Sprintf("/dashboard/leagues/%s/matches/%s", leagueUUID, matchUUID))
+func hrefMatchDetail(leagueUUID, fixtureUUID, groupUUID, matchUUID uuid.UUID) templ.SafeURL {
+  return templ.URL(fmt.Sprintf("/admin/dashboard/leagues/%s/fixtures/%s/groups/%s/matches/%s", leagueUUID, fixtureUUID, groupUUID, matchUUID))
+}
+
+func matchTeamWinOrLose(match *entities.Match, aOrB string) string {
+  setsWonA := 0
+  setsWonB := 0
+  for _, s := range match.Sets {
+    if s.TeamAScore > s.TeamBScore {
+      setsWonA += 1
+    }
+    if s.TeamBScore > s.TeamAScore {
+      setsWonB += 1
+    }
+  }
+
+  if aOrB == "A" {
+    if setsWonA > setsWonB {
+      return "W"
+    }
+    if setsWonB > setsWonA {
+      return "L"
+    }
+  }
+
+  if aOrB == "B" {
+    if setsWonA > setsWonB {
+      return "L"
+    }
+    if setsWonB > setsWonA {
+      return "W"
+    }
+  }
+
+  return "-"
 }

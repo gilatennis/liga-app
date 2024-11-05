@@ -8,7 +8,6 @@ import (
 	"liga-app/interfaces/repositories"
 	"liga-app/interfaces/services"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -486,6 +485,33 @@ func (h *Handler) GenerateMatches(c *gin.Context) {
 	h.ResponseAlertSuccess(c, "round robin matches generated")
 }
 
+func (h *Handler) GenerateGroupResults(c *gin.Context) {
+	user, err := h.GetAuthenticatedUser(c)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusUnauthorized, err.Error())
+		return
+	}
+	_ = user
+
+	params, err := h.GetURLUUIDParams(c, []string{"league_uuid", "fixture_uuid", "group_uuid"})
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	leagueUUID, fixtureUUID, groupUUID := params[0], params[1], params[2]
+	_, _, _ = leagueUUID, fixtureUUID, groupUUID
+
+	err = h.groupService.GenerateGroupResults(c, groupUUID)
+	if err != nil {
+		h.ResponseAlertError(c, err.Error())
+		return
+	}
+
+	h.ResponseAlertSuccess(c, "hasil klasemen berhasil di update")
+}
+
+/*
 func (h *Handler) GetGroupMatchesPage(c *gin.Context) {
 	user, err := h.GetAuthenticatedUser(c)
 	if err != nil {
@@ -531,11 +557,9 @@ func (h *Handler) GetGroupMatchesPage(c *gin.Context) {
 		f.Status = &status
 	}
 
-	/*
-		if matchParticipant == "" || matchParticipant == "ME" {
-			f.UserUUID = &user.UUID
-		}
-	*/
+		// if matchParticipant == "" || matchParticipant == "ME" {
+		// 	f.UserUUID = &user.UUID
+		// }
 
 	matches, count, err := h.matchService.Get(c, p, f)
 	if err != nil {
@@ -609,11 +633,11 @@ func (h *Handler) GetGroupMatchesView(c *gin.Context) {
 		f.Status = &status
 	}
 
-	/*
-		if matchParticipant == "ME" {
-			f.UserUUID = &user.UUID
-		}
-	*/
+	//
+	// if matchParticipant == "ME" {
+	// 	f.UserUUID = &user.UUID
+	// }
+	//
 
 	matches, count, err := h.matchService.Get(c, p, f)
 	if err != nil {
@@ -645,29 +669,4 @@ func (h *Handler) GetGroupMatchesView(c *gin.Context) {
 		return
 	}
 }
-
-func (h *Handler) GenerateGroupResults(c *gin.Context) {
-	user, err := h.GetAuthenticatedUser(c)
-	if err != nil {
-		h.RenderErrorPage(c, http.StatusUnauthorized, err.Error())
-		return
-	}
-	_ = user
-
-	params, err := h.GetURLUUIDParams(c, []string{"league_uuid", "fixture_uuid", "group_uuid"})
-	if err != nil {
-		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
-		return
-	}
-
-	leagueUUID, fixtureUUID, groupUUID := params[0], params[1], params[2]
-	_, _, _ = leagueUUID, fixtureUUID, groupUUID
-
-	err = h.groupService.GenerateGroupResults(c, groupUUID)
-	if err != nil {
-		h.ResponseAlertError(c, err.Error())
-		return
-	}
-
-	h.ResponseAlertSuccess(c, "hasil klasemen berhasil di update")
-}
+*/

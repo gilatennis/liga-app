@@ -1,0 +1,356 @@
+package match
+
+import (
+  "liga-app/infra/http/htmx/common/layouts"
+  // "liga-app/infra/http/htmx/common/components"
+  // "liga-app/infra/http/htmx/dashboard/league"
+  // "liga-app/entities"
+  // "liga-app/enums"
+  "strconv"
+	"github.com/google/uuid"
+  "net/url"
+  "fmt"
+	"liga-app/infra/http/htmx/common/components"
+	"liga-app/entities"
+  "time"
+	"liga-app/enums"
+	"github.com/goodsign/monday"
+	// "github.com/k0kubun/pp"
+	"sort"
+	"strings"
+)
+
+templ PageMatchDetail(vmodel VModelPageMatchDetail) {
+  @layouts.AdminDashboardLayout("Tim", vmodel.User) {
+    <div class="space-y-8">
+      @components.PageHeader("Detail Pertandingan", "")
+
+      @ViewMatchResultUpdatedCheck(vmodel.League.UUID, vmodel.Match.UUID, vmodel.Match.UpdatedAt)
+      @ViewMatchDetail(vmodel)
+    </div>
+  }
+}
+
+// INFO: this checks if match result is updated and trigger match-update in @ViewMatchDetail
+templ ViewMatchResultUpdatedCheck(leagueUUID, matchUUID uuid.UUID, matchUpdatedAt time.Time) {
+  <div
+    class="hidden"
+    hx-swap="outerHTML"
+    hx-trigger="every 5s"
+    hx-get={string(urlMatchResultUpdated(leagueUUID, matchUUID, matchUpdatedAt))}>
+  </div>
+}
+
+templ ViewMatchDetail(vmodel VModelPageMatchDetail) {
+  <div
+    class="card w-auto shadow-xl"
+    hx-get={string(urlMatchDetailView(vmodel.League.UUID, vmodel.Match.UUID))}
+    hx-trigger="match-update from:body"
+    hx-swap="outerHTML"
+  >
+    <div class="p-4 space-y-2">
+      <div class="flex flex-row">
+        if vmodel.Match.FilterStatus == "COMPLETED" {
+          <div class="flex-1 text-left text-success font-bold">{vmodel.Match.FilterStatus}</div>
+        } else {
+          <div class="flex-1 text-left text-primary font-bold">{vmodel.Match.FilterStatus}</div>
+        }
+        <div class="flex-1">
+          <div class="text-left text-secondary font-bold">Pertandingan ke {strconv.Itoa(vmodel.Match.Round.Number)}</div>
+          /*
+          if vmodel.Match.Round.Start != nil && vmodel.Match.Round.End != nil {
+            <div class="text-xs">{monday.Format(*vmodel.Match.Round.Start, "02/01/2006", monday.LocaleIdID)} - {monday.Format(*vmodel.Match.Round.End, "02/01/2006", monday.LocaleIdID)}</div>
+          }
+          */
+        </div>
+      </div>
+      <div class="flex">
+        if vmodel.Match.TeamA == nil {
+          <div class="w-[40%] text-sm">-</div>
+        } else {
+          <div class="w-[40%] text-sm">{vmodel.Match.TeamA.Name}</div>
+        }
+        <div class="w-[10%] text-center">VS</div>
+        if vmodel.Match.TeamB == nil {
+          <div class="w-[40%] text-sm">-</div>
+        } else {
+          <div class="w-[40%] text-sm pl-2">{vmodel.Match.TeamB.Name}</div>
+        }
+      </div>
+      if vmodel.Match.FilterStatus == "COMPLETED" {
+        <div class="flex">
+          if matchTeamWinOrLose(vmodel.Match, "A") == "W" {
+            <div class="w-[40%] text-left text-success font-bold">{matchTeamWinOrLose(vmodel.Match, "A")}</div>
+          } else if matchTeamWinOrLose(vmodel.Match, "A") == "L" {
+            <div class="w-[40%] text-left text-error font-bold">{matchTeamWinOrLose(vmodel.Match, "A")}</div>
+          } 
+
+          <div class="w-[10%]"></div>
+
+          if matchTeamWinOrLose(vmodel.Match, "B") == "W" {
+            <div class="w-[40%] text-left text-success font-bold pl-2">{matchTeamWinOrLose(vmodel.Match, "B")}</div>
+          } else if matchTeamWinOrLose(vmodel.Match, "B") == "L" {
+            <div class="w-[40%] text-left text-error font-bold pl-2">{matchTeamWinOrLose(vmodel.Match, "B")}</div>
+          } 
+        </div>
+      }
+
+      // INFO: Match Schedule not requested =========================
+      if vmodel.Match.MatchScheduleRequest == nil {
+        <div class="pt-4 flex flex-col space-y-4">
+          <a hx-boost="false" href={hrefScheduleMatch(vmodel.Match)} class="btn btn-primary w-full">
+            Atur Jadwal Pertandingan
+          </a>
+        </div>
+      }
+      // Match schedule not requested end ============================
+
+
+      // INFO: Match schedule requested ==============================
+      if vmodel.Match.MatchScheduleRequest != nil {
+        <div class="pt-4 flex flex-col space-y-2">
+          <div class="text-lg font-bold">Jadwal Pertandingan</div>
+          @ViewMatchSchedule(vmodel.Match.MatchScheduleRequest)
+        </div>
+
+        <div>TODO: If match.status is not completed, show match schedule confirmation status</div>
+
+        // INFO: Match schedule is accepted
+        if vmodel.Match.MatchScheduleRequest.IsAccepted {
+          <div>TODO: If match.status is not completed, add a button to undo schedule confirmation status</div>
+
+
+          // Match Score Input
+          <div class="pt-4 flex flex-col space-y-2">
+            <div class="text-lg font-bold">Skor Pertandingan</div>
+            if vmodel.League.ParticipationCategory == enums.CATEGORY_PARTICIPATION_TEAMS {
+              @ViewMatchDetailTeams(vmodel.User, vmodel.League, vmodel.Match)
+            }
+            if vmodel.League.ParticipationCategory == enums.CATEGORY_PARTICIPATION_SINGLES ||
+              vmodel.League.ParticipationCategory == enums.CATEGORY_PARTICIPATION_DOUBLES {
+              @ViewMatchDetailIndividuals(vmodel.User, vmodel.League, vmodel.Match)
+            }
+          </div>
+        }
+      }
+      // Match schedule requested end ============================================
+    </div>
+  </div>
+}
+ func urlMatchResultUpdated(leagueUUID, matchUUID uuid.UUID, lastUpdate time.Time) templ.SafeURL {
+  // loc, _ := time.LoadLocation("Asia/Jakarta")
+  return templ.URL(fmt.Sprintf("/dashboard/leagues/%s/matches/%s/is-updated?last-update=%s", leagueUUID, matchUUID, url.QueryEscape(lastUpdate.Format(time.RFC3339))))
+}
+
+func urlMatchDetailView(leagueUUID, matchUUID uuid.UUID) templ.SafeURL {
+  return templ.URL(fmt.Sprintf("/dashboard/leagues/%s/matches/%s/view", leagueUUID, matchUUID))
+}
+
+func isUsingOwnVenue(matchSchedReq *entities.MatchScheduleRequest) bool {
+  return matchSchedReq.Court == nil
+}
+
+templ ViewMatchSchedule(matchSchedReq *entities.MatchScheduleRequest) {
+  <div class="flex flex-col space-y-2">
+    if isUsingOwnVenue(matchSchedReq) {
+      <div>Venue: {matchSchedReq.VenueName}</div>
+      <div>Alamat: {matchSchedReq.Address}</div>
+      <div>Catatan: {matchSchedReq.Notes}</div>
+      <div>{displayDateOwnVenue(*matchSchedReq.Start)}</div>
+      <div>{displayTimeOwnVenue(*matchSchedReq.Start)}</div>
+    } else {
+      <div>{matchSchedReq.Court.Venue.Name}</div>
+      <div>{matchSchedReq.Court.Venue.Address}</div>
+      <div class="font-bold">{matchSchedReq.Court.Name}</div>
+      <div>{displayTimeSlotsDate(matchSchedReq.TimeSlots)}</div>
+      <div>{displayTimeSlotsTimeStartToEnd(matchSchedReq.TimeSlots)}</div>
+    }
+  </div>
+}
+
+func isMatchScheduleCreator(user *entities.User, match *entities.Match) bool {
+  return isMatchParticipantCaptain(user, match) && user.UUID == match.MatchScheduleRequest.CreatedBy
+}
+
+func isMatchScheduleConfirmer(user *entities.User, match *entities.Match) bool {
+  return isMatchParticipantCaptain(user, match) && user.UUID != match.MatchScheduleRequest.CreatedBy
+}
+
+func canCancelSchedule(user *entities.User, match *entities.Match) bool {
+  return isMatchScheduleCreator(user, match) && match.MatchScheduleRequest != nil
+}
+
+func isMatchParticipantCaptain(user *entities.User, match *entities.Match) bool {
+  return user.UUID == match.TeamA.CaptainUserUUID || user.UUID == match.TeamB.CaptainUserUUID
+}
+
+func getMatchScheduleCreator(match *entities.Match) *entities.User {
+  if match.TeamA.CaptainUserUUID == match.MatchScheduleRequest.CreatedBy {
+    return &match.TeamA.Captain
+  }
+  if match.TeamB.CaptainUserUUID == match.MatchScheduleRequest.CreatedBy {
+    return &match.TeamB.Captain
+  }
+  return nil
+}
+
+func hrefDeleteCancelMatchSchedule(leagueUUID, matchUUID, matchScheduleRequestUUID uuid.UUID) string {
+  return fmt.Sprintf("/dashboard/leagues/%s/matches/%s/schedule/requests/%s/cancel", leagueUUID, matchUUID, matchScheduleRequestUUID)
+}
+
+func hrefPutConfirmMatchSchedule(leagueUUID, matchUUID, matchScheduleRequestUUID uuid.UUID) string {
+  return fmt.Sprintf("/dashboard/leagues/%s/matches/%s/schedule/requests/%s/confirm", leagueUUID, matchUUID, matchScheduleRequestUUID)
+}
+
+templ alertScheduleConfirmation(user *entities.User, match *entities.Match) {
+  <div role="alert" class="alert alert-warning flex flex-row items-start">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      class="h-6 w-6 shrink-0 stroke-current"
+      fill="none"
+      viewBox="0 0 24 24">
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+    </svg>
+    if isMatchScheduleConfirmer(user, match) {
+      <div class="text-left text-sm space-y-4">Mohon konfirmasi jadwal pertandingan</div>
+    } else {
+      <div class="text-left text-sm space-y-4">Menunggu konfirmasi jadwal oleh lawan</div>
+    }
+  </div>
+}
+
+func displayTimeSlotsDate(timeslots []entities.CourtTimeSlot) string {
+  if len(timeslots) == 0 {
+    return "-"
+  }
+  loc, _ := time.LoadLocation("Asia/Jakarta")
+  start := timeslots[0].Start.In(loc)
+
+  return monday.Format(start, "Monday 2 January 2006", monday.LocaleIdID)
+}
+
+func displayTimeSlotsTimeStartToEnd(timeslots []entities.CourtTimeSlot) string {
+  if len(timeslots) == 0 {
+    return "-"
+  }
+
+  sort.Slice(timeslots, func(i, j int) bool {
+    return timeslots[i].Start.Before(timeslots[j].Start)
+  })
+
+  loc, _ := time.LoadLocation("Asia/Jakarta")
+  start := timeslots[0]
+  end := timeslots[len(timeslots) - 1]
+
+  return fmt.Sprintf("%s - %s", start.Start.In(loc).Format("15:04"), end.End.In(loc).Format("15:04"))
+}
+
+func displayDateOwnVenue(d time.Time) string {
+  return monday.Format(d, "Monday 2 January 2006", monday.LocaleIdID)
+}
+
+func displayTimeOwnVenue(start time.Time) string {
+  loc, _ := time.LoadLocation("Asia/Jakarta")
+  return fmt.Sprintf("%s", start.In(loc).Format("15:04"))
+}
+
+func hrefScheduleMatch(m *entities.Match) templ.SafeURL {
+  return templ.URL(fmt.Sprintf("/dashboard/leagues/%s/matches/%s/schedule/venues", m.LeagueUUID, m.UUID))
+}
+
+func IsMatchScheduleable(match *entities.Match) bool {
+  return match.Status == string(enums.MATCH_STATUS_WAITING)
+  /*
+  return match.Status == string(enums.MATCH_STATUS_WAITING) &&
+    match.TimeStart == nil &&
+    (IsCurrentRound(match) || IsPreviousRound(match))
+  */
+}
+
+func IsCurrentRound(match *entities.Match) bool {
+  if match.Round.Start == nil || match.Round.End == nil {
+    return false
+  }
+  return time.Now().After(*match.Round.Start) && time.Now().Before(*match.Round.End)
+}
+
+func IsPreviousRound(match *entities.Match) bool {
+  if match.Round.Start == nil || match.Round.End == nil {
+    return false
+  }
+  return match.Round.End.Before(time.Now())
+}
+
+func hrefWAContactOpponent(user *entities.User, match *entities.Match, webBaseURL string) templ.SafeURL {
+  var opponentCaptain entities.User 
+  if match.TeamA.CaptainUserUUID == user.UUID {
+    opponentCaptain = match.TeamB.Captain
+  } else {
+    opponentCaptain = match.TeamA.Captain
+  }
+  text := fmt.Sprintf("Halo %s saya ingin menjadwalkan pertandingan berikut %s",
+    opponentCaptain.Name,
+    fmt.Sprintf("%s/dashboard/leagues/%s/matches/%s", webBaseURL, match.LeagueUUID, match.UUID),
+  )
+  params := url.Values{}
+  params.Add("text", text)
+  if strings.HasPrefix(opponentCaptain.Phone, "0") {
+    opponentCaptain.Phone = strings.Replace(opponentCaptain.Phone, "0", "+62", 1)
+  }
+  return templ.URL(fmt.Sprintf("https://wa.me/%s?%s", opponentCaptain.Phone, params.Encode()))
+}
+
+func hrefWAContactOpponentForConfirmation(user *entities.User, match *entities.Match, webBaseURL string) templ.SafeURL {
+  var opponentCaptain entities.User 
+  if match.TeamA.CaptainUserUUID == user.UUID {
+    opponentCaptain = match.TeamB.Captain
+  } else {
+    opponentCaptain = match.TeamA.Captain
+  }
+
+  text := fmt.Sprintf("Halo %s saya sudah menjadwalkan pertandingan. Mohon konfirmasi pertandingan di %s",
+    opponentCaptain.Name,
+    fmt.Sprintf("%s/dashboard/leagues/%s/matches/%s", webBaseURL, match.LeagueUUID, match.UUID),
+  )
+  params := url.Values{}
+  params.Add("text", text)
+  if strings.HasPrefix(opponentCaptain.Phone, "0") {
+    opponentCaptain.Phone = strings.Replace(opponentCaptain.Phone, "0", "+62", 1)
+  }
+  return templ.URL(fmt.Sprintf("https://wa.me/%s?%s", opponentCaptain.Phone, params.Encode()))
+}
+
+func hrefWAContactOpponentForScheduleChange(
+  captainScheduleCreator *entities.User,
+  matchScheduleRequest *entities.MatchScheduleRequest,
+  match *entities.Match,
+  webBaseURL string,
+) templ.SafeURL {
+  text := fmt.Sprintf("Halo. Saya ingin request perubahan jadwal untuk pertandingan di %s",
+    fmt.Sprintf("%s/dashboard/leagues/%s/matches/%s", webBaseURL, match.LeagueUUID, match.UUID),
+  )
+  params := url.Values{}
+  params.Add("text", text)
+  if strings.HasPrefix(captainScheduleCreator.Phone, "0") {
+    captainScheduleCreator.Phone = strings.Replace(captainScheduleCreator.Phone, "0", "+62", 1)
+  }
+  return templ.URL(fmt.Sprintf("https://wa.me/%s?%s", captainScheduleCreator.Phone, params.Encode()))
+}
+
+func hrefWAContactUs() templ.SafeURL {
+  /*
+  phoneNumber := "628159239794"
+  text := "Halo, saya ingin bertanya mengenai Liga Gilatennis"
+  params := url.Values{}
+  params.Add("text", text)
+  return templ.URL(fmt.Sprintf("https://wa.me/%s?%s", phoneNumber, params.Encode()))
+  */
+  linkWAGroupSeason1Beginners := "https://chat.whatsapp.com/JUup3ZHCEMd1eO2WifCsI5"
+  return templ.URL(linkWAGroupSeason1Beginners)
+}
+
+

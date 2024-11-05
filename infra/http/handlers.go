@@ -175,7 +175,7 @@ func setupHandlers(
 		AdminLeagueFixtureHandler:   adminLeagueFixture.NewHandler(fixtureService, leagueService, groupService, teamService, matchService),
 		AdminCourtHandler:           adminCourt.NewHandler(courtService),
 		AdminPlayerHandler:          adminPlayer.NewHandler(userService, userInfoService),
-		AdminMatchHandler:           adminMatch.NewHandler(matchService),
+		AdminMatchHandler:           adminMatch.NewHandler(leagueService, matchService),
 	}
 
 	JSONHandlers := JSONHandlers{

@@ -9,6 +9,7 @@ import (
 type Round struct {
 	Base
 	GroupUUID uuid.UUID `gorm:"type:CHAR(36)"`
+	Group     Group     `gorm:"ForeignKey:GroupUUID;References:UUID"`
 	Number    int
 	Matches   []Match `gorm:"ForeignKey:"RoundUUID"`
 	Start     *time.Time

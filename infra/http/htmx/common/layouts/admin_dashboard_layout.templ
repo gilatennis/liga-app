@@ -31,7 +31,7 @@ templ AdminDashboardLayout(title string, user *entities.User) {
 templ AdminDashboardDrawer(user *entities.User) {
   <div class="drawer">
     <input id="my-drawer" type="checkbox" class="drawer-toggle" />
-    <div class="drawer-content min-h-full flex-grow overflow-auto mb-8 p-4 mt-12">
+    <div class="drawer-content min-h-full flex-grow overflow-auto mb-8 p-4 mt-16">
       @AlertSuccess()
       @AlertError()
       <!-- Page content here -->
