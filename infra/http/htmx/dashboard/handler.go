@@ -11,6 +11,7 @@ import (
 	iRepo "liga-app/interfaces/repositories"
 	iService "liga-app/interfaces/services"
 
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
@@ -145,6 +146,16 @@ func (h *Handler) PostSubmitUserInfoForm(c *gin.Context) {
 		return
 	}
 
-	view := ViewCompleteUserInfoSuccess()
+	redirect := ""
+	session := sessions.Default(c)
+	redirectInSession := session.Get("redirect")
+
+	if redirectInSession != nil && redirectInSession.(string) != "" {
+		redirect = redirectInSession.(string)
+		// clear redirect in session
+		session.Delete("redirect")
+	}
+
+	view := ViewCompleteUserInfoSuccess(redirect)
 	h.RenderView(c, view)
 }

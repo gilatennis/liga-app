@@ -72,6 +72,23 @@ func (h *Handler) GetAcceptInvitePage(c *gin.Context) {
 		return
 	}
 
+	if user.Name == "" {
+		// fmt.Println(c.Request.URL.Path)
+		// fmt.Println(c.Request.URL.RawQuery)
+		redirectStr := fmt.Sprintf("%s?%s", c.Request.URL.Path, c.Request.URL.RawQuery)
+		session := sessions.Default(c)
+		session.Set("redirect", redirectStr)
+		err := session.Save()
+		if err != nil {
+			fmt.Println("Error: ", err)
+		}
+
+		// params := url.Values{}
+		// params.Add("redirect", redirectStr)
+		c.Redirect(http.StatusFound, "/dashboard/complete-user-info")
+		return
+	}
+
 	params, err := h.GetQueryUUIDParams(c, []string{"league_uuid", "team_uuid"})
 	if err != nil {
 		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
