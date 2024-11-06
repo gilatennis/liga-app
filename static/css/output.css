@@ -4418,6 +4418,10 @@ html:has(.drawer-toggle:checked) {
   overflow-x: auto;
 }
 
+.overscroll-none {
+  overscroll-behavior: none;
+}
+
 .rounded-box {
   border-radius: var(--rounded-box, 1rem);
 }
@@ -4765,6 +4769,16 @@ html:has(.drawer-toggle:checked) {
   transition-property: all;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
+}
+
+@supports (-webkit-touch-callout: none) {
+  body {
+    height: -webkit-fill-available;
+  }
+
+  html {
+    height: -webkit-fill-available;
+  }
 }
 
 .placeholder\:text-slate-700::-moz-placeholder {

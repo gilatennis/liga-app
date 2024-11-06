@@ -311,7 +311,7 @@ templ ViewGroupStandings(groupStandings map[string][]entities.GroupRoundRobinTea
   for groupName, results := range groupStandings {
     <div class="card shadow-xl">
       <div class="text-lg pl-4">Grup {groupName}</div>
-      <div class="overflow-x-auto">
+      <div class="overflow-x-auto overscroll-none">
         <table class="table">
           <!-- head -->
           <thead>
