@@ -321,6 +321,8 @@ templ ViewGroupStandings(groupStandings map[string][]entities.GroupRoundRobinTea
               <th>Played</th>
               <th>W</th>
               <th>L</th>
+              <th>GW</th>
+              <th>GL</th>
             </tr>
           </thead>
           <tbody>
@@ -329,8 +331,10 @@ templ ViewGroupStandings(groupStandings map[string][]entities.GroupRoundRobinTea
                 <th>{strconv.Itoa(r.Rank)}</th>
                 <td>{r.Team.Name}</td>
                 <td>{strconv.Itoa(r.MatchPlayed)}</td>
-                <td>{strconv.Itoa(r.MatchWon)}</td>
-                <td>{strconv.Itoa(r.MatchLost)}</td>
+                <td class="text-success">{strconv.Itoa(r.MatchWon)}</td>
+                <td class="text-error">{strconv.Itoa(r.MatchLost)}</td>
+                <td class="text-success">{strconv.Itoa(r.GamesWon)}</td>
+                <td class="text-error">{strconv.Itoa(r.GamesLost)}</td>
               </tr>
             }
           </tbody>

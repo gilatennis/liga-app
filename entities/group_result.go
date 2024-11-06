@@ -17,6 +17,8 @@ type GroupRoundRobinTeamResult struct {
 	MatchPlayed int
 	MatchWon    int
 	MatchLost   int
+	GamesWon    int
+	GamesLost   int
 }
 
 type GroupRoundRobinHeadToHeadResult struct {

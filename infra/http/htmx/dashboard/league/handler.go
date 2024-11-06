@@ -1,6 +1,7 @@
 package league
 
 import (
+	"fmt"
 	"liga-app/entities"
 	"liga-app/enums"
 	"liga-app/infra/http/htmx/common"
@@ -157,6 +158,12 @@ func (h *Handler) GetLeagueDetailPage(c *gin.Context) {
 				}
 				groupStandings[g.Name] = standings
 			}
+		}
+	}
+
+	for _, s := range groupStandings {
+		for _, r := range s {
+			fmt.Printf("team: %s, matches won: %d, matches lost %d, games won %d, games lost %d \n", r.Team.Name, r.MatchWon, r.MatchLost, r.GamesWon, r.GamesLost)
 		}
 	}
 

@@ -102,6 +102,8 @@ func (s *Service) GenerateGroupResults(ctx context.Context, groupUUID uuid.UUID)
 				MatchPlayed: 0,
 				MatchWon:    0,
 				MatchLost:   0,
+				GamesWon:    0,
+				GamesLost:   0,
 			}
 		}
 
@@ -137,7 +139,16 @@ func (s *Service) GenerateGroupResults(ctx context.Context, groupUUID uuid.UUID)
 
 			teamASetsWon := 0
 			teamBSetsWon := 0
+
 			for _, s := range match.Sets {
+				// team A games win / loss
+				teamResultByTeamUUID[*match.TeamAUUID].GamesWon += s.TeamAScore
+				teamResultByTeamUUID[*match.TeamAUUID].GamesLost += s.TeamBScore
+
+				// team B games win / loss
+				teamResultByTeamUUID[*match.TeamBUUID].GamesWon += s.TeamBScore
+				teamResultByTeamUUID[*match.TeamBUUID].GamesLost += s.TeamAScore
+
 				if s.TeamAScore > s.TeamBScore {
 					teamASetsWon += 1
 				}
@@ -206,24 +217,36 @@ func (s *Service) GenerateGroupResults(ctx context.Context, groupUUID uuid.UUID)
 
 		sort.Slice(groupRoundRobinResults, func(i, j int) bool {
 			if groupRoundRobinResults[i].Score == groupRoundRobinResults[j].Score {
-				cumulativeGamesWon1 := groupRoundRobinResults[i].MatchWon - groupRoundRobinResults[i].MatchLost
-				cumulativeGamesWon2 := groupRoundRobinResults[j].MatchWon - groupRoundRobinResults[j].MatchLost
+				cumulativeMatchesWon1 := groupRoundRobinResults[i].MatchWon - groupRoundRobinResults[i].MatchLost
+				cumulativeMatchesWon2 := groupRoundRobinResults[j].MatchWon - groupRoundRobinResults[j].MatchLost
 
-				if cumulativeGamesWon1 == 0 && cumulativeGamesWon2 == 0 {
+				if cumulativeMatchesWon1 == 0 && cumulativeMatchesWon2 == 0 {
 					return false
+				}
+
+				if cumulativeMatchesWon1 != cumulativeMatchesWon2 {
+					return cumulativeMatchesWon1 > cumulativeMatchesWon2
+				}
+
+				cumulativeGamesWon1 := groupRoundRobinResults[i].GamesWon - groupRoundRobinResults[i].GamesLost
+				cumulativeGamesWon2 := groupRoundRobinResults[j].GamesWon - groupRoundRobinResults[j].GamesLost
+
+				if cumulativeGamesWon1 != cumulativeGamesWon2 {
+					return cumulativeGamesWon1 > cumulativeGamesWon2
 				}
 
 				team1UUID := groupRoundRobinResults[i].TeamUUID
 				team2UUID := groupRoundRobinResults[j].TeamUUID
-				if cumulativeGamesWon1 == cumulativeGamesWon2 {
-					if teamHeadToHeadResultByTeamUUID[team1UUID][team2UUID].Result == enums.MatchResultWin {
-						return true
-					} else {
-						return false
-					}
-				} else {
-					return cumulativeGamesWon1 > cumulativeGamesWon2
+				// fmt.Println("team1UUID.String()", team1UUID.String())
+				// fmt.Println("team2UUID.String()", team2UUID.String())
+
+				if teamHeadToHeadResultByTeamUUID[team1UUID] != nil &&
+					teamHeadToHeadResultByTeamUUID[team1UUID][team2UUID] != nil &&
+					teamHeadToHeadResultByTeamUUID[team1UUID][team2UUID].Result == enums.MatchResultWin {
+					return true
 				}
+
+				return false
 			}
 
 			return groupRoundRobinResults[i].Score > groupRoundRobinResults[j].Score
