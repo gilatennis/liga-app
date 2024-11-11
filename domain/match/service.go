@@ -480,3 +480,12 @@ func (s *Service) GenerateRoundRobinMatches(ctx context.Context, groupUUID uuid.
 
 	return nil
 }
+
+func (s *Service) GetPlayerMatchStats(ctx context.Context, userUUID uuid.UUID) (*entities.MatchStats, error) {
+	matchStats, err := s.matchRepo.GetPlayerMatchStats(ctx, userUUID)
+	if err != nil {
+		return nil, fmt.Errorf("s.matchRepo.GetPlayerMatchStats(ctx, userUUID) : %w", err)
+	}
+
+	return matchStats, nil
+}

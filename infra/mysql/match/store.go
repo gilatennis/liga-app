@@ -165,3 +165,60 @@ func (s *Store) CreateGeneratedMatches(ctx context.Context, rounds []entities.Ro
 
 	return nil
 }
+
+func (s *Store) GetPlayerMatchStats(ctx context.Context, userUUID uuid.UUID) (*entities.MatchStats, error) {
+	matchStats := entities.MatchStats{}
+
+	err := s.db.WithContext(ctx).
+		Raw(`
+      SELECT
+        user_uuid,
+        COUNT(*) as played,
+        SUM(CASE when sets_win > sets_lose then 1 else 0 END) as win,
+        SUM(CASE when sets_lose > sets_win then 1 else 0 END) as lose
+      FROM
+      (SELECT 
+        -- m.*,
+        m.uuid,
+        -- m.team_a_uuid,
+        ta.name as team_a_name,
+        -- m.team_b_uuid,
+        tb.name as team_b_name,
+        -- (case when m.team_a_uuid = tp.team_uuid then m.team_a_uuid else m.team_b_uuid END) as team_uuid,
+        t.name as team_name,
+        u.uuid as user_uuid,
+        u.name as user_name,
+        SUM(ms.team_a_score),
+        SUM(ms.team_b_score),
+        SUM(case 
+        when (m.team_a_uuid = tp.team_uuid AND ms.team_a_score > ms.team_b_score) then 1 
+          when (m.team_a_uuid = tp.team_uuid AND ms.team_b_score > ms.team_a_score) then 0
+          when (m.team_b_uuid = tp.team_uuid AND ms.team_a_score > ms.team_b_score) then 0 
+          else 1 END
+        ) AS sets_win,
+        SUM(case 
+        when (m.team_a_uuid = tp.team_uuid AND ms.team_a_score > ms.team_b_score) then 0 
+          when (m.team_a_uuid = tp.team_uuid AND ms.team_b_score > ms.team_a_score) then 1
+          when (m.team_b_uuid = tp.team_uuid AND ms.team_a_score > ms.team_b_score) then 1 
+          else 0 END
+        ) AS sets_lose
+      FROM 
+        users u 
+          JOIN team_players tp on tp.player_uuid = u.uuid 
+          JOIN teams t on tp.team_uuid = t.uuid
+          JOIN matches m on tp.team_uuid = (case when (m.team_a_uuid = tp.team_uuid) then m.team_a_uuid else m.team_b_uuid END)
+          JOIN match_sets ms on ms.match_uuid = m.uuid
+          JOIN teams ta on m.team_a_uuid = ta.uuid
+          JOIN teams tb on m.team_b_uuid = tb.uuid
+      WHERE u.uuid = ?
+      GROUP BY m.uuid, t.name, u.uuid) inner_table
+      GROUP BY user_uuid;
+    `, userUUID).
+		Scan(&matchStats).
+		Error
+	if err != nil {
+		return nil, fmt.Errorf("s.db.WithContext(ctx).Raw(...).Error : %w", err)
+	}
+
+	return &matchStats, nil
+}

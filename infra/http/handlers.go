@@ -162,7 +162,7 @@ func setupHandlers(
 		AuthHandler:                 auth.NewHandler(cfg, authService, userService),
 		IndexHandler:                index.NewHandler(ruleBookService),
 		InviteHandler:               invite.NewHandler(inviteService, leagueService, teamService),
-		DashboardHandler:            dashboard.NewHandler(userInfoService, leagueService),
+		DashboardHandler:            dashboard.NewHandler(userInfoService, leagueService, matchService),
 		DashboardLeagueHandler:      dashLeague.NewHandler(leagueService, teamService, matchService, groupService),
 		DashboardLeagueMatchHandler: dashLeagueMatch.NewHandler(cfg, leagueService, matchService, venueService, courtService, groupService),
 		DashboardLeagueTeamHandler:  dashLeagueTeam.NewHandler(leagueService, teamService),

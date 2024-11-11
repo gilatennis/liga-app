@@ -36,22 +36,24 @@ templ PageDashboardIndex(vmodel *VModelPageDashboardIndex) {
           <div class="text-center">
             <h2 class="text-xl">Match Stats</h2>
           </div>
-          <div class="h-full flex flex-col justify-center">
-            <div class="text-center">
-              <h2 class="text-sm">Played</h2>
-              <h2 class="text-lg">0</h2>
-            </div>
-            <div class="grid grid-cols-2">
+          if vmodel.MatchStats != nil {
+            <div class="h-full flex flex-col justify-center">
               <div class="text-center">
-                <h2 class="text-sm">Win</h2>
-                <h2 class="text-lg">0</h2>
+                <h2 class="text-sm">Played</h2>
+                <h2 class="text-lg">{strconv.Itoa(vmodel.MatchStats.Played)}</h2>
               </div>
-              <div class="text-center">
-                <h2 class="text-sm">Lose</h2>
-                <h2 class="text-lg">0</h2>
+              <div class="grid grid-cols-2">
+                <div class="text-center">
+                  <h2 class="text-sm">Win</h2>
+                  <h2 class="text-lg">{strconv.Itoa(vmodel.MatchStats.Win)}</h2>
+                </div>
+                <div class="text-center">
+                  <h2 class="text-sm">Lose</h2>
+                  <h2 class="text-lg">{strconv.Itoa(vmodel.MatchStats.Lose)}</h2>
+                </div>
               </div>
             </div>
-          </div>
+          }
         </div>
       </div>
     </div>

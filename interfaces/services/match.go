@@ -37,4 +37,5 @@ type IMatchService interface {
 	CompleteMatch(ctx context.Context, userUUID, matchUUID uuid.UUID) (*uuid.UUID, error)
 	ConfirmCompleteMatch(ctx context.Context, userUUID, matchUUID uuid.UUID) (*uuid.UUID, error)
 	GenerateRoundRobinMatches(ctx context.Context, groupUUID uuid.UUID, isHomeAndAway bool) error
+	GetPlayerMatchStats(ctx context.Context, userUUID uuid.UUID) (*entities.MatchStats, error)
 }

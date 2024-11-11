@@ -19,12 +19,18 @@ type Handler struct {
 	common.BaseHandler
 	userInfoService iService.IUserInfoService
 	leagueService   iService.ILeagueService
+	matchService    iService.IMatchService
 }
 
-func NewHandler(userInfoService iService.IUserInfoService, leagueService iService.ILeagueService) *Handler {
+func NewHandler(
+	userInfoService iService.IUserInfoService,
+	leagueService iService.ILeagueService,
+	matchService iService.IMatchService,
+) *Handler {
 	return &Handler{
 		userInfoService: userInfoService,
 		leagueService:   leagueService,
+		matchService:    matchService,
 	}
 }
 
@@ -48,9 +54,16 @@ func (h *Handler) Index(c *gin.Context) {
 		return
 	}
 
+	matchStats, err := h.matchService.GetPlayerMatchStats(c, user.UUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
 	vmodel := &VModelPageDashboardIndex{
-		User:    user,
-		Leagues: leagues,
+		User:       user,
+		Leagues:    leagues,
+		MatchStats: matchStats,
 	}
 	page := PageDashboardIndex(vmodel)
 	h.RenderView(c, page)
