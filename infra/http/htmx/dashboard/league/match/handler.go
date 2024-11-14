@@ -27,6 +27,7 @@ type Handler struct {
 	venueService  services.IVenueService
 	courtService  services.ICourtService
 	groupService  services.IGroupService
+	teamService   services.ITeamService
 }
 
 func NewHandler(
@@ -36,6 +37,7 @@ func NewHandler(
 	venueService services.IVenueService,
 	courtService services.ICourtService,
 	groupService services.IGroupService,
+	teamService services.ITeamService,
 ) *Handler {
 	return &Handler{
 		cfg:           cfg,
@@ -44,6 +46,7 @@ func NewHandler(
 		venueService:  venueService,
 		courtService:  courtService,
 		groupService:  groupService,
+		teamService:   teamService,
 	}
 }
 
@@ -79,7 +82,7 @@ func (h *Handler) GetMatchListPage(c *gin.Context) {
 		f.Status = &status
 	}
 
-	if matchParticipant == "" || matchParticipant == "ME" {
+	if matchParticipant == "ME" {
 		f.UserUUID = &user.UUID
 	}
 
@@ -92,10 +95,19 @@ func (h *Handler) GetMatchListPage(c *gin.Context) {
 	// pp.Println(matches)
 	fmt.Println("p.Limit", p.Limit)
 
+	pTeam := iCommon.NewPagination(1, 200, []iCommon.OrderBy{{Column: "name", Direction: "asc"}})
+	fTeam := &repositories.TeamFilter{LeagueUUID: &leagueUUID}
+	teams, _, err := h.teamService.Get(c, pTeam, fTeam)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
 	vmodel := VModelPageMatchList{
 		User:            user,
 		League:          league,
 		Matches:         matches,
+		Teams:           teams,
 		MatchesNextPage: p.GetNextPage(),
 	}
 	page := PageMatchList(&vmodel)
@@ -136,7 +148,17 @@ func (h *Handler) GetMatchListView(c *gin.Context) {
 
 	if matchParticipant == "ME" {
 		f.UserUUID = &user.UUID
+	} else if matchParticipant == "ALL" {
+		f.UserUUID = nil
+	} else if matchParticipant != "" {
+		teamUUID, err := uuid.Parse(matchParticipant)
+		if err != nil {
+			h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
+			return
+		}
+		f.TeamUUID = &teamUUID
 	}
+	pp.Println(f)
 
 	matches, count, err := h.matchService.Get(c, p, f)
 	if err != nil {

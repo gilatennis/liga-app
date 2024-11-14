@@ -52,6 +52,10 @@ func (s *Store) Get(ctx context.Context, p *common.Pagination, f *repositories.M
 				Where("tpa.player_uuid = ? OR tpb.player_uuid = ?", f.UserUUID, f.UserUUID)
 		}
 
+		if f.TeamUUID != nil {
+			queryDB = queryDB.Where("(matches.team_a_uuid = ? OR matches.team_b_uuid = ?)", f.TeamUUID, f.TeamUUID)
+		}
+
 		if f.Status != nil {
 			queryDB = queryDB.Where("status = ?", *f.Status)
 		}

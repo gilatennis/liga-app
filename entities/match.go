@@ -1,6 +1,8 @@
 package entities
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -45,4 +47,14 @@ func (m *Match) GetMatchSetByNumber(num int) *MatchSet {
 	}
 
 	return ms
+}
+
+func (m *Match) GetMatchSetsScoreString() string {
+	scores := []string{}
+	for _, s := range m.Sets {
+		score := fmt.Sprintf("%d - %d", s.TeamAScore, s.TeamBScore)
+		scores = append(scores, score)
+	}
+
+	return strings.Join(scores, ", ")
 }

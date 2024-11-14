@@ -14,6 +14,7 @@ type MatchFilter struct {
 	RoundIsAfter        *time.Time
 	RoundIsBefore       *time.Time
 	UserUUID            *uuid.UUID
+	TeamUUID            *uuid.UUID
 	Status              *enums.MATCH_STATUS
 	GroupUUID           *uuid.UUID
 	LeagueUUID          *uuid.UUID

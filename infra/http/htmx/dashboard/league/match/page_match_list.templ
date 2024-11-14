@@ -18,7 +18,7 @@ templ PageMatchList(vmodel *VModelPageMatchList) {
     <div class="space-y-8">
       @league.ViewLeagueDetail(vmodel.League, false)
       @components.PageHeader("Daftar Pertandingan", fmt.Sprintf("/dashboard/leagues/%s", vmodel.League.UUID))
-      @ViewFilterMatchList()
+      @ViewFilterMatchList(vmodel.Teams)
       @ViewMatchList(vmodel.League.UUID, vmodel.Matches, vmodel.MatchesNextPage)
     </div>
   }
@@ -30,7 +30,7 @@ script onOptionChange() {
   htmx.trigger(target, event)
 }
 
-templ ViewFilterMatchList() {
+templ ViewFilterMatchList(teams []entities.Team) {
   <div id="filter-match-list" class="flex flex-row space-x-4">
     @components.InputSelect(components.InputSelectParams{
       Label: "Status Pertandingan",
@@ -63,20 +63,33 @@ templ ViewFilterMatchList() {
     @components.InputSelect(components.InputSelectParams{
       Label: "Peserta Pertandingan",
       Name: "match_participant",
-      SelectedValue: "ME",
+      SelectedValue: "ALL",
       JS_OnChange: onOptionChange(),
-      Options: []components.InputSelectOption{
-        {
-          Text: "Semua",
-          Value: "ALL",
-        },
-        {
-          Text: "Pertandingan Saya",
-          Value: "ME",
-        },
-      },
+      Options: optionMatchParticipants(teams),
     })
   </div>
+}
+
+func optionMatchParticipants(teams []entities.Team) []components.InputSelectOption {
+  options := []components.InputSelectOption{
+    {
+      Text: "Semua",
+      Value: "ALL",
+    },
+    {
+      Text: "Pertandingan Saya",
+      Value: "ME",
+    },
+  }
+
+  for _, t := range teams {
+    options = append(options, components.InputSelectOption{
+      Text: t.Name,
+      Value: t.UUID.String(),
+    })
+  }
+
+  return options
 }
 
 func urlGetMatchListView(leagueUUID uuid.UUID) string {
@@ -161,34 +174,47 @@ templ ViewMatchCard(m entities.Match) {
             */
           </div>
         </div>
-        <div class="flex">
-          if m.TeamA == nil {
-            <div class="w-[40%] text-sm">-</div>
-          } else {
-            <div class="w-[40%] text-sm">{m.TeamA.Name}</div>
-          }
-          <div class="w-[10%] text-center">VS</div>
-          if m.TeamB == nil {
-            <div class="w-[40%] text-sm">-</div>
-          } else {
-            <div class="w-[40%] text-sm pl-2">{m.TeamB.Name}</div>
-          }
-        </div>
         if m.FilterStatus == "COMPLETED" {
           <div class="flex">
-            if matchTeamWinOrLose(&m, "A") == "W" {
-              <div class="w-[40%] text-left text-success font-bold">{matchTeamWinOrLose(&m, "A")}</div>
-            } else if matchTeamWinOrLose(&m, "A") == "L" {
-              <div class="w-[40%] text-left text-error font-bold">{matchTeamWinOrLose(&m, "A")}</div>
-            } 
+            <div class="flex w-[40%] space-x-2 items-center">
+              if matchTeamWinOrLose(&m, "A") == "W" {
+                <div class="w-[20%] text-left text-success font-bold">{matchTeamWinOrLose(&m, "A")}</div>
+                <div class="w-[80%] text-sm">{m.TeamA.Name}</div>
+              } else if matchTeamWinOrLose(&m, "A") == "L" {
+                <div class="w-[20%] text-left text-error font-bold">{matchTeamWinOrLose(&m, "A")}</div>
+                <div class="w-[80%] text-sm">{m.TeamA.Name}</div>
+              } 
+            </div>
 
-            <div class="w-[10%]"></div>
+            <div class="w-[10%]">VS</div>
 
-            if matchTeamWinOrLose(&m, "B") == "W" {
-              <div class="w-[40%] text-left text-success font-bold pl-2">{matchTeamWinOrLose(&m, "B")}</div>
-            } else if matchTeamWinOrLose(&m, "B") == "L" {
-              <div class="w-[40%] text-left text-error font-bold pl-2">{matchTeamWinOrLose(&m, "B")}</div>
-            } 
+            <div class="flex w-[40%] space-x-2 items-center">
+              if matchTeamWinOrLose(&m, "B") == "W" {
+                <div class="w-[20%] text-left text-success font-bold pl-2">{matchTeamWinOrLose(&m, "B")}</div>
+                <div class="w-[80%] text-sm">{m.TeamB.Name}</div>
+              } else if matchTeamWinOrLose(&m, "B") == "L" {
+                <div class="w-[20%] text-left text-error font-bold pl-2">{matchTeamWinOrLose(&m, "B")}</div>
+                <div class="w-[80%] text-sm">{m.TeamB.Name}</div>
+              }
+            </div>
+          </div>
+          <div class="flex space-x-4">
+            <span class="font-bold">Score: </span>
+            <div>{m.GetMatchSetsScoreString()}</div>
+          </div>
+        } else {
+          <div class="flex">
+            if m.TeamA == nil {
+              <div class="w-[40%] text-sm">-</div>
+            } else {
+              <div class="w-[40%] text-sm">{m.TeamA.Name}</div>
+            }
+            <div class="w-[10%] text-center">VS</div>
+            if m.TeamB == nil {
+              <div class="w-[40%] text-sm">-</div>
+            } else {
+              <div class="w-[40%] text-sm pl-2">{m.TeamB.Name}</div>
+            }
           </div>
         }
       </div>

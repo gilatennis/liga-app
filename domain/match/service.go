@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/k0kubun/pp"
 )
 
 type Service struct {
@@ -41,6 +42,7 @@ func NewService(
 
 func (s *Service) Get(ctx context.Context, p *common.Pagination, f *iService.MatchFilter) ([]entities.Match, int64, error) {
 	repoFilter := &iRepo.MatchFilter{
+		TeamUUID:            f.TeamUUID,
 		UserUUID:            f.UserUUID,
 		GroupUUID:           f.GroupUUID,
 		LeagueUUID:          f.LeagueUUID,
@@ -48,6 +50,7 @@ func (s *Service) Get(ctx context.Context, p *common.Pagination, f *iService.Mat
 		IsComplete:          f.IsComplete,
 		IsCompleteConfirmed: f.IsCompleteConfirmed,
 	}
+	pp.Println("repoFilter", repoFilter)
 
 	// INFO: Rounds start on wednesday
 	startOfWeek := s.getStartOfWeek()

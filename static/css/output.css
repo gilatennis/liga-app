@@ -4222,12 +4222,20 @@ html:has(.drawer-toggle:checked) {
   width: 10%;
 }
 
+.w-\[20\%\] {
+  width: 20%;
+}
+
 .w-\[350px\] {
   width: 350px;
 }
 
 .w-\[40\%\] {
   width: 40%;
+}
+
+.w-\[80\%\] {
+  width: 80%;
 }
 
 .w-auto {
