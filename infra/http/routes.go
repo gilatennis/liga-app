@@ -27,6 +27,7 @@ func setupHtxmRoutes(r *gin.Engine, handlers *Handlers, middlewares *middlewares
 	// ------------------
 	// routes serving htmx
 	// ------------------
+	r.Use(middlewares.SessionMiddleware)
 	r.GET("/", handlers.HTMXHandlers.IndexHandler.Index)
 
 	// FIXME: Not working
@@ -65,7 +66,7 @@ func publicRoutes(public *gin.RouterGroup, handlers *Handlers, middlewares *midd
 }
 
 func dashboardRoutes(dashboard *gin.RouterGroup, handlers *Handlers, middlewares *middlewares.Middlewares) {
-	dashboard.Use(middlewares.SessionMiddleware)
+	dashboard.Use(middlewares.AuthSessionMiddleware)
 	{
 		dashboard.GET("", handlers.HTMXHandlers.DashboardHandler.Index)
 		dashboard.GET("/complete-user-info", handlers.HTMXHandlers.DashboardHandler.GetCompleteUserInfoPage)
@@ -121,7 +122,7 @@ func adminRoutes(admin *gin.RouterGroup, handlers *Handlers, middlewares *middle
 	}
 
 	adminDashboard := admin.Group("/dashboard")
-	adminDashboard.Use(middlewares.SessionMiddleware)
+	adminDashboard.Use(middlewares.AuthSessionMiddleware)
 	{
 		adminDashboard.GET("", handlers.HTMXHandlers.AdminDashHandler.Index)
 		adminDashboard.GET("/leagues/:league_uuid", handlers.HTMXHandlers.AdminLeagueHandler.GetLeagueDetailPage)

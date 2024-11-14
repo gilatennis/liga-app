@@ -27,25 +27,51 @@ func NewSessionMiddleware(
 		userUUIDStr, ok := session.Get("user_uuid").(string)
 
 		if userUUIDAny == nil || !ok {
-			// Abort the request with the appropriate error code
 			fmt.Println("user_uuid not found in session")
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 			return
 		}
 
 		userUUID, err := uuid.Parse(userUUIDStr)
 		if err != nil {
 			fmt.Println("error parsing user_uuid from session. user_uuid: ", userUUIDStr)
+			return
+		}
+
+		user, err := sessionGetUserByUUID(c, cfg, db, fileStorage, userUUID)
+		if err != nil {
+			err = fmt.Errorf("error getting user by user_uuid from session. user_uuid: %s, err: %w", userUUIDStr, err)
+			fmt.Println(err.Error())
+			return
+		}
+
+		c.Set("user_uuid", userUUIDStr)
+		c.Set("user", user)
+		// Continue down the chain to handler etc
+		c.Next()
+	}
+}
+
+func NewAuthSessionMiddleware(
+	cfg *config.Config,
+	db *gorm.DB,
+) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userAny, ok := c.Get("user")
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			return
+		}
+		user, ok := userAny.(*entities.User)
+		if !ok {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 			return
 		}
 
 		fullPath := c.FullPath()
 		if strings.HasPrefix("/admin/dashboard", fullPath) {
-			isAdmin, err := sessionIsAdmin(c, db, userUUID)
+			isAdmin, err := sessionIsAdmin(c, db, user.UUID)
 			if err != nil {
-				fmt.Printf("sessionIsAdmin(c, db, userUUID=%s) : %+v \n", userUUIDStr, err)
-				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+				fmt.Printf("sessionIsAdmin(c, db, userUUID=%s) : %+v \n", user.UUID, err)
 				return
 			}
 
@@ -55,17 +81,6 @@ func NewSessionMiddleware(
 			}
 		}
 
-		user, err := sessionGetUserByUUID(c, cfg, db, fileStorage, userUUID)
-		if err != nil {
-			err = fmt.Errorf("error getting user by user_uuid from session. user_uuid: %s, err: %w", userUUIDStr, err)
-			fmt.Println(err.Error())
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-			return
-		}
-
-		c.Set("user_uuid", userUUIDStr)
-		c.Set("user", user)
-		// Continue down the chain to handler etc
 		c.Next()
 	}
 }

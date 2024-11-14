@@ -23,6 +23,8 @@ func (h *Handler) Index(c *gin.Context) {
 		ruleBook = &entities.RuleBook{Link: ""}
 	}
 
+	user, _ := h.GetAuthenticatedUser(c)
+
 	// INFO: for getting into a user's account, for debugging
 	/*
 		session := sessions.Default(c)
@@ -37,6 +39,7 @@ func (h *Handler) Index(c *gin.Context) {
 
 	vmodel := &VModelPageIndex{
 		RuleBook: ruleBook,
+		User:     user,
 	}
 	page := PageIndex(vmodel)
 

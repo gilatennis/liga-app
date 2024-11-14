@@ -26,12 +26,12 @@ func (h *BaseHandler) RenderViewWithStatus(c *gin.Context, view templ.Component,
 func (h *BaseHandler) GetAuthenticatedUser(c *gin.Context) (*entities.User, error) {
 	userAny, ok := c.Get("user")
 	if !ok {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		// c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return nil, fmt.Errorf("unauthorized")
 	}
 	user, ok := userAny.(*entities.User)
 	if !ok {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		// c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return nil, fmt.Errorf("unauthorized")
 	}
 

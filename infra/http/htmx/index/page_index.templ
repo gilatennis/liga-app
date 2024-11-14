@@ -169,13 +169,54 @@ templ PageIndex(vmodel *VModelPageIndex) {
           <h1 class="text-xl text-primary font-bold">Gilatennis</h1>
         </a>
       </div>
-      <div class="flex-none">
-        <ul class="menu menu-horizontal px-1">
-          <li><a class="text-primary" href="#">Home</a></li>
-          <li><a class="text-primary" href="/auth/register">Register</a></li>
-          <li><a class="text-primary" href="/auth/login">Login</a></li>
-        </ul>
-      </div>
+      // is not logged in
+      if vmodel.User == nil {
+        <div class="flex-none">
+          <ul class="menu menu-horizontal px-1">
+            <li><a class="text-primary" href="#">Home</a></li>
+            <li><a class="text-primary" href="/auth/register">Register</a></li>
+            <li><a class="text-primary" href="/auth/login">Login</a></li>
+          </ul>
+        </div>
+      }
+      // is logged in
+      if vmodel.User != nil {
+        <div class="flex-none gap-2">
+          <div class="dropdown dropdown-end">
+            <div tabindex="0" role="button" class="flex items-center space-x-2 btn btn-ghost">
+              if vmodel.User.ProfilePictureURL == "" {
+                <div class="avatar placeholder">
+                  <div class="bg-primary text-neutral-content w-10 rounded-full">
+                    <span class="text-3xl">{string(vmodel.User.Name[0])}</span>
+                  </div>
+                </div>
+              } else {
+                <div class="avatar">
+                  <div class="w-10 rounded-full">
+                    <img src={vmodel.User.ProfilePictureURL} />
+                  </div>
+                </div>
+              }
+              // <h3 class="text-xl">{vmodel.User.Name}</h3>
+            </div>
+            // z index need to be more than drawer
+            // dropdown > drawer > footer
+            <ul tabindex="0" class="mt-3 z-30 p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52">
+              <li>
+                <a href="/dashboard/profile" class="pl-3">
+                  {vmodel.User.Name}
+                </a>
+              </li>
+              <li>
+                <a href="/dashboard" class="justify-between">
+                  Dashboard
+                </a>
+              </li>
+              <li><a href="/auth/logout">Logout</a></li>
+            </ul>
+          </div>
+        </div>
+      }
     </div>
 
     <!-- Hero -->
