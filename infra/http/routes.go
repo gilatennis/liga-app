@@ -29,6 +29,7 @@ func setupHtxmRoutes(r *gin.Engine, handlers *Handlers, middlewares *middlewares
 	// ------------------
 	r.Use(middlewares.SessionMiddleware)
 	r.GET("/", handlers.HTMXHandlers.IndexHandler.Index)
+	r.GET("/group-standings/:league_uuid", handlers.HTMXHandlers.IndexHandler.GetViewGroupStandings)
 
 	// FIXME: Not working
 	// r.Use(middlewares.HistoryMiddleware)

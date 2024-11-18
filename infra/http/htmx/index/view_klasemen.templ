@@ -1,0 +1,99 @@
+package index
+
+import (
+ //  "liga-app/infra/http/htmx/common/layouts"
+	"github.com/google/uuid"
+  "fmt"
+  // "net/url"
+  "strconv"
+  "liga-app/entities"
+	// "liga-app/enums"
+  // "github.com/goodsign/monday"
+)
+
+templ ViewKlasemen(leagues []entities.League, groupStandings map[string][]entities.GroupRoundRobinTeamResult) {
+  <div class="flex flex-col space-y-4">
+    <h1 class="text-4xl font-bold mb-2">Klasemen</h1>
+    <h2 class="text-2xl font-bold mb-2">Season 1 - Beginners</h2>
+    <div class="w-full overflow-x-auto">
+      <div class="flex space-x-4">
+        for i, l := range leagues {
+          if i == 0 {
+            @BtnCategory(l, true)
+          } else {
+            @BtnCategory(l, false)
+          }
+        }
+      </div>
+    </div>
+
+    @ViewGroupStandings(groupStandings)
+
+    <script>
+      function toggleActive(clickedButton) {
+        // Remove the active classes from all buttons
+        document.querySelectorAll('.btn-category').forEach(button => {
+          button.classList.remove('btn-primary');
+          button.classList.add('btn-secondary');
+        });
+        // Add the active classes to the clicked button
+        clickedButton.classList.add('btn-primary');
+        clickedButton.classList.remove('btn-secondary');
+      }
+    </script>
+  </div>
+}
+
+templ BtnCategory(league entities.League, isActive bool) {
+  <button
+    class={"btn-category whitespace-nowrap btn btn-xs", templ.KV("btn-primary", isActive), templ.KV("btn-secondary", !isActive)}
+    hx-get={hxGetCategoryStandings(league.UUID)}
+    onclick="toggleActive(this)"
+    hx-target="#view-group-standings"
+  >
+    {league.Name}
+  </button>
+}
+
+func hxGetCategoryStandings(leagueUUID uuid.UUID) string {
+  return fmt.Sprintf("/group-standings/%s", leagueUUID)
+}
+
+templ ViewGroupStandings(groupStandings map[string][]entities.GroupRoundRobinTeamResult) {
+  <div id="view-group-standings" class="flex flex-col space-y-4">
+    for groupName, results := range groupStandings {
+      <div class="card shadow-xl">
+        <div class="text-lg pl-4">Grup {groupName}</div>
+        <div class="overflow-x-auto overscroll-none">
+          <table class="table">
+            <!-- head -->
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Team Name</th>
+                <th>Played</th>
+                <th>W</th>
+                <th>L</th>
+                <th>GW</th>
+                <th>GL</th>
+              </tr>
+            </thead>
+            <tbody>
+              for _, r := range results {
+                <tr>
+                  <th>{strconv.Itoa(r.Rank)}</th>
+                  <td>{r.Team.Name}</td>
+                  <td>{strconv.Itoa(r.MatchPlayed)}</td>
+                  <td class="text-success">{strconv.Itoa(r.MatchWon)}</td>
+                  <td class="text-error">{strconv.Itoa(r.MatchLost)}</td>
+                  <td class="text-success">{strconv.Itoa(r.GamesWon)}</td>
+                  <td class="text-error">{strconv.Itoa(r.GamesLost)}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+  </div>
+}

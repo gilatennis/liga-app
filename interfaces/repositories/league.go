@@ -12,6 +12,7 @@ type LeagueFilter struct {
 	CityID     *string
 	ProvinceID *string
 	UserUUID   *uuid.UUID
+	Season     *int
 }
 
 type ILeagueRepository interface {

@@ -160,7 +160,7 @@ func setupHandlers(
 
 	HTMXHandlers := HTMXHandlers{
 		AuthHandler:                 auth.NewHandler(cfg, authService, userService),
-		IndexHandler:                index.NewHandler(ruleBookService),
+		IndexHandler:                index.NewHandler(ruleBookService, leagueService, groupService),
 		InviteHandler:               invite.NewHandler(inviteService, leagueService, teamService),
 		DashboardHandler:            dashboard.NewHandler(userInfoService, leagueService, matchService),
 		DashboardLeagueHandler:      dashLeague.NewHandler(leagueService, teamService, matchService, groupService),

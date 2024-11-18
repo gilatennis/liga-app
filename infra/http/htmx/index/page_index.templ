@@ -40,8 +40,8 @@ var features = []Feature{
   },
   {
     Icon: "smile",
-    Title: "Lapangan Gratis (Limited Availability)",
-    Body: "Kami mensubsidi 2 lapangan outdoor setiap hari sabtu & minggu untuk pemain / tim yang terdaftar di liga.",
+    Title: "Lapangan Gratis",
+    Body: "Kami menyiapkan 2 lapangan outdoor setiap hari sabtu & minggu untuk pemain / tim yang terdaftar di liga.",
   },
   {
     Icon: "help-circle",
@@ -289,6 +289,12 @@ templ PageIndex(vmodel *VModelPageIndex) {
         }
       </div>
     </div>
+
+    <div id="klasemen" class="px-8 md:px-16 py-24 bg-base-200">
+      @ViewKlasemen(vmodel.Leagues, vmodel.GroupStandings)
+    </div>
+
+    /*
     <div
       class="hero min-h-screen md:min-h-[50vh]"
       style="background-image: url(/static/images/flyer-liga-gilatennis.png);"
@@ -333,6 +339,7 @@ templ PageIndex(vmodel *VModelPageIndex) {
         </div>
       </div>
     </div>
+    */
 
     <!-- F.A.Q -->
     <div id="faq" class="px-8 md:px-16 py-24 bg-base-200">

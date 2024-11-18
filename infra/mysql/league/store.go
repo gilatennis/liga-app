@@ -24,6 +24,8 @@ func (s *Store) Get(ctx context.Context, p *common.Pagination, f *repositories.L
 
 	dbHandle := s.db.WithContext(ctx).
 		Preload("Wilayah").
+		Preload("Fixtures").
+		Preload("Fixtures.Groups").
 		Offset(p.Offset).
 		Limit(p.Limit)
 
@@ -31,7 +33,10 @@ func (s *Store) Get(ctx context.Context, p *common.Pagination, f *repositories.L
 		if f.UserUUID != nil {
 			dbHandle = dbHandle.
 				Joins("JOIN league_players ON league_players.league_uuid = leagues.uuid").
-				Where("league_players.player_uuid = ?", f.UserUUID)
+				Where("league_players.player_uuid = ?", *f.UserUUID)
+		}
+		if f.Season != nil {
+			dbHandle = dbHandle.Where("leagues.season = ?", *f.Season)
 		}
 	}
 
