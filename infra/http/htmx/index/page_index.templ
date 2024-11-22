@@ -294,6 +294,10 @@ templ PageIndex(vmodel *VModelPageIndex) {
       @ViewKlasemen(vmodel.Leagues, vmodel.GroupStandings)
     </div>
 
+    <div id="leaderboard" class="px-8 md:px-16 py-24 bg-base-200">
+      @ViewLeaderboard(vmodel.Leagues)
+    </div>
+
     /*
     <div
       class="hero min-h-screen md:min-h-[50vh]"

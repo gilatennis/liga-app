@@ -1,0 +1,217 @@
+package index
+
+import (
+  "liga-app/entities"
+)
+
+templ ViewLeaderboard(leagues []entities.League) {
+  <div class="flex flex-col space-y-4">
+    <h1 class="text-4xl font-bold mb-2">Leaderboard - Top 5</h1>
+    <div role="tablist" class="tabs tabs-lifted tabs-lg">
+      <a role="tab" id="tab-leaderboard-seasonal" onclick="toggleActiveLeaderboardTypeTab(this)" class="tab-leaderboard-type tab tab-active">
+        Season 1
+      </a>
+      /* TODO: After season 1 is completed */
+      <a role="tab" id="tab-leaderboard-hall-of-fame" onclick="toggleActiveLeaderboardTypeTab(this)" class="tab-leaderboard-type tab --tab-bg:gray">
+        Hall of Fame
+      </a>
+    </div>
+    @ViewLeaderboardSeasonal(leagues)
+    @ViewLeaderboardHallOfFame()
+
+    <button class="btn btn-secondary">
+      Tampilkan Leaderboard Lengkap
+    </button>
+    <button class="btn btn-primary">
+      Daftar Sekarang!
+    </button>
+  </div>
+  <script>
+    function toggleActiveBtnLevel(clickedButton) {
+      // Remove the active classes from all buttons
+      document.querySelectorAll('.btn-level').forEach(button => {
+        button.classList.remove('btn-primary');
+        button.classList.add('btn-secondary');
+      });
+      // Add the active classes to the clicked button
+      clickedButton.classList.add('btn-primary');
+      clickedButton.classList.remove('btn-secondary');
+    }
+
+    function toggleActiveLeaderboardTypeTab(clickedTab) {
+      document.querySelectorAll(".tab-leaderboard-type").forEach(tab => {
+        tab.classList.remove("tab-active");
+      })
+      clickedTab.classList.add("tab-active");
+
+      if (clickedTab.id == "tab-leaderboard-seasonal") {
+        document.getElementById("view-leaderboard-hall-of-fame").style.display = "none"
+        document.getElementById("view-leaderboard-seasonal").style.display = "flex"
+      }
+
+      if (clickedTab.id == "tab-leaderboard-hall-of-fame") {
+        document.getElementById("view-leaderboard-hall-of-fame").style.display = "flex"
+        document.getElementById("view-leaderboard-seasonal").style.display = "none"
+      }
+    }
+
+    function toggleActiveBtnCategory(clickedButton) {
+      // Remove the active classes from all buttons
+      document.querySelectorAll('.btn-leaderboard-category').forEach(button => {
+        button.classList.remove('btn-primary');
+        button.classList.add('btn-secondary');
+      });
+      // Add the active classes to the clicked button
+      clickedButton.classList.add('btn-primary');
+      clickedButton.classList.remove('btn-secondary');
+    }
+  </script>
+}
+
+templ ViewLeaderboardSeasonal(leagues []entities.League) {
+  <div id="view-leaderboard-seasonal" class="flex flex-col space-y-4">
+    <div class="w-full overflow-x-auto">
+      <div class="flex space-x-4">
+        @BtnLevel("Beginners NTRP 2.5 - 3.5", true, false)
+        /* TODO: For season 2 where we will add advanced level */
+        @BtnLevel("Advanced NTRP 4.0 - 5.5", false, true)
+      </div>
+    </div>
+    <div class="w-full overflow-x-auto">
+      <div class="flex space-x-4">
+        for i, l := range leagues {
+          if i == 0 {
+            @BtnLeaderboardCategory(l, true)
+          } else {
+            @BtnLeaderboardCategory(l, false)
+          }
+        }
+      </div>
+    </div>
+    <div class="card shadow-xl">
+      <div class="overflow-x-auto overscroll-none">
+        <table class="table">
+          <!-- head -->
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Player / Team</th>
+              <th>Points</th>
+              <th>Matches Played</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>Player A</td>
+              <td>500</td>
+              <td>5</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>Player A</td>
+              <td>500</td>
+              <td>5</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>Player A</td>
+              <td>500</td>
+              <td>5</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td>Player A</td>
+              <td>500</td>
+              <td>5</td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td>Player A</td>
+              <td>500</td>
+              <td>5</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+}
+
+templ ViewLeaderboardHallOfFame() {
+  <div id="view-leaderboard-hall-of-fame" class="flex-col space-y-4 hidden">
+    <div class="card shadow-xl">
+      <div class="overflow-x-auto overscroll-none">
+        <table class="table">
+          <!-- head -->
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Player / Team</th>
+              <th>Points</th>
+              <th>Titles Won</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>Player A</td>
+              <td>500</td>
+              <td>5 🏆</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>Player A</td>
+              <td>500</td>
+              <td>5 🏆</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>Player A</td>
+              <td>500</td>
+              <td>5 🏆</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td>Player A</td>
+              <td>500</td>
+              <td>5 🏆</td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td>Player A</td>
+              <td>500</td>
+              <td>5 🏆</td>
+
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+}
+
+templ BtnLevel(title string, isActive bool, isDisabled bool) {
+  <button
+    class={"btn-level whitespace-nowrap btn btn-xs", templ.KV("btn-primary", isActive), templ.KV("btn-secondary", !isActive)}
+    onclick="toggleActiveBtnLevel(this)"
+    disabled?={isDisabled}
+  >
+    {title}
+  </button>
+}
+
+templ BtnLeaderboardCategory(league entities.League, isActive bool) {
+  <button
+    class={"btn-leaderboard-category whitespace-nowrap btn btn-xs", templ.KV("btn-primary", isActive), templ.KV("btn-secondary", !isActive)}
+    hx-get={hxGetLeaderboard()}
+    onclick="toggleActiveBtnCategory(this)"
+    hx-target="#view-leaderboard"
+  >
+    {league.Name}
+  </button>
+}
+
+func hxGetLeaderboard() string {
+  return "/TODO"
+}
