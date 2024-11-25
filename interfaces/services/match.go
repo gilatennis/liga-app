@@ -31,6 +31,7 @@ type MatchFilter struct {
 type IMatchService interface {
 	Get(ctx context.Context, p *common.Pagination, f *MatchFilter) ([]entities.Match, int64, error)
 	GetByUUID(ctx context.Context, matchUUID uuid.UUID) (*entities.Match, error)
+	Update(ctx context.Context, match *entities.Match) (*uuid.UUID, error)
 	RequestMatchSchedule(ctx context.Context, userUUID uuid.UUID, matchUUID uuid.UUID, timeslotUUIDs []uuid.UUID) (*uuid.UUID, error)
 	RequestMatchScheduleOwnVenue(ctx context.Context, userUUID uuid.UUID, matchUUID uuid.UUID, matchScheduleRequest *entities.MatchScheduleRequest) (*uuid.UUID, error)
 	ConfirmMatchSchedule(ctx context.Context, userUUID uuid.UUID, matchScheduleRequestUUID uuid.UUID) (*uuid.UUID, error)

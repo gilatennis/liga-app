@@ -46,11 +46,20 @@ templ InputCheckbox(params InputCheckboxParams) {
             disabled?={params.Readonly}
             checked?={option.IsChecked}
             class="checkbox"
-            x-model={option.JS_XModel}
+            if option.JS_XModel != "" {
+              x-model={option.JS_XModel}
+            }
             onchange={params.JS_OnChange}
           />
         </label>
       }
     </div>
   </div>
+}
+
+func isCheckedStr(isChecked bool) string {
+  if isChecked {
+    return "true"
+  }
+  return "false"
 }

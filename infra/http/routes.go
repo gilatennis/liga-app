@@ -162,6 +162,9 @@ func adminRoutes(admin *gin.RouterGroup, handlers *Handlers, middlewares *middle
 		// Matches
 		adminDashboard.GET("/matches", handlers.HTMXHandlers.AdminMatchHandler.GetMatchListPage)
 		adminDashboard.GET("/matches/view", handlers.HTMXHandlers.AdminMatchHandler.GetMatchListView)
+		adminDashboard.POST("/matches/:match_uuid/match-set", handlers.HTMXHandlers.AdminMatchHandler.PostMatchSet)
+		adminDashboard.PUT("/matches/:match_uuid/complete", handlers.HTMXHandlers.AdminMatchHandler.PutMatchComplete)
+		adminDashboard.PUT("/matches/:match_uuid/statuses", handlers.HTMXHandlers.AdminMatchHandler.PutMatchStatuses)
 	}
 }
 

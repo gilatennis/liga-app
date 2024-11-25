@@ -25,7 +25,7 @@ templ PageMatchDetail(vmodel VModelPageMatchDetail) {
     <div class="space-y-8">
       @components.PageHeader("Detail Pertandingan", "")
 
-      @ViewMatchResultUpdatedCheck(vmodel.League.UUID, vmodel.Match.UUID, vmodel.Match.UpdatedAt)
+      // @ViewMatchResultUpdatedCheck(vmodel.League.UUID, vmodel.Match.UUID, vmodel.Match.UpdatedAt)
       @ViewMatchDetail(vmodel)
     </div>
   }
@@ -103,7 +103,9 @@ templ ViewMatchDetail(vmodel VModelPageMatchDetail) {
           </a>
         </div>
       }
+
       // Match schedule not requested end ============================
+      @ViewFormMatchStatuses(vmodel.Match)
 
 
       // INFO: Match schedule requested ==============================
@@ -113,13 +115,8 @@ templ ViewMatchDetail(vmodel VModelPageMatchDetail) {
           @ViewMatchSchedule(vmodel.Match.MatchScheduleRequest)
         </div>
 
-        <div>TODO: If match.status is not completed, show match schedule confirmation status</div>
-
         // INFO: Match schedule is accepted
         if vmodel.Match.MatchScheduleRequest.IsAccepted {
-          <div>TODO: If match.status is not completed, add a button to undo schedule confirmation status</div>
-
-
           // Match Score Input
           <div class="pt-4 flex flex-col space-y-2">
             <div class="text-lg font-bold">Skor Pertandingan</div>
@@ -137,6 +134,43 @@ templ ViewMatchDetail(vmodel VModelPageMatchDetail) {
     </div>
   </div>
 }
+
+templ ViewFormMatchStatuses(match *entities.Match) {
+  <form
+    id="view-form-match-statuses"
+    hx-put={urlUpdateMatchStatuses(match.UUID)}
+    hx-swap="outerHTML"
+  >
+    @components.InputCheckbox(components.InputCheckboxParams{
+      Label: "Status Jadwal",
+      Name: "match_schedule_status",
+      // JS_OnChange: onOptionChange(),
+      Options: []components.InputCheckboxOption{
+        {Label: "Jadwal Terkonfirmasi", Value: "is_schedule_confirmed", IsChecked: match.MatchScheduleRequest.IsAccepted},
+      },
+    })
+
+    @components.InputCheckbox(components.InputCheckboxParams{
+      Label: "Status Pertandingan",
+      Name: "match_complete_status[]",
+      Options: []components.InputCheckboxOption{
+        {Label: "Pertandingan Selesai", Value: "is_match_completed", IsChecked: match.IsComplete},
+        {Label: "Konfirmasi Pertandingan Selesai", Value: "is_match_complete_confirmed", IsChecked: match.IsCompleteConfirmed},
+      },
+    })
+
+    <div class="mt-4">
+      <button class="btn btn-primary w-full btn-sm">
+        Update Status Pertandingan
+      </button>
+    </div>
+  </form>
+}
+
+func urlUpdateMatchStatuses(matchUUID uuid.UUID) string {
+  return fmt.Sprintf("/admin/dashboard/matches/%s/statuses", matchUUID)
+}
+
  func urlMatchResultUpdated(leagueUUID, matchUUID uuid.UUID, lastUpdate time.Time) templ.SafeURL {
   // loc, _ := time.LoadLocation("Asia/Jakarta")
   return templ.URL(fmt.Sprintf("/dashboard/leagues/%s/matches/%s/is-updated?last-update=%s", leagueUUID, matchUUID, url.QueryEscape(lastUpdate.Format(time.RFC3339))))

@@ -2,6 +2,7 @@ package match
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	domainErrors "liga-app/domain/errors"
 	"liga-app/entities"
@@ -22,6 +23,8 @@ type Service struct {
 	matchScheduleRequestRepo iRepo.IMatchScheduleRequestRepository
 	matchSetRepo             iRepo.IMatchSetRepository
 	groupRepo                iRepo.IGroupRepository
+	userRepo                 iRepo.IUserRepository
+	adminRepo                iRepo.IAdminRepository
 }
 
 func NewService(
@@ -30,6 +33,8 @@ func NewService(
 	matchScheduleRequestRepo iRepo.IMatchScheduleRequestRepository,
 	matchSetRepo iRepo.IMatchSetRepository,
 	groupRepo iRepo.IGroupRepository,
+	userRepo iRepo.IUserRepository,
+	adminRepo iRepo.IAdminRepository,
 ) *Service {
 	return &Service{
 		matchRepo:                matchRepo,
@@ -37,6 +42,8 @@ func NewService(
 		matchScheduleRequestRepo: matchScheduleRequestRepo,
 		matchSetRepo:             matchSetRepo,
 		groupRepo:                groupRepo,
+		userRepo:                 userRepo,
+		adminRepo:                adminRepo,
 	}
 }
 
@@ -156,6 +163,15 @@ func (s *Service) GetByUUID(ctx context.Context, matchUUID uuid.UUID) (*entities
 	return match, nil
 }
 
+func (s *Service) Update(ctx context.Context, match *entities.Match) (*uuid.UUID, error) {
+	matchUUID, err := s.matchRepo.Update(ctx, match)
+	if err != nil {
+		return nil, fmt.Errorf("s.matchRepo.Update(ctx, match=%+v): %w", match, err)
+	}
+
+	return matchUUID, nil
+}
+
 func (s *Service) RequestMatchSchedule(ctx context.Context, userUUID uuid.UUID, matchUUID uuid.UUID, timeslotUUIDs []uuid.UUID) (*uuid.UUID, error) {
 	p := common.NewPagination(1, len(timeslotUUIDs), []common.OrderBy{})
 	f := &iRepo.CourtTimeSlotFilter{CourtTimeSlotUUIDs: timeslotUUIDs}
@@ -253,7 +269,12 @@ func (s *Service) SaveMatchSet(ctx context.Context, userUUID uuid.UUID, matchSet
 		return nil, fmt.Errorf("s.matchRepo.GetByUUID(ctx, matchSet.MatchUUID=%s) : %w", matchSet.MatchUUID, err)
 	}
 
-	if match.TeamA.CaptainUserUUID != userUUID && match.TeamB.CaptainUserUUID != userUUID {
+	isAdmin, err := s.IsAdmin(ctx, userUUID)
+	if err != nil {
+		return nil, fmt.Errorf("s.IsAdmin(ctx, userUUID=%s): %w", userUUID, err)
+	}
+
+	if !isAdmin && match.TeamA.CaptainUserUUID != userUUID && match.TeamB.CaptainUserUUID != userUUID {
 		return nil, &domainErrors.ErrUnauthorized{Message: "not authorized to save match set"}
 	}
 
@@ -491,4 +512,19 @@ func (s *Service) GetPlayerMatchStats(ctx context.Context, userUUID uuid.UUID) (
 	}
 
 	return matchStats, nil
+}
+
+func (s *Service) IsAdmin(ctx context.Context, userUUID uuid.UUID) (bool, error) {
+	admin, err := s.adminRepo.GetByUserUUID(ctx, userUUID)
+	var errNotFound *domainErrors.ErrNotFound
+	if err != nil && !errors.As(err, &errNotFound) {
+		return false, fmt.Errorf("s.adminRepo.GetByUserUUID(ctx, user.UUID=%s) : %w", userUUID, err)
+	}
+
+	if err != nil && errors.As(err, &errNotFound) {
+		return false, nil
+	}
+
+	_ = admin
+	return true, nil
 }

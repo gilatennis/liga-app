@@ -152,7 +152,15 @@ func setupHandlers(
 	teamService := domainTeam.NewService(cfg, teamStore, minioClient)
 	inviteService := domainInvite.NewService(leagueRegStore, leagueStore, teamStore)
 	ruleBookService := domainRuleBook.NewService(gormStore)
-	matchService := domainMatch.NewService(matchStore, courtTimeSlotStore, matchSchedReqStore, matchSetStore, groupStore)
+	matchService := domainMatch.NewService(
+		matchStore,
+		courtTimeSlotStore,
+		matchSchedReqStore,
+		matchSetStore,
+		groupStore,
+		userStore,
+		adminStore,
+	)
 	venueService := domainVenue.NewService(venueStore)
 	courtService := domainCourt.NewService(courtStore, courtTimeSlotStore)
 	fixtureService := domainFixture.NewService(fixtureStore)

@@ -114,14 +114,14 @@ templ ViewMatchSet(user *entities.User, partaiName string, leagueUUID uuid.UUID,
         hx-target={"#match-set-" + strconv.Itoa(matchSetNumber)}
       >
         <input type="hidden" name="match_set_number" value={strconv.Itoa(matchSetNumber)} />
-        <input type="hidden" name="partai_name" value={"Doubles #" + strconv.Itoa(matchSetNumber)} />
+        <input type="hidden" name="partai_name" value={partaiName} />
         <div class="flex flex-row justify-between px-2">
           @components.InputText(components.InputTextParams{
             Label: " ",
             Value: teamAScore(match.GetMatchSetByNumber(matchSetNumber)),
             Name: "team_a_score",
             Placeholder: "0",
-            Readonly: (match.IsComplete && match.IsCompleteConfirmed && isMatchParticipantCaptain(user, match)) || !isMatchParticipantCaptain(user, match),
+            // Readonly: (match.IsComplete && match.IsCompleteConfirmed && isMatchParticipantCaptain(user, match)) || !isMatchParticipantCaptain(user, match),
           })
           <div class="w-16"> </div>
           @components.InputText(components.InputTextParams{
@@ -129,27 +129,27 @@ templ ViewMatchSet(user *entities.User, partaiName string, leagueUUID uuid.UUID,
             Value: teamBScore(match.GetMatchSetByNumber(matchSetNumber)),
             Name: "team_b_score",
             Placeholder: "0",
-            Readonly: (match.IsComplete && match.IsCompleteConfirmed && isMatchParticipantCaptain(user, match)) || !isMatchParticipantCaptain(user, match),
+            // Readonly: (match.IsComplete && match.IsCompleteConfirmed && isMatchParticipantCaptain(user, match)) || !isMatchParticipantCaptain(user, match),
           })
         </div>
-        if !match.IsCompleteConfirmed && isMatchParticipantCaptain(user, match) {
-          <div class="w-full pt-8 px-2">
-            <button class="btn btn-primary w-full btn-sm">
-              Update Skor
-            </button>
-          </div>
-        }
+        // if !match.IsCompleteConfirmed && isMatchParticipantCaptain(user, match) {
+        <div class="w-full pt-8 px-2">
+          <button class="btn btn-primary w-full btn-sm">
+            Update Skor
+          </button>
+        </div>
+        // }
       </form>
     </div>
   </div>
 }
 
 func urlPostMatchSet(leagueUUID, matchUUID uuid.UUID) string {
-  return fmt.Sprintf("/dashboard/leagues/%s/matches/%s/match-set", leagueUUID, matchUUID)
+  return fmt.Sprintf("/admin/dashboard/matches/%s/match-set", matchUUID)
 }
 
 func urlPutCompleteMatch(leagueUUID, matchUUID uuid.UUID) string {
-  return fmt.Sprintf("/dashboard/leagues/%s/matches/%s/complete", leagueUUID, matchUUID)
+  return fmt.Sprintf("/admin/dashboard/matches/%s/complete", matchUUID)
 }
 
 func urlPutConfirmCompleteMatch(leagueUUID, matchUUID uuid.UUID) string {

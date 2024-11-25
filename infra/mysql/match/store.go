@@ -135,6 +135,12 @@ func (s *Store) Update(ctx context.Context, match *entities.Match) (*uuid.UUID, 
 		return nil, fmt.Errorf("s.db.Save(match).Error : %w", err)
 	}
 
+	match.MatchScheduleRequest.UpdatedAt = time.Now()
+	err = s.db.WithContext(ctx).Omit(clause.Associations).Save(match.MatchScheduleRequest).Error
+	if err != nil {
+		return nil, fmt.Errorf("s.db.Save(match.MatchScheduleRequest).Error : %w", err)
+	}
+
 	return &match.UUID, nil
 }
 
