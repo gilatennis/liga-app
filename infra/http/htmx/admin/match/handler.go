@@ -297,6 +297,7 @@ func (h *Handler) PutMatchComplete(c *gin.Context) {
 type MatchStatusPayload struct {
 	MatchScheduleStatus string   `form:"match_schedule_status" json:"match_schedule_status"`
 	MatchCompleteStatus []string `form:"match_complete_status[]" json:"match_complete_status"`
+	MatchStatus         string   `form:"match_status" json:"match_status"`
 }
 
 func (m *MatchStatusPayload) IsMatchScheduleConfirmed() bool {
@@ -342,18 +343,6 @@ func (h *Handler) PutMatchStatuses(c *gin.Context) {
 		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	// pp.Println("match.MatchScheduleRequest", match.MatchScheduleRequest)
-
-	// Read the raw payload
-	/*
-		body, err := io.ReadAll(c.Request.Body)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Unable to read payload"})
-			return
-		}
-
-		fmt.Println("body", string(body))
-	*/
 
 	p := MatchStatusPayload{}
 	err = c.Bind(&p)
@@ -373,6 +362,10 @@ func (h *Handler) PutMatchStatuses(c *gin.Context) {
 	}
 	match.IsComplete = isMatchCompleted
 	match.IsCompleteConfirmed = isMatchCompleteConfirmed
+
+	if p.MatchStatus != "" {
+		match.Status = p.MatchStatus
+	}
 
 	_, err = h.matchService.Update(c, match)
 	if err != nil {

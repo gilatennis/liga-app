@@ -151,11 +151,22 @@ templ ViewFormMatchStatuses(match *entities.Match) {
     })
 
     @components.InputCheckbox(components.InputCheckboxParams{
-      Label: "Status Pertandingan",
+      Label: "Status Pertandingan Selesai",
       Name: "match_complete_status[]",
       Options: []components.InputCheckboxOption{
         {Label: "Pertandingan Selesai", Value: "is_match_completed", IsChecked: match.IsComplete},
         {Label: "Konfirmasi Pertandingan Selesai", Value: "is_match_complete_confirmed", IsChecked: match.IsCompleteConfirmed},
+      },
+    })
+
+    @components.InputSelect(components.InputSelectParams{
+      Label: "Status Pertandingan",
+      Name: "match_status",
+      SelectedValue: match.Status,
+      Options: []components.InputSelectOption{
+        {Text: "WAITING", Value: string(enums.MATCH_STATUS_WAITING) },
+        {Text: "COMPLETED", Value: string(enums.MATCH_STATUS_COMPLETED) },
+        {Text: "WALKOVER", Value: string(enums.MATCH_STATUS_WALKOVER) },
       },
     })
 
