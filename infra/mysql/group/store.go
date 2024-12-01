@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"liga-app/entities"
+	"strings"
 
 	domainErrors "liga-app/domain/errors"
 
@@ -33,6 +34,71 @@ func (s *Store) GetByUUID(ctx context.Context, groupUUID uuid.UUID) (*entities.G
 		Error
 	if err != nil {
 		return nil, fmt.Errorf("s.db.First(&g, \"uuid = ?\", groupUUID).Error : %w", err)
+	}
+
+	if len(g.Teams) == 0 {
+		return &g, nil
+	}
+
+	teamUUIDs := []uuid.UUID{}
+	for _, t := range g.Teams {
+		teamUUIDs = append(teamUUIDs, t.UUID)
+	}
+
+	from := fmt.Sprintf(`FROM (
+    SELECT '%s' AS team_uuid
+  `, teamUUIDs[0].String())
+	for _, u := range teamUUIDs[1:] {
+		from += fmt.Sprintf("  UNION ALL SELECT '%s' \n", u.String())
+	}
+	from += ") AS tl"
+
+	teamUUIDString := []string{}
+	for _, u := range teamUUIDs {
+		teamUUIDString = append(teamUUIDString, fmt.Sprintf("'%s'", u.String()))
+	}
+	teamUUIDStringJoin := strings.Join(teamUUIDString, ", ")
+	order := fmt.Sprintf("ORDER BY FIELD(tl.team_uuid, %s)", teamUUIDStringJoin)
+
+	rawQuery := fmt.Sprintf(`
+    SELECT
+        tl.team_uuid,
+        (SELECT COUNT(DISTINCT m.uuid)
+        FROM matches m
+        JOIN rounds r ON m.round_uuid = r.uuid
+        JOIN `+"`groups`"+` g ON r.group_uuid = g.uuid
+        JOIN fixtures f ON g.fixture_uuid = f.uuid
+        WHERE (m.team_a_uuid = tl.team_uuid OR m.team_b_uuid = tl.team_uuid)
+          AND f.format = 'ROUND_ROBIN' AND m.team_a_uuid IS NOT NULL AND m.team_b_uuid IS NOT NULL) AS group_stage_match_count,
+        (SELECT COUNT(DISTINCT m.uuid)
+        FROM matches m
+        JOIN rounds r ON m.round_uuid = r.uuid
+        JOIN `+"`groups`"+` g ON r.group_uuid = g.uuid
+        JOIN fixtures f ON g.fixture_uuid = f.uuid
+        WHERE (m.team_a_uuid = tl.team_uuid OR m.team_b_uuid = tl.team_uuid)
+          AND f.format = 'ROUND_ROBIN' AND m.status = 'COMPLETED') AS group_stage_match_completed_count
+      %s
+      %s;
+  `, from, order)
+
+	type Temp struct {
+		TeamUUID                      uuid.UUID
+		GroupStageMatchCount          int64
+		GroupStageMatchCompletedCount int64
+	}
+	temps := []Temp{}
+	err = s.db.WithContext(ctx).
+		Raw(rawQuery).
+		Scan(&temps).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	for i, t := range g.Teams {
+		t.GroupStageMatchCount = temps[i].GroupStageMatchCount
+		t.GroupStageMatchCompletedCount = temps[i].GroupStageMatchCompletedCount
+		g.Teams[i] = t
 	}
 
 	return &g, nil

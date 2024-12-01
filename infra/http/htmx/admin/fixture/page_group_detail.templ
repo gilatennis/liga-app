@@ -133,6 +133,10 @@ templ ViewTeamList(leagueUUID, fixtureUUID, groupUUID  uuid.UUID, teams []entiti
               <div class="w-full text-left">
                 <h3 class="text-2xl">Tim {t.Name}</h3>
                 <h3>{strconv.Itoa(len(t.Players))} Pemain</h3>
+                <div class="pt-2">
+                  <h3 class="text-xs font-bold">Group Stage Matches</h3>
+                  <h3 class="text-xs">{strconv.Itoa(int(t.GroupStageMatchCompletedCount))}/{strconv.Itoa(int(t.GroupStageMatchCount))} Completed</h3>
+                </div>
               </div>
             </div>
           </div>
