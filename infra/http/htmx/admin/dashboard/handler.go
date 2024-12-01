@@ -2,13 +2,14 @@ package dashboard
 
 import (
 	"liga-app/infra/http/htmx/common"
+	"liga-app/interfaces/repositories"
 	"net/http"
 
 	iCommon "liga-app/interfaces/common"
+
 	iService "liga-app/interfaces/services"
 
 	"github.com/gin-gonic/gin"
-	"github.com/k0kubun/pp"
 )
 
 type Handler struct {
@@ -29,14 +30,18 @@ func (h *Handler) Index(c *gin.Context) {
 		return
 	}
 
+	season := 1
+	f := repositories.LeagueFilter{
+		Season: &season,
+	}
 	p := iCommon.NewPagination(1, 8, []iCommon.OrderBy{})
-	leagues, _, err := h.leagueService.Get(c, p, nil)
+	leagues, _, err := h.leagueService.Get(c, p, &f)
 	if err != nil {
 		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	pp.Println("leagues", leagues)
+	// pp.Println("leagues", leagues)
 
 	vmodel := VModelPageDashboard{
 		User:    user,

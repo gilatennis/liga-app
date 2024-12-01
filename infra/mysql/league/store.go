@@ -55,23 +55,39 @@ func (s *Store) Get(ctx context.Context, p *common.Pagination, f *repositories.L
 	}
 
 	type Temp struct {
-		LeagueUUID  uuid.UUID
-		TeamCount   int64
-		PlayerCount int64
+		LeagueUUID                    uuid.UUID
+		TeamCount                     int64
+		PlayerCount                   int64
+		GroupStageMatchCount          int64
+		GroupStageMatchCompletedCount int64
 	}
 	temps := []Temp{}
 
 	err = s.db.WithContext(ctx).
 		Raw(`
-      select
-        l.uuid AS league_uuid,
-        COUNT(DISTINCT lt.uuid) AS team_count,
-        COUNT(DISTINCT lp.uuid) AS player_count
-      from leagues l
-        left join league_teams lt on l.uuid = lt.league_uuid 
-        left join league_players lp on l.uuid = lp.league_uuid
-      WHERE l.uuid in ? AND lt.deleted_at IS NULL AND lp.deleted_at IS NULL
-      GROUP BY l.uuid
+      SELECT
+          l.uuid AS league_uuid,
+          COUNT(DISTINCT lt.uuid) AS team_count,
+          COUNT(DISTINCT lp.uuid) AS player_count,
+          (SELECT COUNT(DISTINCT m.uuid)
+            FROM matches m
+            JOIN rounds r ON m.round_uuid = r.uuid
+            JOIN `+"`groups`"+` g ON r.group_uuid = g.uuid
+            JOIN fixtures f ON g.fixture_uuid = f.uuid
+            WHERE m.league_uuid = l.uuid AND f.format = 'ROUND_ROBIN' AND m.team_a_uuid IS NOT NULL AND m.team_b_uuid IS NOT NULL)
+          AS group_stage_match_count,
+          (SELECT COUNT(DISTINCT m.uuid)
+            FROM matches m
+            JOIN rounds r ON m.round_uuid = r.uuid
+            JOIN `+"`groups`"+` g ON r.group_uuid = g.uuid
+            JOIN fixtures f ON g.fixture_uuid = f.uuid
+            WHERE m.league_uuid = l.uuid AND f.format = 'ROUND_ROBIN' AND m.status = 'COMPLETED'
+          ) AS group_stage_match_completed_count
+      FROM leagues l
+      LEFT JOIN league_teams lt ON l.uuid = lt.league_uuid AND lt.deleted_at IS NULL
+      LEFT JOIN league_players lp ON l.uuid = lp.league_uuid AND lp.deleted_at IS NULL
+      WHERE l.uuid IN ?
+      GROUP BY l.uuid;
     `, leagueUUIDs).
 		Scan(&temps).
 		Error
@@ -82,6 +98,8 @@ func (s *Store) Get(ctx context.Context, p *common.Pagination, f *repositories.L
 	for i, l := range leagues {
 		l.TeamCount = temps[i].TeamCount
 		l.PlayerCount = temps[i].PlayerCount
+		l.GroupStageMatchCount = temps[i].GroupStageMatchCount
+		l.GroupStageMatchCompletedCount = temps[i].GroupStageMatchCompletedCount
 		leagues[i] = l
 	}
 
