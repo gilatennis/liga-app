@@ -45,8 +45,8 @@ func (h *Handler) Index(c *gin.Context) {
 	// INFO: for getting into a user's account, for debugging
 	/*
 		session := sessions.Default(c)
-		session.Set("user_uuid", "7aecca4b-e93e-498c-ae81-2a645d8e3d85")
-		pp.Println(session)
+		session.Set("user_uuid", "37e5d5be-9d96-416b-bfa6-d6ff0a41f181")
+		// pp.Println(session)
 
 		if err := session.Save(); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

@@ -1,6 +1,7 @@
 package league
 
 import (
+	"context"
 	"fmt"
 	"liga-app/entities"
 	"liga-app/enums"
@@ -11,6 +12,7 @@ import (
 	"sort"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type Handler struct {
@@ -86,11 +88,53 @@ func (h *Handler) GetLeagueDetailPage(c *gin.Context) {
 		return
 	}
 
-	isRatingRequired := false
-	numPlayersHasRating := 0
+	matchNeedsCompleteConfirmation, err := h.GetMatchNeedsCompleteConfirmation(c, leagueUUID, user.UUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
 
-	playersWithRatingTooHigh := []entities.User{}
-	playersWithRatingTooLow := []entities.User{}
+	matchNeedsScheduleConfirmation, err := h.GetMatchNeedsScheduleConfirmation(c, leagueUUID, user.UUID)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	isRatingRequired, playersWithRatingTooHigh, playersWithRatingTooLow := h.GetTeamRatingRequirements(team, league)
+
+	/*
+		  currentMatch, err := h.GetCurrentMatch(c, leagueUUID, user.UUID)
+		  if err != nil {
+				h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+				return
+		  }
+	*/
+
+	groupStandings, err := h.GetLeagueGroupStandings(c, league)
+	if err != nil {
+		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	vmodel := &VModelPageLeagueDetail{
+		User:                     user,
+		League:                   league,
+		Team:                     team,
+		IsRatingRequired:         isRatingRequired,
+		PlayersWithRatingTooHigh: playersWithRatingTooHigh,
+		PlayersWithRatingTooLow:  playersWithRatingTooLow,
+		// CurrentMatch:             currentMatch,
+		MatchNeedsCompleteConfirmation: matchNeedsCompleteConfirmation,
+		MatchNeedsScheduleConfirmation: matchNeedsScheduleConfirmation,
+		GroupStandings:                 groupStandings,
+	}
+
+	page := PageLeagueDetail(vmodel)
+	h.RenderView(c, page)
+}
+
+func (h *Handler) GetTeamRatingRequirements(team *entities.Team, league *entities.League) (isRatingRequired bool, playersWithRatingTooHigh []entities.User, playersWithRatingTooLow []entities.User) {
+	numPlayersHasRating := 0
 
 	if team != nil {
 		for _, p := range team.Players {
@@ -114,14 +158,17 @@ func (h *Handler) GetLeagueDetailPage(c *gin.Context) {
 		}
 	}
 
+	return isRatingRequired, playersWithRatingTooHigh, playersWithRatingTooLow
+}
+
+func (h *Handler) GetMatchNeedsCompleteConfirmation(c context.Context, leagueUUID uuid.UUID, userUUID uuid.UUID) (*entities.Match, error) {
 	p := iCommon.NewPagination(1, 1, []iCommon.OrderBy{{Column: "rounds.number", Direction: "asc"}})
 	isComplete := true
 	isCompleteConfirmed := false
-	f := &iService.MatchFilter{LeagueUUID: &leagueUUID, UserUUID: &user.UUID, IsComplete: &isComplete, IsCompleteConfirmed: &isCompleteConfirmed}
+	f := &iService.MatchFilter{LeagueUUID: &leagueUUID, UserUUID: &userUUID, IsComplete: &isComplete, IsCompleteConfirmed: &isCompleteConfirmed}
 	matches, _, err := h.matchService.Get(c, p, f)
 	if err != nil {
-		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
-		return
+		return nil, fmt.Errorf("h.matchService.Get(): %w", err)
 	}
 
 	var matchNeedsCompleteConfirmation *entities.Match
@@ -129,22 +176,10 @@ func (h *Handler) GetLeagueDetailPage(c *gin.Context) {
 		matchNeedsCompleteConfirmation = &matches[0]
 	}
 
-	/*
-		p := iCommon.NewPagination(1, 1, []iCommon.OrderBy{{Column: "rounds.number", Direction: "asc"}})
-		currentRound := iService.MATCH_FILTER_STATUS_CURRENT_ROUND
-		f := &iService.MatchFilter{LeagueUUID: &leagueUUID, UserUUID: &user.UUID, Status: &currentRound}
-		matches, _, err := h.matchService.Get(c, p, f)
-		if err != nil {
-			h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
-			return
-		}
+	return matchNeedsCompleteConfirmation, nil
+}
 
-		var currentMatch *entities.Match
-		if len(matches) > 0 {
-			currentMatch = &matches[0]
-		}
-	*/
-
+func (h *Handler) GetLeagueGroupStandings(c context.Context, league *entities.League) (map[string][]entities.GroupRoundRobinTeamResult, error) {
 	groupStandings := make(map[string][]entities.GroupRoundRobinTeamResult)
 	for _, f := range league.Fixtures {
 		if f.Format == enums.FIXTURE_FORMAT_ROUND_ROBIN {
@@ -154,33 +189,64 @@ func (h *Handler) GetLeagueDetailPage(c *gin.Context) {
 			for _, g := range f.Groups {
 				standings, err := h.groupService.GetGroupRoundRobinResults(c, g.UUID)
 				if err != nil {
-					h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
+					return nil, fmt.Errorf("h.groupService.GetGroupRoundRobinResults(c, g.UUID=%s): %w", g.UUID, err)
 				}
 				groupStandings[g.Name] = standings
 			}
 		}
 	}
 
-	for _, s := range groupStandings {
-		for _, r := range s {
-			fmt.Printf("team: %s, matches won: %d, matches lost %d, games won %d, games lost %d \n", r.Team.Name, r.MatchWon, r.MatchLost, r.GamesWon, r.GamesLost)
+	/*
+		for _, s := range groupStandings {
+			for _, r := range s {
+				fmt.Printf("team: %s, matches won: %d, matches lost %d, games won %d, games lost %d \n", r.Team.Name, r.MatchWon, r.MatchLost, r.GamesWon, r.GamesLost)
+			}
 		}
+	*/
+
+	return groupStandings, nil
+}
+
+func (h *Handler) GetMatchNeedsScheduleConfirmation(c context.Context, leagueUUID uuid.UUID, userUUID uuid.UUID) (*entities.Match, error) {
+	p := iCommon.NewPagination(1, 1, []iCommon.OrderBy{{Column: "rounds.number", Direction: "asc"}})
+	isComplete := false
+	isCompleteConfirmed := false
+	isScheduleConfirmed := false
+	f := &iService.MatchFilter{
+		LeagueUUID:          &leagueUUID,
+		UserUUID:            &userUUID,
+		IsComplete:          &isComplete,
+		IsScheduleConfirmed: &isScheduleConfirmed,
+		IsCompleteConfirmed: &isCompleteConfirmed,
+	}
+	matches, _, err := h.matchService.Get(c, p, f)
+	if err != nil {
+		return nil, fmt.Errorf("h.matchService.Get(): %w", err)
 	}
 
-	vmodel := &VModelPageLeagueDetail{
-		User:                     user,
-		League:                   league,
-		Team:                     team,
-		IsRatingRequired:         isRatingRequired,
-		PlayersWithRatingTooHigh: playersWithRatingTooHigh,
-		PlayersWithRatingTooLow:  playersWithRatingTooLow,
-		// CurrentMatch:             currentMatch,
-		MatchNeedsCompleteConfirmation: matchNeedsCompleteConfirmation,
-		GroupStandings:                 groupStandings,
+	var matchNeedsScheduleConfirmation *entities.Match
+	if len(matches) > 0 {
+		matchNeedsScheduleConfirmation = &matches[0]
 	}
 
-	page := PageLeagueDetail(vmodel)
-	h.RenderView(c, page)
+	return matchNeedsScheduleConfirmation, nil
+}
+
+func (h *Handler) GetCurrentMatch(c context.Context, leagueUUID uuid.UUID, userUUID uuid.UUID) (*entities.Match, error) {
+	p := iCommon.NewPagination(1, 1, []iCommon.OrderBy{{Column: "rounds.number", Direction: "asc"}})
+	currentRound := iService.MATCH_FILTER_STATUS_CURRENT_ROUND
+	f := &iService.MatchFilter{LeagueUUID: &leagueUUID, UserUUID: &userUUID, Status: &currentRound}
+	matches, _, err := h.matchService.Get(c, p, f)
+	if err != nil {
+		return nil, fmt.Errorf("h.matchService.Get(c, p, f): %w", err)
+	}
+
+	var currentMatch *entities.Match
+	if len(matches) > 0 {
+		currentMatch = &matches[0]
+	}
+
+	return currentMatch, nil
 }
 
 func (h *Handler) GetLeagueRegistrationPage(c *gin.Context) {

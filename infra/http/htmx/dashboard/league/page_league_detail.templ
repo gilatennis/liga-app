@@ -154,6 +154,12 @@ templ PageLeagueDetail(vmodel *VModelPageLeagueDetail) {
         </div>
       }
 
+      if vmodel.MatchNeedsScheduleConfirmation != nil {
+        <div class="mt-4">
+          @ViewMatchCardWithAlert(*vmodel.MatchNeedsScheduleConfirmation, "Menunggu konfirmasi jadwal")
+        </div>
+      }
+
       <div>
         <div class="grid grid-cols-2 gap-2">
           // @ComponentCardButton(fmt.Sprintf("/dashboard/leagues/%s/teams", vmodel.League.UUID)) {

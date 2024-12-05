@@ -12,5 +12,6 @@ type VModelPageLeagueDetail struct {
 	PlayersWithRatingTooLow        []entities.User
 	CurrentMatch                   *entities.Match
 	MatchNeedsCompleteConfirmation *entities.Match
+	MatchNeedsScheduleConfirmation *entities.Match
 	GroupStandings                 map[string][]entities.GroupRoundRobinTeamResult
 }
