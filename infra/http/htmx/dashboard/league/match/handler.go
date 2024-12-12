@@ -888,16 +888,16 @@ func (h *Handler) PutMatchConfirmComplete(c *gin.Context) {
 		return
 	}
 
+	err = h.groupService.GenerateGroupResults(c, match.Round.GroupUUID)
+	if err != nil {
+		fmt.Printf("ERROR: h.groupService.GenerateGroupResults(c, match.Round.GroupUUID) : %+v \n", err)
+	}
+
 	if league.ParticipationCategory == enums.CATEGORY_PARTICIPATION_TEAMS {
 		view := ViewMatchDetailTeams(user, league, match)
 		h.ResponseAlertSuccess(c, "Pertandingan berhasil di update")
 		h.RenderView(c, view)
 		return
-	}
-
-	err = h.groupService.GenerateGroupResults(c, match.Round.GroupUUID)
-	if err != nil {
-		fmt.Printf("ERROR: h.groupService.GenerateGroupResults(c, match.Round.GroupUUID) : %+v \n", err)
 	}
 
 	view := ViewMatchDetailIndividuals(user, league, match)
