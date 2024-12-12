@@ -119,9 +119,11 @@ func (s *Store) GetByUUID(ctx context.Context, leagueUUID uuid.UUID) (*entities.
 	}
 
 	type Temp struct {
-		LeagueUUID  uuid.UUID
-		TeamCount   int64
-		PlayerCount int64
+		LeagueUUID                    uuid.UUID
+		TeamCount                     int64
+		PlayerCount                   int64
+		GroupStageMatchCount          int64
+		GroupStageMatchCompletedCount int64
 	}
 	temp := Temp{}
 	err = s.db.WithContext(ctx).
@@ -129,7 +131,21 @@ func (s *Store) GetByUUID(ctx context.Context, leagueUUID uuid.UUID) (*entities.
       select
         l.uuid AS league_uuid,
         COUNT(DISTINCT lt.uuid) AS team_count,
-        COUNT(DISTINCT lp.uuid) AS player_count
+        COUNT(DISTINCT lp.uuid) AS player_count,
+        (SELECT COUNT(DISTINCT m.uuid)
+          FROM matches m
+          JOIN rounds r ON m.round_uuid = r.uuid
+          JOIN `+"`groups`"+` g ON r.group_uuid = g.uuid
+          JOIN fixtures f ON g.fixture_uuid = f.uuid
+          WHERE m.league_uuid = l.uuid AND f.format = 'ROUND_ROBIN' AND m.team_a_uuid IS NOT NULL AND m.team_b_uuid IS NOT NULL)
+        AS group_stage_match_count,
+        (SELECT COUNT(DISTINCT m.uuid)
+          FROM matches m
+          JOIN rounds r ON m.round_uuid = r.uuid
+          JOIN `+"`groups`"+` g ON r.group_uuid = g.uuid
+          JOIN fixtures f ON g.fixture_uuid = f.uuid
+          WHERE m.league_uuid = l.uuid AND f.format = 'ROUND_ROBIN' AND m.status = 'COMPLETED'
+        ) AS group_stage_match_completed_count
       from leagues l
         left join league_teams lt on l.uuid = lt.league_uuid 
         left join league_players lp on l.uuid = lp.league_uuid
@@ -144,6 +160,8 @@ func (s *Store) GetByUUID(ctx context.Context, leagueUUID uuid.UUID) (*entities.
 
 	league.TeamCount = temp.TeamCount
 	league.PlayerCount = temp.PlayerCount
+	league.GroupStageMatchCount = temp.GroupStageMatchCount
+	league.GroupStageMatchCompletedCount = temp.GroupStageMatchCompletedCount
 
 	return &league, nil
 }

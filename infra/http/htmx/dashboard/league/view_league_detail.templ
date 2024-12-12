@@ -31,6 +31,10 @@ templ ViewLeagueDetail(league *entities.League, showTeamCount bool) {
           <div>
             End: {displayMaybeDate(league.LeagueEndAt)}
           </div>
+          <div>
+            <h3 class="text-sm font-bold">Group Stage Matches</h3>
+            <h3 class="text-sm">{strconv.Itoa(int(league.GroupStageMatchCompletedCount))} / {strconv.Itoa(int(league.GroupStageMatchCount))} Completed</h3>
+          </div>
         </div>
 
         // Right

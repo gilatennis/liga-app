@@ -104,6 +104,10 @@ templ ViewLeagueList(leagues []entities.League, nextPage int, showTeamCount bool
                 }
               </div>
             }
+            <div class="text-center">
+              <h3 class="text-xs font-bold">Group Stage Matches</h3>
+              <h3 class="text-xs">{strconv.Itoa(int(l.GroupStageMatchCompletedCount))} / {strconv.Itoa(int(l.GroupStageMatchCount))} Completed</h3>
+            </div>
           </div>
         </div>
       </a>
