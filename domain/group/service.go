@@ -153,8 +153,8 @@ func (s *Service) GenerateGroupResults(ctx context.Context, groupUUID uuid.UUID)
 			teamResultByTeamUUID[*match.TeamBUUID].MatchPlayed += 1
 
 			// INFO: Playing a match adds 1 to score
-			teamResultByTeamUUID[*match.TeamAUUID].Score += 1
-			teamResultByTeamUUID[*match.TeamBUUID].Score += 1
+			// teamResultByTeamUUID[*match.TeamAUUID].Score += 1
+			// teamResultByTeamUUID[*match.TeamBUUID].Score += 1
 
 			if teamHeadToHeadResultByTeamUUID[*match.TeamAUUID] == nil {
 				teamHeadToHeadResultByTeamUUID[*match.TeamAUUID] = make(map[uuid.UUID]*entities.GroupRoundRobinHeadToHeadResult)
@@ -217,38 +217,34 @@ func (s *Service) GenerateGroupResults(ctx context.Context, groupUUID uuid.UUID)
 		}
 
 		sort.Slice(groupRoundRobinResults, func(i, j int) bool {
-			if groupRoundRobinResults[i].Score == groupRoundRobinResults[j].Score {
-				cumulativeMatchesWon1 := groupRoundRobinResults[i].MatchWon - groupRoundRobinResults[i].MatchLost
-				cumulativeMatchesWon2 := groupRoundRobinResults[j].MatchWon - groupRoundRobinResults[j].MatchLost
-
-				if cumulativeMatchesWon1 == 0 && cumulativeMatchesWon2 == 0 {
-					return false
-				}
-
-				if cumulativeMatchesWon1 != cumulativeMatchesWon2 {
-					return cumulativeMatchesWon1 > cumulativeMatchesWon2
-				}
-
-				cumulativeGamesWon1 := groupRoundRobinResults[i].GamesWon - groupRoundRobinResults[i].GamesLost
-				cumulativeGamesWon2 := groupRoundRobinResults[j].GamesWon - groupRoundRobinResults[j].GamesLost
-
-				if cumulativeGamesWon1 != cumulativeGamesWon2 {
-					return cumulativeGamesWon1 > cumulativeGamesWon2
-				}
-
-				team1UUID := groupRoundRobinResults[i].TeamUUID
-				team2UUID := groupRoundRobinResults[j].TeamUUID
-
-				if teamHeadToHeadResultByTeamUUID[team1UUID] != nil &&
-					teamHeadToHeadResultByTeamUUID[team1UUID][team2UUID] != nil &&
-					teamHeadToHeadResultByTeamUUID[team1UUID][team2UUID].Result == enums.MatchResultWin {
-					return true
-				}
-
-				return false
+			// 1. Sort by Score
+			if groupRoundRobinResults[i].Score != groupRoundRobinResults[j].Score {
+				return groupRoundRobinResults[i].Score > groupRoundRobinResults[j].Score
 			}
 
-			return groupRoundRobinResults[i].Score > groupRoundRobinResults[j].Score
+			// 2. Sort by Matches Played if scores are tied
+			if groupRoundRobinResults[i].MatchPlayed != groupRoundRobinResults[j].MatchPlayed {
+				return groupRoundRobinResults[i].MatchPlayed > groupRoundRobinResults[j].MatchPlayed
+			}
+
+			// 3. Sort by Games Won - Games Lost if matches played are tied
+			cumulativeGamesWon1 := groupRoundRobinResults[i].GamesWon - groupRoundRobinResults[i].GamesLost
+			cumulativeGamesWon2 := groupRoundRobinResults[j].GamesWon - groupRoundRobinResults[j].GamesLost
+			if cumulativeGamesWon1 != cumulativeGamesWon2 {
+				return cumulativeGamesWon1 > cumulativeGamesWon2
+			}
+
+			// 4. If all criteria are tied, use Head-to-Head result
+			team1UUID := groupRoundRobinResults[i].TeamUUID
+			team2UUID := groupRoundRobinResults[j].TeamUUID
+
+			if teamHeadToHeadResultByTeamUUID[team1UUID] != nil &&
+				teamHeadToHeadResultByTeamUUID[team1UUID][team2UUID] != nil &&
+				teamHeadToHeadResultByTeamUUID[team1UUID][team2UUID].Result == enums.MatchResultWin {
+				return true
+			}
+
+			return false
 		})
 
 		for i, res := range groupRoundRobinResults {
