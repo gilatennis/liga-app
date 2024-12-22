@@ -67,6 +67,33 @@ func (s *Service) RemoveTeam(ctx context.Context, groupUUID uuid.UUID, teamUUID 
 	return groupTeamUUID, nil
 }
 
+func updateHeadToHeadResult(
+	teamResults map[uuid.UUID]map[uuid.UUID]*entities.GroupRoundRobinHeadToHeadResult,
+	winner uuid.UUID,
+	loser uuid.UUID,
+	groupUUID uuid.UUID,
+) {
+	if teamResults[winner] == nil {
+		teamResults[winner] = make(map[uuid.UUID]*entities.GroupRoundRobinHeadToHeadResult)
+	}
+	teamResults[winner][loser] = &entities.GroupRoundRobinHeadToHeadResult{
+		GroupUUID:        groupUUID,
+		TeamUUID:         winner,
+		TeamOpponentUUID: loser,
+		Result:           enums.MatchResultWin,
+	}
+
+	if teamResults[loser] == nil {
+		teamResults[loser] = make(map[uuid.UUID]*entities.GroupRoundRobinHeadToHeadResult)
+	}
+	teamResults[loser][winner] = &entities.GroupRoundRobinHeadToHeadResult{
+		GroupUUID:        groupUUID,
+		TeamUUID:         loser,
+		TeamOpponentUUID: winner,
+		Result:           enums.MatchResultLoss,
+	}
+}
+
 func (s *Service) GenerateGroupResults(ctx context.Context, groupUUID uuid.UUID) error {
 	group, err := s.groupRepo.GetByUUID(ctx, groupUUID)
 	if err != nil {
@@ -157,48 +184,22 @@ func (s *Service) GenerateGroupResults(ctx context.Context, groupUUID uuid.UUID)
 				}
 			}
 
+			// team A Win, team B Lost
 			if teamASetsWon > teamBSetsWon {
 				// INFO: winning a match adds 1 to score
-				teamResultByTeamUUID[*match.TeamAUUID].Score += 1
-
+				teamResultByTeamUUID[*match.TeamAUUID].Score += 3
 				teamResultByTeamUUID[*match.TeamAUUID].MatchWon += 1
 				teamResultByTeamUUID[*match.TeamBUUID].MatchLost += 1
-				// team A win
-				teamHeadToHeadResultByTeamUUID[*match.TeamAUUID][*match.TeamBUUID] = &entities.GroupRoundRobinHeadToHeadResult{
-					GroupUUID:        groupUUID,
-					TeamUUID:         *match.TeamAUUID,
-					TeamOpponentUUID: *match.TeamBUUID,
-					Result:           enums.MatchResultWin,
-				}
-				// team B loss
-				teamHeadToHeadResultByTeamUUID[*match.TeamBUUID][*match.TeamAUUID] = &entities.GroupRoundRobinHeadToHeadResult{
-					GroupUUID:        groupUUID,
-					TeamUUID:         *match.TeamBUUID,
-					TeamOpponentUUID: *match.TeamBUUID,
-					Result:           enums.MatchResultLoss,
-				}
+				updateHeadToHeadResult(teamHeadToHeadResultByTeamUUID, *match.TeamAUUID, *match.TeamBUUID, groupUUID)
 			}
 
+			// team B win, Team A Lost
 			if teamBSetsWon > teamASetsWon {
 				// INFO: winning a match adds 1 to score
-				teamResultByTeamUUID[*match.TeamBUUID].Score += 1
-
+				teamResultByTeamUUID[*match.TeamBUUID].Score += 3
 				teamResultByTeamUUID[*match.TeamBUUID].MatchWon += 1
 				teamResultByTeamUUID[*match.TeamAUUID].MatchLost += 1
-				// team B win
-				teamHeadToHeadResultByTeamUUID[*match.TeamBUUID][*match.TeamAUUID] = &entities.GroupRoundRobinHeadToHeadResult{
-					GroupUUID:        groupUUID,
-					TeamUUID:         *match.TeamBUUID,
-					TeamOpponentUUID: *match.TeamAUUID,
-					Result:           enums.MatchResultWin,
-				}
-				// team A loss
-				teamHeadToHeadResultByTeamUUID[*match.TeamAUUID][*match.TeamBUUID] = &entities.GroupRoundRobinHeadToHeadResult{
-					GroupUUID:        groupUUID,
-					TeamUUID:         *match.TeamAUUID,
-					TeamOpponentUUID: *match.TeamBUUID,
-					Result:           enums.MatchResultLoss,
-				}
+				updateHeadToHeadResult(teamHeadToHeadResultByTeamUUID, *match.TeamBUUID, *match.TeamAUUID, groupUUID)
 			}
 		}
 
@@ -237,8 +238,6 @@ func (s *Service) GenerateGroupResults(ctx context.Context, groupUUID uuid.UUID)
 
 				team1UUID := groupRoundRobinResults[i].TeamUUID
 				team2UUID := groupRoundRobinResults[j].TeamUUID
-				// fmt.Println("team1UUID.String()", team1UUID.String())
-				// fmt.Println("team2UUID.String()", team2UUID.String())
 
 				if teamHeadToHeadResultByTeamUUID[team1UUID] != nil &&
 					teamHeadToHeadResultByTeamUUID[team1UUID][team2UUID] != nil &&
