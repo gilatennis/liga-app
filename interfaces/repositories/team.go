@@ -9,10 +9,11 @@ import (
 )
 
 type TeamFilter struct {
-	LeagueUUID *uuid.UUID
-	PlayerUUID *uuid.UUID
-	GroupUUID  *uuid.UUID
-	NotInGroup *bool
+	LeagueUUID     *uuid.UUID
+	PlayerUUID     *uuid.UUID
+	GroupUUID      *uuid.UUID
+	NotInGroup     *bool
+	NotInGroupUUID *uuid.UUID
 }
 
 type ITeamRepository interface {

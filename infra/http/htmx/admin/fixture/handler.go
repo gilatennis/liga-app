@@ -3,6 +3,7 @@ package fixture
 import (
 	"fmt"
 	"liga-app/entities"
+	"liga-app/enums"
 	"liga-app/infra/http/htmx/common"
 	iCommon "liga-app/interfaces/common"
 	"liga-app/interfaces/repositories"
@@ -251,13 +252,25 @@ func (h *Handler) GetGroupDetailPage(c *gin.Context) {
 	}
 
 	p := iCommon.NewPagination(1, 500, []iCommon.OrderBy{{Column: "name", Direction: "asc"}})
-	notingroup := true
-	f := &repositories.TeamFilter{LeagueUUID: &leagueUUID, NotInGroup: &notingroup}
-	teamsAvailable, _, err := h.teamService.Get(c, p, f)
+	f := &repositories.TeamFilter{LeagueUUID: &leagueUUID}
+	opt := &services.TeamOptions{}
+
+	if fixture.Format == enums.FIXTURE_FORMAT_ROUND_ROBIN {
+		notingroup := true
+		f.NotInGroup = &notingroup
+	}
+	if fixture.Format == enums.FIXTURE_FORMAT_KNOCKOUT {
+		notInGroupUUID := &group.UUID
+		f.NotInGroupUUID = notInGroupUUID
+		opt.IncludeRoundRobinResult = true
+	}
+
+	teamsAvailable, _, err := h.teamService.Get(c, p, f, opt)
 	if err != nil {
 		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
 		return
 	}
+	// pp.Print("teamsAvailable", teamsAvailable)
 
 	vmodel := VModelPageGroupDetail{
 		User:              user,
@@ -305,9 +318,20 @@ func (h *Handler) PostAddTeamToGroup(c *gin.Context) {
 	}
 
 	p := iCommon.NewPagination(1, 500, []iCommon.OrderBy{{Column: "name", Direction: "asc"}})
-	notingroup := true
-	f := &repositories.TeamFilter{LeagueUUID: &leagueUUID, NotInGroup: &notingroup}
-	teamsAvailable, _, err := h.teamService.Get(c, p, f)
+	f := &repositories.TeamFilter{LeagueUUID: &leagueUUID}
+	opt := &services.TeamOptions{}
+
+	if fixture.Format == enums.FIXTURE_FORMAT_ROUND_ROBIN {
+		notingroup := true
+		f.NotInGroup = &notingroup
+	}
+	if fixture.Format == enums.FIXTURE_FORMAT_KNOCKOUT {
+		notInGroupUUID := &group.UUID
+		f.NotInGroupUUID = notInGroupUUID
+		opt.IncludeRoundRobinResult = true
+	}
+
+	teamsAvailable, _, err := h.teamService.Get(c, p, f, opt)
 	if err != nil {
 		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
 		return
@@ -347,9 +371,19 @@ func (h *Handler) PostAddTeamToGroup(c *gin.Context) {
 	}
 
 	p = iCommon.NewPagination(1, 500, []iCommon.OrderBy{{Column: "name", Direction: "asc"}})
-	notingroup = true
-	f = &repositories.TeamFilter{LeagueUUID: &leagueUUID, NotInGroup: &notingroup}
-	vmodel.TeamsAvailable, _, err = h.teamService.Get(c, p, f)
+	f = &repositories.TeamFilter{LeagueUUID: &leagueUUID}
+	opt = &services.TeamOptions{}
+	if fixture.Format == enums.FIXTURE_FORMAT_ROUND_ROBIN {
+		notingroup := true
+		f.NotInGroup = &notingroup
+	}
+	if fixture.Format == enums.FIXTURE_FORMAT_KNOCKOUT {
+		notInGroupUUID := &group.UUID
+		f.NotInGroupUUID = notInGroupUUID
+		opt.IncludeRoundRobinResult = true
+	}
+
+	vmodel.TeamsAvailable, _, err = h.teamService.Get(c, p, f, opt)
 	if err != nil {
 		view := ViewFormAddTeamToGroup(vmodel)
 		h.ResponseAlertError(c, err.Error())
@@ -404,9 +438,18 @@ func (h *Handler) DeleteRemoveTeamFromGroup(c *gin.Context) {
 	}
 
 	p := iCommon.NewPagination(1, 500, []iCommon.OrderBy{{Column: "name", Direction: "asc"}})
-	notingroup := true
-	f := &repositories.TeamFilter{LeagueUUID: &leagueUUID, NotInGroup: &notingroup}
-	teamsAvailable, _, err := h.teamService.Get(c, p, f)
+	f := &repositories.TeamFilter{LeagueUUID: &leagueUUID}
+	opt := &services.TeamOptions{}
+	if fixture.Format == enums.FIXTURE_FORMAT_ROUND_ROBIN {
+		notingroup := true
+		f.NotInGroup = &notingroup
+	}
+	if fixture.Format == enums.FIXTURE_FORMAT_KNOCKOUT {
+		notInGroupUUID := &group.UUID
+		f.NotInGroupUUID = notInGroupUUID
+		opt.IncludeRoundRobinResult = true
+	}
+	teamsAvailable, _, err := h.teamService.Get(c, p, f, opt)
 	if err != nil {
 		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
 		return
@@ -430,9 +473,20 @@ func (h *Handler) DeleteRemoveTeamFromGroup(c *gin.Context) {
 	}
 
 	p = iCommon.NewPagination(1, 500, []iCommon.OrderBy{{Column: "name", Direction: "asc"}})
-	notingroup = true
-	f = &repositories.TeamFilter{LeagueUUID: &leagueUUID, NotInGroup: &notingroup}
-	vmodel.TeamsAvailable, _, err = h.teamService.Get(c, p, f)
+	f = &repositories.TeamFilter{LeagueUUID: &leagueUUID}
+	opt = &services.TeamOptions{}
+
+	if fixture.Format == enums.FIXTURE_FORMAT_ROUND_ROBIN {
+		notingroup := true
+		f.NotInGroup = &notingroup
+	}
+	if fixture.Format == enums.FIXTURE_FORMAT_KNOCKOUT {
+		notInGroupUUID := &group.UUID
+		f.NotInGroupUUID = notInGroupUUID
+		opt.IncludeRoundRobinResult = true
+	}
+
+	vmodel.TeamsAvailable, _, err = h.teamService.Get(c, p, f, opt)
 	if err != nil {
 		view := ViewFormAddTeamToGroup(vmodel)
 		h.ResponseAlertError(c, err.Error())
@@ -470,11 +524,7 @@ func (h *Handler) GenerateMatches(c *gin.Context) {
 	_, _, _ = leagueUUID, fixtureUUID, groupUUID
 
 	isHomeAndAwayStr := c.Query("home_and_away")
-	isHomeAndAway := false
-
-	if isHomeAndAwayStr == "true" {
-		isHomeAndAway = true
-	}
+	isHomeAndAway := isHomeAndAwayStr == "true"
 
 	err = h.matchService.GenerateRoundRobinMatches(c, groupUUID, isHomeAndAway)
 	if err != nil {
@@ -510,163 +560,3 @@ func (h *Handler) GenerateGroupResults(c *gin.Context) {
 
 	h.ResponseAlertSuccess(c, "hasil klasemen berhasil di update")
 }
-
-/*
-func (h *Handler) GetGroupMatchesPage(c *gin.Context) {
-	user, err := h.GetAuthenticatedUser(c)
-	if err != nil {
-		h.RenderErrorPage(c, http.StatusUnauthorized, err.Error())
-		return
-	}
-
-	params, err := h.GetURLUUIDParams(c, []string{"league_uuid", "fixture_uuid", "group_uuid"})
-	if err != nil {
-		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
-		return
-	}
-
-	leagueUUID, fixtureUUID, groupUUID := params[0], params[1], params[2]
-	_, _, _ = leagueUUID, fixtureUUID, groupUUID
-
-	league, err := h.leagueService.GetByUUID(c, leagueUUID)
-	if err != nil {
-		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	fixture, err := h.fixtureService.GetByUUID(c, fixtureUUID)
-	if err != nil {
-		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	group, err := h.groupService.GetByUUID(c, groupUUID)
-	if err != nil {
-		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	p := iCommon.NewPagination(1, 10, []iCommon.OrderBy{{Column: "rounds.number", Direction: "asc"}})
-	f := &services.MatchFilter{GroupUUID: &groupUUID}
-
-	matchStatus := c.Query("match_status")
-	// matchParticipant := c.Query("match_participant")
-
-	if matchStatus != "" && matchStatus != "ALL" {
-		status := services.MATCH_FILTER_STATUS(matchStatus)
-		f.Status = &status
-	}
-
-		// if matchParticipant == "" || matchParticipant == "ME" {
-		// 	f.UserUUID = &user.UUID
-		// }
-
-	matches, count, err := h.matchService.Get(c, p, f)
-	if err != nil {
-		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
-		return
-	}
-	p.SetTotalPageByTotalItems(int(count))
-	// pp.Println(matches)
-	fmt.Println("p.Limit", p.Limit)
-
-	vmodel := VModelPageGroupMatches{
-		User:            user,
-		League:          league,
-		Fixture:         fixture,
-		Group:           group,
-		Matches:         matches,
-		MatchesNextPage: p.GetNextPage(),
-	}
-	page := PageGroupMatches(vmodel)
-
-	h.RenderView(c, page)
-}
-
-func (h *Handler) GetGroupMatchesView(c *gin.Context) {
-	user, err := h.GetAuthenticatedUser(c)
-	if err != nil {
-		h.RenderErrorPage(c, http.StatusUnauthorized, err.Error())
-		return
-	}
-
-	params, err := h.GetURLUUIDParams(c, []string{"league_uuid", "fixture_uuid", "group_uuid"})
-	if err != nil {
-		h.RenderErrorPage(c, http.StatusBadRequest, err.Error())
-		return
-	}
-
-	leagueUUID, fixtureUUID, groupUUID := params[0], params[1], params[2]
-	_, _, _ = leagueUUID, fixtureUUID, groupUUID
-
-	league, err := h.leagueService.GetByUUID(c, leagueUUID)
-	if err != nil {
-		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	fixture, err := h.fixtureService.GetByUUID(c, fixtureUUID)
-	if err != nil {
-		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	group, err := h.groupService.GetByUUID(c, groupUUID)
-	if err != nil {
-		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	page := 1
-	pageStr := c.Query("page")
-	if pageStr != "" {
-		page, _ = strconv.Atoi(pageStr)
-	}
-	p := iCommon.NewPagination(page, 10, []iCommon.OrderBy{{Column: "rounds.number", Direction: "asc"}})
-	f := &services.MatchFilter{GroupUUID: &groupUUID}
-
-	matchStatus := c.Query("match_status")
-	// matchParticipant := c.Query("match_participant")
-
-	if matchStatus != "" && matchStatus != "ALL" {
-		status := services.MATCH_FILTER_STATUS(matchStatus)
-		f.Status = &status
-	}
-
-	//
-	// if matchParticipant == "ME" {
-	// 	f.UserUUID = &user.UUID
-	// }
-	//
-
-	matches, count, err := h.matchService.Get(c, p, f)
-	if err != nil {
-		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
-		return
-	}
-	p.SetTotalPageByTotalItems(int(count))
-
-	fmt.Println("page", page)
-	fmt.Println("count", count)
-	vmodel := VModelPageGroupMatches{
-		User:            user,
-		League:          league,
-		Fixture:         fixture,
-		Group:           group,
-		Matches:         matches,
-		MatchesNextPage: p.GetNextPage(),
-	}
-
-	if page == 1 {
-		view := ViewMatchList(vmodel)
-		h.RenderView(c, view)
-		return
-	}
-
-	if page > 1 {
-		view := ViewMoreMatches(vmodel)
-		h.RenderView(c, view)
-		return
-	}
-}
-*/

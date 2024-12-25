@@ -97,7 +97,7 @@ func (h *Handler) GetMatchListPage(c *gin.Context) {
 
 	pTeam := iCommon.NewPagination(1, 200, []iCommon.OrderBy{{Column: "name", Direction: "asc"}})
 	fTeam := &repositories.TeamFilter{LeagueUUID: &leagueUUID}
-	teams, _, err := h.teamService.Get(c, pTeam, fTeam)
+	teams, _, err := h.teamService.Get(c, pTeam, fTeam, nil)
 	if err != nil {
 		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
 		return

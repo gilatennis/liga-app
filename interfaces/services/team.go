@@ -10,8 +10,12 @@ import (
 	"github.com/google/uuid"
 )
 
+type TeamOptions struct {
+	IncludeRoundRobinResult bool
+}
+
 type ITeamService interface {
-	Get(ctx context.Context, p *common.Pagination, f *repositories.TeamFilter) ([]entities.Team, int64, error)
+	Get(ctx context.Context, p *common.Pagination, f *repositories.TeamFilter, opt *TeamOptions) ([]entities.Team, int64, error)
 	GetUserTeamInLeague(ctx context.Context, userUUID uuid.UUID, leagueUUID uuid.UUID) (*entities.Team, error)
 	GetByUUID(ctx context.Context, teamUUID uuid.UUID) (*entities.Team, error)
 	GetLeagueTeamInviteLink(ctx context.Context, leagueUUID uuid.UUID, teamUUID uuid.UUID) string

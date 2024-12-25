@@ -58,7 +58,7 @@ func (h *Handler) GetTeamListPage(c *gin.Context) {
 
 	p := iCommon.NewPagination(1, 10, []iCommon.OrderBy{})
 	f := &iRepo.TeamFilter{LeagueUUID: &leagueUUID}
-	teams, count, err := h.teamService.Get(c, p, f)
+	teams, count, err := h.teamService.Get(c, p, f, nil)
 	if err != nil {
 		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
 		return
@@ -106,7 +106,7 @@ func (h *Handler) GetTeamListView(c *gin.Context) {
 
 	p := iCommon.NewPagination(q.Page, 10, []iCommon.OrderBy{})
 	f := &iRepo.TeamFilter{LeagueUUID: &leagueUUID}
-	teams, count, err := h.teamService.Get(c, p, f)
+	teams, count, err := h.teamService.Get(c, p, f, nil)
 	if err != nil {
 		h.RenderErrorPage(c, http.StatusInternalServerError, err.Error())
 		return

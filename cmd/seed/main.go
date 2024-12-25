@@ -184,6 +184,11 @@ func main() {
 				Description: "Seed round robin fixtures to all leagues if not exist",
 				Action:      fixtures.SeedRoundRobinFixtures(db),
 			},
+			{
+				Name:        "seed-knockout-fixtures",
+				Description: "Seed knockout fixtures to all leagues if not exist",
+				Action:      fixtures.SeedKnockoutFixtures(db),
+			},
 		},
 	}
 

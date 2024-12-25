@@ -24,6 +24,7 @@ func (s *Store) Get(ctx context.Context, p *common.Pagination, f *repositories.F
 	var count int64
 
 	dbHandle := s.db.WithContext(ctx).
+		Preload("Groups").
 		Offset(p.Offset).
 		Limit(p.Limit)
 
@@ -34,6 +35,10 @@ func (s *Store) Get(ctx context.Context, p *common.Pagination, f *repositories.F
 		if f.LeagueUUID != nil {
 			dbHandle = dbHandle.Where("league_uuid = ?", *f.LeagueUUID)
 			dbCount = dbCount.Where("league_uuid = ?", *f.LeagueUUID)
+		}
+		if f.Format != nil {
+			dbHandle = dbHandle.Where("format = ?", *f.Format)
+			dbCount = dbCount.Where("format = ?", *f.Format)
 		}
 	}
 

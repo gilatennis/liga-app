@@ -47,6 +47,15 @@ func (s *Store) Get(ctx context.Context, p *common.Pagination, f *repositories.T
 		if f.NotInGroup != nil && *f.NotInGroup {
 			db = db.Where("(gt.group_uuid IS NULL)")
 		}
+		if f.NotInGroupUUID != nil {
+			db = db.Where(`
+        teams.uuid NOT IN (
+          SELECT team_uuid
+          FROM group_teams
+          WHERE group_uuid = ?
+        )
+      `, *f.NotInGroupUUID)
+		}
 	}
 
 	err := db.Find(&teams).Error

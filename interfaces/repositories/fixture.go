@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"liga-app/entities"
+	"liga-app/enums"
 	"liga-app/interfaces/common"
 
 	"github.com/google/uuid"
@@ -10,6 +11,7 @@ import (
 
 type FixtureFilter struct {
 	LeagueUUID *uuid.UUID
+	Format     *enums.FIXTURE_FORMAT
 }
 
 type IFixtureRepository interface {

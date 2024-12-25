@@ -149,7 +149,7 @@ func setupHandlers(
 		duitkuAPI,
 		userStore,
 	)
-	teamService := domainTeam.NewService(cfg, teamStore, minioClient)
+	teamService := domainTeam.NewService(cfg, teamStore, groupStore, fixtureStore, minioClient)
 	inviteService := domainInvite.NewService(leagueRegStore, leagueStore, teamStore)
 	ruleBookService := domainRuleBook.NewService(gormStore)
 	matchService := domainMatch.NewService(

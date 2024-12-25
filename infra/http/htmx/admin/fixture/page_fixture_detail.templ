@@ -4,7 +4,7 @@ import (
   "liga-app/infra/http/htmx/common/layouts"
   // "strconv"
   // "liga-app/entities"
-  // "liga-app/enums"
+  "liga-app/enums"
   // "time"
   // "liga-app/infra/http/htmx/common/utils"
 	"liga-app/infra/http/htmx/common/components"
@@ -19,12 +19,14 @@ templ PageFixtureDetail(vmodel VModelPageFixtureDetail) {
       @league.ViewLeagueDetail(vmodel.League, true)
       @components.PageHeader(vmodel.Fixture.Name, "")
       <div class="text-xl">Daftar Grup</div>
-      <div>
-        <a href={hrefAddGroup(vmodel.League.UUID, vmodel.Fixture.UUID)} class="btn btn-primary w-full">
-          <i data-feather="plus" class="w-4 h-4"></i>
-          Tambah Group
-        </a>
-      </div>
+      if vmodel.Fixture.Format == enums.FIXTURE_FORMAT_ROUND_ROBIN {
+        <div>
+          <a href={hrefAddGroup(vmodel.League.UUID, vmodel.Fixture.UUID)} class="btn btn-primary w-full">
+            <i data-feather="plus" class="w-4 h-4"></i>
+            Tambah Group
+          </a>
+        </div>
+      }
       @ViewGroupList(vmodel)
     </div>
   }

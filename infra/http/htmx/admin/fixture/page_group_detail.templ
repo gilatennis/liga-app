@@ -4,7 +4,7 @@ import (
   "liga-app/infra/http/htmx/common/layouts"
   // "strconv"
   // "liga-app/entities"
-  // "liga-app/enums"
+  "liga-app/enums"
   // "time"
   // "liga-app/infra/http/htmx/common/utils"
 	"liga-app/infra/http/htmx/common/components"
@@ -21,8 +21,46 @@ templ PageGroupDetail(vmodel VModelPageGroupDetail) {
       @league.ViewLeagueDetail(vmodel.League, true)
       @components.PageHeader(fmt.Sprintf("Group %s", vmodel.Group.Name), "")
 
-      <div class="grid grid-cols-2 gap-2">
-        /* INFO: disable for now, so we don't accidentally generate additional matches
+      if vmodel.Group.Fixture.Format == enums.FIXTURE_FORMAT_ROUND_ROBIN {
+        <div class="grid grid-cols-2 gap-2">
+          /* INFO: disable for now, so we don't accidentally generate additional matches
+          @components.CardButtonPost(fmt.Sprintf("/admin/dashboard/leagues/%s/fixtures/%s/groups/%s/generate-matches", vmodel.League.UUID, vmodel.Fixture.UUID, vmodel.Group.UUID)) {
+            <div class="grid grid-row-2 gap-4 p-4">
+              <div class="flex justify-center text-primary">
+                <i data-feather="loader" width="32" height="32"></i>
+              </div>
+              <h3 class="text-center">Generate Pertandingan</h3>
+            </div>
+          }
+          @components.CardButtonPost(fmt.Sprintf("/admin/dashboard/leagues/%s/fixtures/%s/groups/%s/generate-matches?home_and_away=true", vmodel.League.UUID, vmodel.Fixture.UUID, vmodel.Group.UUID)) {
+            <div class="grid grid-row-2 gap-4 p-4">
+              <div class="flex justify-center text-primary">
+                <i data-feather="loader" width="32" height="32"></i>
+              </div>
+              <h3 class="text-center">Generate Pertandingan Home & Away</h3>
+            </div>
+          }
+          */
+          @components.CardButton(fmt.Sprintf("/admin/dashboard/leagues/%s/fixtures/%s/groups/%s/matches", vmodel.League.UUID, vmodel.Fixture.UUID, vmodel.Group.UUID)) {
+            <div class="grid grid-row-2 gap-4 p-4">
+              <div class="flex justify-center text-primary">
+                <i data-feather="list" width="32" height="32"></i>
+              </div>
+              <h3 class="text-center">Daftar Pertandingan</h3>
+            </div>
+          }
+          @components.CardButtonPost(fmt.Sprintf("/admin/dashboard/leagues/%s/fixtures/%s/groups/%s/generate-results", vmodel.League.UUID, vmodel.Fixture.UUID, vmodel.Group.UUID)) {
+            <div class="grid grid-row-2 gap-4 p-4">
+              <div class="flex justify-center text-primary">
+                <i data-feather="loader" width="32" height="32"></i>
+              </div>
+              <h3 class="text-center">Update Klasemen</h3>
+            </div>
+          }
+        </div>
+      }
+
+      if vmodel.Group.Fixture.Format == enums.FIXTURE_FORMAT_KNOCKOUT {
         @components.CardButtonPost(fmt.Sprintf("/admin/dashboard/leagues/%s/fixtures/%s/groups/%s/generate-matches", vmodel.League.UUID, vmodel.Fixture.UUID, vmodel.Group.UUID)) {
           <div class="grid grid-row-2 gap-4 p-4">
             <div class="flex justify-center text-primary">
@@ -31,15 +69,6 @@ templ PageGroupDetail(vmodel VModelPageGroupDetail) {
             <h3 class="text-center">Generate Pertandingan</h3>
           </div>
         }
-        @components.CardButtonPost(fmt.Sprintf("/admin/dashboard/leagues/%s/fixtures/%s/groups/%s/generate-matches?home_and_away=true", vmodel.League.UUID, vmodel.Fixture.UUID, vmodel.Group.UUID)) {
-          <div class="grid grid-row-2 gap-4 p-4">
-            <div class="flex justify-center text-primary">
-              <i data-feather="loader" width="32" height="32"></i>
-            </div>
-            <h3 class="text-center">Generate Pertandingan Home & Away</h3>
-          </div>
-        }
-        */
         @components.CardButton(fmt.Sprintf("/admin/dashboard/leagues/%s/fixtures/%s/groups/%s/matches", vmodel.League.UUID, vmodel.Fixture.UUID, vmodel.Group.UUID)) {
           <div class="grid grid-row-2 gap-4 p-4">
             <div class="flex justify-center text-primary">
@@ -48,15 +77,7 @@ templ PageGroupDetail(vmodel VModelPageGroupDetail) {
             <h3 class="text-center">Daftar Pertandingan</h3>
           </div>
         }
-        @components.CardButtonPost(fmt.Sprintf("/admin/dashboard/leagues/%s/fixtures/%s/groups/%s/generate-results", vmodel.League.UUID, vmodel.Fixture.UUID, vmodel.Group.UUID)) {
-          <div class="grid grid-row-2 gap-4 p-4">
-            <div class="flex justify-center text-primary">
-              <i data-feather="loader" width="32" height="32"></i>
-            </div>
-            <h3 class="text-center">Update Klasemen</h3>
-          </div>
-        }
-      </div>
+      }
 
       @ViewGroupDetail(vmodel)
     </div>
@@ -80,7 +101,7 @@ templ ViewFormAddTeamToGroup(vmodel VModelPageGroupDetail) {
       @components.InputSelect(components.InputSelectParams{
         Label: "Tambah Tim",
         Name: "team_uuid",
-        Options: optionsAddTeam(vmodel.TeamsAvailable),
+        Options: optionsAddTeam(vmodel.TeamsAvailable, vmodel.Group.Fixture.Format),
       })
       <div class="pt-8">
         if vmodel.VModelFormAddTeam.base.ServerError != "" {
@@ -98,16 +119,43 @@ func urlPostAddTeam(leagueUUID, fixtureUUID, groupUUID uuid.UUID) string {
   return fmt.Sprintf("/admin/dashboard/leagues/%s/fixtures/%s/groups/%s/teams/add", leagueUUID, fixtureUUID, groupUUID)
 }
 
-func optionsAddTeam(teams []entities.Team) []components.InputSelectOption {
+func optionsAddTeam(teams []entities.Team, fixtureFormat enums.FIXTURE_FORMAT) []components.InputSelectOption {
   opts := []components.InputSelectOption{}
 
-  for _, t := range teams {
-    text := t.Name
-    if len(t.Players) == 1 {
-      text = fmt.Sprintf("%s - %s", t.Name, t.Players[0].GetLatestRatingString())
-    }
+  if fixtureFormat == enums.FIXTURE_FORMAT_ROUND_ROBIN {
+    for _, t := range teams {
+      text := t.Name
+      if len(t.Players) == 1 {
+        text = fmt.Sprintf("%s - %s", t.Name, t.Players[0].GetLatestRatingString())
+      }
 
-    opts = append(opts, components.InputSelectOption{Value: t.UUID.String(), Text: text})
+      opts = append(opts, components.InputSelectOption{Value: t.UUID.String(), Text: text})
+    }
+  }
+
+  if fixtureFormat == enums.FIXTURE_FORMAT_KNOCKOUT {
+    for _, t := range teams {
+      text := ""
+
+      if len(t.Players) == 1 {
+        text = fmt.Sprintf("%s - %s - group: %s - ranking: %d",
+          t.Name,
+          t.Players[0].GetLatestRatingString(),
+          t.GroupStageGroup.Name,
+          t.GroupStageRank,
+        )
+      }
+
+      if len(t.Players) > 1 {
+        text = fmt.Sprintf("%s - group: %s - ranking: %d",
+          t.Name,
+          t.GroupStageGroup.Name,
+          t.GroupStageRank,
+        )
+      }
+
+      opts = append(opts, components.InputSelectOption{Value: t.UUID.String(), Text: text})
+    }
   }
 
   return opts

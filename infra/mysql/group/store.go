@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"liga-app/entities"
+	"liga-app/interfaces/common"
+	"liga-app/interfaces/repositories"
 	"strings"
 
 	domainErrors "liga-app/domain/errors"
@@ -19,6 +21,45 @@ type Store struct {
 
 func NewStore(db *gorm.DB) *Store {
 	return &Store{db}
+}
+
+func (s *Store) Get(ctx context.Context, p *common.Pagination, f *repositories.GroupFilter) ([]entities.Group, int64, error) {
+	groups := []entities.Group{}
+	var count int64
+
+	db := s.db.WithContext(ctx).Session(&gorm.Session{}).Debug().
+		Model(&entities.Group{})
+
+	queryDB := db.
+		Joins("JOIN group_teams gt on gt.group_uuid = groups.uuid")
+
+	if f != nil {
+		if f.FixtureUUID != nil {
+			queryDB = db.Where("fixture_uuid = ?", *f.FixtureUUID)
+		}
+
+		if f.TeamUUID != nil {
+			queryDB = db.Where("gt.team_uuid", *f.TeamUUID)
+		}
+	}
+
+	err := queryDB.
+		Preload("Rounds").
+		Preload("Teams").
+		Offset(p.Offset).
+		Limit(p.Limit).
+		Find(&groups).
+		Error
+	if err != nil {
+		return nil, 0, fmt.Errorf("db.Find(): %w", err)
+	}
+
+	err = queryDB.Count(&count).Error
+	if err != nil {
+		return nil, 0, fmt.Errorf("db.Count(): %w", err)
+	}
+
+	return groups, count, nil
 }
 
 func (s *Store) GetByUUID(ctx context.Context, groupUUID uuid.UUID) (*entities.Group, error) {
