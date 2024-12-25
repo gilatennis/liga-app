@@ -71,6 +71,7 @@ func (s *Store) GetByUUID(ctx context.Context, groupUUID uuid.UUID) (*entities.G
 		Preload("Teams.Captain").
 		Preload("Teams.Players").
 		Preload("Teams.Players.Ratings").
+		Preload("Rounds").
 		First(&g, "uuid = ?", groupUUID).
 		Error
 	if err != nil {

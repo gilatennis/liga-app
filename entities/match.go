@@ -35,6 +35,7 @@ type Match struct {
 	IsCompleteConfirmed      bool
 	IsCompleteConfirmedBy    uuid.UUID `gorm:"type:CHAR(36)"`
 	IsCompleteConfirmedAt    *time.Time
+	NextMatchUUID            *uuid.UUID `gorm:"type:CHAR(36)"`
 }
 
 func (m *Match) GetMatchSetByNumber(num int) *MatchSet {

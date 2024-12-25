@@ -11,6 +11,8 @@ import (
 	iRepo "liga-app/interfaces/repositories"
 	iService "liga-app/interfaces/services"
 	"liga-app/utils"
+	"math"
+	"slices"
 	"time"
 
 	"github.com/google/uuid"
@@ -527,4 +529,191 @@ func (s *Service) IsAdmin(ctx context.Context, userUUID uuid.UUID) (bool, error)
 
 	_ = admin
 	return true, nil
+}
+
+func (s *Service) GenerateKnockoutMatches(ctx context.Context, groupUUID uuid.UUID) error {
+	const BYE = "BYE"
+
+	g, err := s.groupRepo.GetByUUID(ctx, groupUUID)
+	if err != nil {
+		return fmt.Errorf("s.groupRepo.GetByUUID(ctx, groupUUID=%s): %w", groupUUID, err)
+	}
+
+	// INFO: team count has to be power of two.
+	// e.g 2, 4, 8, 16, 32
+	// if not, round up to the nearest power of two.
+	// by filling the empty team ids with "BYE"
+	teamCount := len(g.Teams)
+	minTeamCountPowerOfTwo := 2
+
+	teamIDs := make([]string, teamCount)
+	for i, team := range g.Teams {
+		teamIDs[i] = team.UUID.String()
+	}
+
+	if teamCount > minTeamCountPowerOfTwo {
+		for minTeamCountPowerOfTwo < teamCount {
+			minTeamCountPowerOfTwo = minTeamCountPowerOfTwo * 2
+		}
+	}
+
+	for i := 0; i < (minTeamCountPowerOfTwo - teamCount); i++ {
+		teamIDs = append(teamIDs, BYE)
+	}
+
+	numTeams := len(teamIDs)
+	numRounds := 0
+	rounds := make([]entities.Round, 0)
+
+	// Generate rounds based on number of teams
+	for numTeams > 1 {
+		// integer division is round down in golang
+		numTeams = (numTeams + 1) / 2
+		numRounds++
+		r := entities.Round{
+			Base: entities.Base{
+				UUID: uuid.New(),
+			},
+			GroupUUID: groupUUID,
+			Number:    numRounds,
+			Matches:   make([]entities.Match, 0),
+		}
+		rounds = append(rounds, r)
+	}
+
+	/*
+	  *  INFO:
+	      create matches for each round
+	      assign next_match_uuid for each match
+	      refer to the diagram below for the logic
+
+	      ---
+	      Round 4. [0]
+	      Round 3. [0, 1]
+	      Round 2. [0, 1, 2, 3]
+	      Round 1. [0, 1, 2, 3, 4, 5, 6, 7]
+
+	      to assign the next_match_uuid for each match in round 1,
+	      the function f(x) = y is used, where x is the match index in round 1,
+	      and y is the match index in round 2
+
+	      f(0) = 0, f(1) = 0, f(2) = 1,
+	      f(3) = 1, f(4) = 2, f(5) = 2,
+	      f(6) = 3, f(7) = 3
+	*/
+	slices.Reverse(rounds)
+	var prevIterRound *entities.Round = nil
+	// roundUUID => matches
+	for i, r := range rounds {
+		numMatchesInRound := 1
+		if i > 0 {
+			numMatchesInRound = int(math.Pow(2, float64(i)))
+		}
+		for mIdx := 0; mIdx < numMatchesInRound; mIdx++ {
+			match := entities.Match{
+				Base: entities.Base{
+					UUID: uuid.New(),
+				},
+				RoundUUID: r.UUID,
+				Status:    string(enums.MATCH_STATUS_WAITING),
+				Number:    mIdx + 1,
+			}
+			if prevIterRound != nil {
+				nextMatchIdx := mIdx / 2
+				match.NextMatchUUID = &prevIterRound.Matches[nextMatchIdx].UUID
+			}
+			r.Matches = append(r.Matches, match)
+			rounds[i] = r
+		}
+		prevIterRound = &rounds[i]
+	}
+
+	slices.Reverse(rounds)
+
+	/*
+		  *  INFO:
+			  matches = [0, 1]
+			  teams = [0, 1, 2, 3]
+
+			  i = 0
+			  m1 = matches[0]
+			  opp1 = teams[0] 0 * 2
+			  opp2 = teams[1] 0 * 2 + 1
+
+			  i = 1
+			  m1 = matches[1]
+			  opp1 = teams[2] 1 * 2
+			  opp2 = teams[3] 1 * 2 + 1
+
+			  i = 2
+			  m3 = matches[2]
+			  opp1 = teams[4] 2 * 2
+			  opp2 = teams[5] 2 * 2 + 1
+
+			  i = 3
+			  m4 = matches[3]
+			  opp1 = teams[6] 3 * 2
+			  opp2 = teams[7] 3 * 2 + 1
+
+			  i = 4
+			  m5 = matches[4]
+			  opp1 = teams[8] 4 * 2
+			  opp2 = teams[9] 4 * 2 + 1
+	*/
+
+	firstRound := rounds[0]
+	for i := 0; i < len(firstRound.Matches); i++ {
+		opp1ID := teamIDs[i*2]
+		opp2ID := teamIDs[(i*2)+1]
+		match := firstRound.Matches[i]
+
+		switch opp1ID {
+		case BYE:
+			match.IsByeTeamA = true
+
+		case "TBA":
+			match.TeamAUUID = nil
+
+		default:
+			opp1UUID, err := uuid.Parse(opp1ID)
+			if err != nil {
+				err = fmt.Errorf("domain.matchs.service.GenerateKnockoutMatches() uuid.Parse(teamIDs[%d]=%s): %w", i, opp1ID, err)
+				return err
+			}
+			match.TeamAUUID = &opp1UUID
+		}
+
+		switch opp2ID {
+		case BYE:
+			match.IsByeTeamB = true
+
+		case "TBA":
+			match.TeamBUUID = nil
+
+		default:
+			opp2UUID, err := uuid.Parse(opp2ID)
+			if err != nil {
+				err = fmt.Errorf("domain.matchs.service.GenerateKnockoutMatches() uuid.Parse(teamIDs[%d]=%s): %w", i, opp2ID, err)
+				return err
+			}
+			match.TeamBUUID = &opp2UUID
+		}
+
+		firstRound.Matches[i] = match
+	}
+	rounds[0] = firstRound
+
+	pp.Println("rounds", rounds)
+	for _, r := range rounds {
+		fmt.Printf("round number: %d \n", r.Number)
+		for _, m := range r.Matches {
+			fmt.Printf("\t\t match number %d: %s VS %s \n", m.Number, m.TeamAUUID, m.TeamBUUID)
+		}
+	}
+
+	err = s.matchRepo.CreateGeneratedMatches(ctx, rounds, g.Fixture.LeagueUUID, g.UUID)
+	if err != nil {
+		return fmt.Errorf("s.matchRepo.CreateGeneratedMatches(ctx, rounds, g.Fixture.LeagueUUID, g.UUID) : %w", err)
+	}
+	return nil
 }

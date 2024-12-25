@@ -523,16 +523,32 @@ func (h *Handler) GenerateMatches(c *gin.Context) {
 	leagueUUID, fixtureUUID, groupUUID := params[0], params[1], params[2]
 	_, _, _ = leagueUUID, fixtureUUID, groupUUID
 
-	isHomeAndAwayStr := c.Query("home_and_away")
-	isHomeAndAway := isHomeAndAwayStr == "true"
-
-	err = h.matchService.GenerateRoundRobinMatches(c, groupUUID, isHomeAndAway)
+	group, err := h.groupService.GetByUUID(c, groupUUID)
 	if err != nil {
 		h.ResponseAlertError(c, err.Error())
 		return
 	}
 
-	h.ResponseAlertSuccess(c, "round robin matches generated")
+	if group.Fixture.Format == enums.FIXTURE_FORMAT_ROUND_ROBIN {
+		isHomeAndAwayStr := c.Query("home_and_away")
+		isHomeAndAway := isHomeAndAwayStr == "true"
+
+		err = h.matchService.GenerateRoundRobinMatches(c, groupUUID, isHomeAndAway)
+		if err != nil {
+			h.ResponseAlertError(c, err.Error())
+			return
+		}
+		h.ResponseAlertSuccess(c, "round robin matches generated")
+	}
+
+	if group.Fixture.Format == enums.FIXTURE_FORMAT_KNOCKOUT {
+		err = h.matchService.GenerateKnockoutMatches(c, groupUUID)
+		if err != nil {
+			h.ResponseAlertError(c, err.Error())
+			return
+		}
+		h.ResponseAlertSuccess(c, "knockout matches generated")
+	}
 }
 
 func (h *Handler) GenerateGroupResults(c *gin.Context) {

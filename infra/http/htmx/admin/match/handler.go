@@ -49,7 +49,7 @@ func (h *Handler) GetMatchListPage(c *gin.Context) {
 		{Column: "rounds.number", Direction: "asc"},
 		{Column: "matches.uuid", Direction: "asc"},
 	})
-	f := &services.MatchFilter{LeagueUUID: &leagueUUID}
+	f := &services.MatchFilter{LeagueUUID: &leagueUUID, GroupUUID: &groupUUID}
 
 	matchStatus := c.Query("match_status")
 	// matchParticipant := c.Query("match_participant")
@@ -100,11 +100,11 @@ func (h *Handler) GetMatchListView(c *gin.Context) {
 	if pageStr != "" {
 		page, _ = strconv.Atoi(pageStr)
 	}
-	p := iCommon.NewPagination(1, 10, []iCommon.OrderBy{
+	p := iCommon.NewPagination(page, 10, []iCommon.OrderBy{
 		{Column: "rounds.number", Direction: "asc"},
 		{Column: "matches.uuid", Direction: "asc"},
 	})
-	f := &services.MatchFilter{LeagueUUID: &leagueUUID}
+	f := &services.MatchFilter{LeagueUUID: &leagueUUID, GroupUUID: &groupUUID}
 
 	matchStatus := c.Query("match_status")
 	matchParticipant := c.Query("match_participant")

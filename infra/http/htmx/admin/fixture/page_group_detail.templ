@@ -61,13 +61,15 @@ templ PageGroupDetail(vmodel VModelPageGroupDetail) {
       }
 
       if vmodel.Group.Fixture.Format == enums.FIXTURE_FORMAT_KNOCKOUT {
-        @components.CardButtonPost(fmt.Sprintf("/admin/dashboard/leagues/%s/fixtures/%s/groups/%s/generate-matches", vmodel.League.UUID, vmodel.Fixture.UUID, vmodel.Group.UUID)) {
-          <div class="grid grid-row-2 gap-4 p-4">
-            <div class="flex justify-center text-primary">
-              <i data-feather="loader" width="32" height="32"></i>
+        if len(vmodel.Group.Rounds) == 0 {
+          @components.CardButtonPost(fmt.Sprintf("/admin/dashboard/leagues/%s/fixtures/%s/groups/%s/generate-matches", vmodel.League.UUID, vmodel.Fixture.UUID, vmodel.Group.UUID)) {
+            <div class="grid grid-row-2 gap-4 p-4">
+              <div class="flex justify-center text-primary">
+                <i data-feather="loader" width="32" height="32"></i>
+              </div>
+              <h3 class="text-center">Generate Pertandingan</h3>
             </div>
-            <h3 class="text-center">Generate Pertandingan</h3>
-          </div>
+          }
         }
         @components.CardButton(fmt.Sprintf("/admin/dashboard/leagues/%s/fixtures/%s/groups/%s/matches", vmodel.League.UUID, vmodel.Fixture.UUID, vmodel.Group.UUID)) {
           <div class="grid grid-row-2 gap-4 p-4">
