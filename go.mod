@@ -1,9 +1,11 @@
 module liga-app
 
-go 1.21.0
+go 1.23
+
+toolchain go1.23.4
 
 require (
-	github.com/a-h/templ v0.2.771
+	github.com/a-h/templ v0.3.819
 	github.com/dchest/uniuri v1.2.0
 	github.com/dustin/go-humanize v1.0.1
 	github.com/gin-contrib/cors v1.7.2
@@ -21,7 +23,7 @@ require (
 	github.com/moul/http2curl v1.0.0
 	github.com/rs/zerolog v1.33.0
 	github.com/urfave/cli/v2 v2.27.4
-	golang.org/x/crypto v0.26.0
+	golang.org/x/crypto v0.31.0
 	golang.org/x/oauth2 v0.17.0
 	google.golang.org/api v0.126.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -84,9 +86,9 @@ require (
 	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/arch v0.8.0 // indirect
-	golang.org/x/net v0.28.0 // indirect
-	golang.org/x/sys v0.24.0 // indirect
-	golang.org/x/text v0.17.0 // indirect
+	golang.org/x/net v0.33.0 // indirect
+	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/text v0.21.0 // indirect
 	golang.org/x/time v0.0.0-20220922220347-f3bd1da661af // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230530153820-e85fd2cbaebc // indirect
