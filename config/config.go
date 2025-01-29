@@ -93,6 +93,8 @@ type Config struct {
 
 	Google struct {
 		ServiceAccountCreds string `yaml:"service_account_creds"`
+		RecaptchaSiteKey    string `yaml:"recaptcha_site_key"`
+		RecaptchaSecretKey  string `yaml:"recaptcha_secret_key"`
 	} `yaml:"google"`
 }
 

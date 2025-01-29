@@ -10,6 +10,7 @@ import (
 	"liga-app/enums"
 	"liga-app/interfaces"
 	"liga-app/interfaces/repositories"
+	"liga-app/interfaces/third_party/google"
 	"time"
 
 	"github.com/dchest/uniuri"
@@ -20,26 +21,29 @@ import (
 var logTag = "[domain.auth.Service]"
 
 type Service struct {
-	config      *config.Config
-	authRepo    repositories.IAuthRepository
-	userRepo    repositories.IUserRepository
-	emailSender interfaces.IEmailSender
-	adminRepo   repositories.IAdminRepository
+	config       *config.Config
+	recaptchaAPI google.IRecaptchaAPI
+	authRepo     repositories.IAuthRepository
+	userRepo     repositories.IUserRepository
+	emailSender  interfaces.IEmailSender
+	adminRepo    repositories.IAdminRepository
 }
 
 func NewService(
 	config *config.Config,
+	recaptchaAPI google.IRecaptchaAPI,
 	authRepo repositories.IAuthRepository,
 	userRepo repositories.IUserRepository,
 	emailSender interfaces.IEmailSender,
 	adminRepo repositories.IAdminRepository,
 ) *Service {
 	return &Service{
-		config:      config,
-		authRepo:    authRepo,
-		userRepo:    userRepo,
-		emailSender: emailSender,
-		adminRepo:   adminRepo,
+		config:       config,
+		recaptchaAPI: recaptchaAPI,
+		authRepo:     authRepo,
+		userRepo:     userRepo,
+		emailSender:  emailSender,
+		adminRepo:    adminRepo,
 	}
 }
 
@@ -57,7 +61,16 @@ func (s *Service) GenerateToken() string {
 	return uniuri.NewLen(20)
 }
 
-func (s *Service) RegisterWithMagicLink(ctx context.Context, email string, redirect *string) error {
+func (s *Service) RegisterWithMagicLink(ctx context.Context, recaptchaToken string, email string, redirect *string) error {
+	isAPerson, err := s.recaptchaAPI.Verify(recaptchaToken)
+	if err != nil {
+		return fmt.Errorf("%s: %w", logTag, err)
+	}
+
+	if !isAPerson {
+		return fmt.Errorf("%w", errors.New("recaptcha failed, excuse me sir, are you a ROBOT"))
+	}
+
 	user, err := s.userRepo.GetUserByEmail(ctx, email)
 	var errNotFound *domainErrors.ErrNotFound
 	if err != nil && !errors.As(err, &errNotFound) {
@@ -153,8 +166,17 @@ func (s *Service) CompleteMagicLinkRegistration(ctx context.Context, email strin
 	return user, nil
 }
 
-func (s *Service) LoginWithMagicLink(ctx context.Context, email string, redirect *string) error {
-	_, err := s.userRepo.GetUserByEmail(ctx, email)
+func (s *Service) LoginWithMagicLink(ctx context.Context, recaptchaToken string, email string, redirect *string) error {
+	isAPerson, err := s.recaptchaAPI.Verify(recaptchaToken)
+	if err != nil {
+		return fmt.Errorf("%s: %w", logTag, err)
+	}
+
+	if !isAPerson {
+		return fmt.Errorf("%w", errors.New("recaptcha failed, excuse me sir, are you a ROBOT"))
+	}
+
+	_, err = s.userRepo.GetUserByEmail(ctx, email)
 	if err != nil {
 		return fmt.Errorf("%s: %w", logTag, err)
 	}

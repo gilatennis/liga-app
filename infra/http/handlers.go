@@ -53,6 +53,7 @@ import (
 	dbWilayah "liga-app/infra/mysql/wilayah"
 
 	thirdPartyDuitku "liga-app/third_party/duitku"
+	thirdPartyGoogle "liga-app/third_party/google"
 
 	// "liga-app/mixins"
 
@@ -100,6 +101,7 @@ func setupHandlers(
 	_ = logger
 
 	duitkuAPI := thirdPartyDuitku.NewAPI(cfg)
+	recaptchaAPI := thirdPartyGoogle.NewRecaptchaAPI(cfg.Google.RecaptchaSecretKey)
 
 	/*
 		accessControlProvider, err := casbin.NewProvider(db)
@@ -128,6 +130,7 @@ func setupHandlers(
 
 	authService := domainAuth.NewService(
 		cfg,
+		recaptchaAPI,
 		authStore,
 		userStore,
 		mail,

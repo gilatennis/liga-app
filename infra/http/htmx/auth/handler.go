@@ -56,7 +56,7 @@ func (h *Handler) GetRegisterForm(c *gin.Context) {
 	fmt.Println("DEBUG: [GetRegisterForm] redirect: ", redirect)
 
 	model := VModelFormRegister{}
-	page := PageRegister(model, redirect)
+	page := PageRegister(model, redirect, h.cfg.Google.RecaptchaSiteKey)
 
 	r := renderer.New(c.Request.Context(), http.StatusOK, page)
 	c.Render(http.StatusOK, r)
@@ -71,14 +71,14 @@ func (h *Handler) SubmitRegisterForm(c *gin.Context) {
 		log.Println(err)
 		model.ServerError = err.Error()
 
-		content := ViewFormRegister(model, redirect)
+		content := ViewFormRegister(model, redirect, h.cfg.Google.RecaptchaSiteKey)
 		r := renderer.New(c.Request.Context(), http.StatusInternalServerError, content)
 		c.Render(http.StatusInternalServerError, r)
 		return
 	}
 
 	if !model.Validate() {
-		content := ViewFormRegister(model, redirect)
+		content := ViewFormRegister(model, redirect, h.cfg.Google.RecaptchaSiteKey)
 		r := renderer.New(c.Request.Context(), http.StatusBadRequest, content)
 		c.Render(http.StatusBadRequest, r)
 		return
@@ -88,10 +88,10 @@ func (h *Handler) SubmitRegisterForm(c *gin.Context) {
 	if redirect != "" {
 		magicLinkRedirect = &redirect
 	}
-	err := h.authService.RegisterWithMagicLink(c, model.Email, magicLinkRedirect)
+	err := h.authService.RegisterWithMagicLink(c, model.GRecaptchaResponse, model.Email, magicLinkRedirect)
 	if err != nil {
 		model.ServerError = errors.Unwrap(err).Error()
-		content := ViewFormRegister(model, redirect)
+		content := ViewFormRegister(model, redirect, h.cfg.Google.RecaptchaSiteKey)
 		r := renderer.New(c.Request.Context(), http.StatusInternalServerError, content)
 		c.Render(http.StatusInternalServerError, r)
 		return
@@ -137,7 +137,7 @@ func (h *Handler) CompleteMagicLinkRegistration(c *gin.Context) {
 
 func (h *Handler) GetLoginForm(c *gin.Context) {
 	model := VModelFormLogin{}
-	page := PageLogin(model)
+	page := PageLogin(model, "", h.cfg.Google.RecaptchaSiteKey)
 
 	r := renderer.New(c.Request.Context(), http.StatusOK, page)
 	c.Render(http.StatusOK, r)
@@ -152,14 +152,14 @@ func (h *Handler) SubmitLoginForm(c *gin.Context) {
 		log.Println(err)
 		model.ServerError = err.Error()
 
-		content := LoginForm(model, redirect)
+		content := LoginForm(model, redirect, h.cfg.Google.RecaptchaSiteKey)
 		r := renderer.New(c.Request.Context(), http.StatusInternalServerError, content)
 		c.Render(http.StatusInternalServerError, r)
 		return
 	}
 
 	if !model.Validate() {
-		content := LoginForm(model, redirect)
+		content := LoginForm(model, redirect, h.cfg.Google.RecaptchaSiteKey)
 		r := renderer.New(c.Request.Context(), http.StatusBadRequest, content)
 		c.Render(http.StatusBadRequest, r)
 		return
@@ -171,7 +171,7 @@ func (h *Handler) SubmitLoginForm(c *gin.Context) {
 	if utils.IsDevEnv() {
 		user, err := h.userService.GetUserByEmail(c, model.Email)
 		if err != nil {
-			content := LoginForm(model, redirect)
+			content := LoginForm(model, redirect, h.cfg.Google.RecaptchaSiteKey)
 			r := renderer.New(c.Request.Context(), http.StatusInternalServerError, content)
 			c.Render(http.StatusInternalServerError, r)
 			return
@@ -186,7 +186,7 @@ func (h *Handler) SubmitLoginForm(c *gin.Context) {
 			}
 
 			h.ResponseSuccessRedirect(c, "login sukses", "/dashboard")
-			content := LoginForm(model, redirect)
+			content := LoginForm(model, redirect, h.cfg.Google.RecaptchaSiteKey)
 			h.RenderView(c, content)
 			return
 		}
@@ -197,10 +197,10 @@ func (h *Handler) SubmitLoginForm(c *gin.Context) {
 	if redirect != "" {
 		magicLinkRedirect = &redirect
 	}
-	err := h.authService.LoginWithMagicLink(c, model.Email, magicLinkRedirect)
+	err := h.authService.LoginWithMagicLink(c, model.GRecaptchaResponse, model.Email, magicLinkRedirect)
 	if err != nil {
 		model.ServerError = errors.Unwrap(err).Error()
-		content := LoginForm(model, redirect)
+		content := LoginForm(model, redirect, h.cfg.Google.RecaptchaSiteKey)
 		r := renderer.New(c.Request.Context(), http.StatusInternalServerError, content)
 		c.Render(http.StatusInternalServerError, r)
 		return

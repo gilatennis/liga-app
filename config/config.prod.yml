@@ -75,3 +75,5 @@ duitku:
 
 google:
   service_account_creds: $GOOGLE_SERVICE_ACCOUNT_CREDS
+  recaptcha_site_key: $GOOGLE_RECAPTCHA_SITE_KEY
+  recaptcha_secret_key: $GOOGLE_RECAPTCHA_SECRET_KEY

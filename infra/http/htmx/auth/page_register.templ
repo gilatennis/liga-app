@@ -4,9 +4,9 @@ import (
   "fmt"
 )
 
-templ PageRegister(model VModelFormRegister, redirect string) {
+templ PageRegister(model VModelFormRegister, redirect string, recaptchaSiteKey string) {
   @pageContainer("Register") {
-    @ViewFormRegister(model, redirect)
+    @ViewFormRegister(model, redirect, recaptchaSiteKey)
   }
 }
 
@@ -18,7 +18,7 @@ func registerPostURL(redirect string) string {
   }
 }
 
-templ ViewFormRegister(model VModelFormRegister, redirect string) {
+templ ViewFormRegister(model VModelFormRegister, redirect string, recaptchaSiteKey string) {
   @container() {
     <div id="register-form"  class="card w-96 bg-base-100 shadow-xl">
       <div class="card-body space-y-6">
@@ -50,6 +50,7 @@ templ ViewFormRegister(model VModelFormRegister, redirect string) {
             <p class="text-error">{ model.ServerError }</p>
           }
 
+          <div class="g-recaptcha" data-sitekey={recaptchaSiteKey} style="transform:scale(1.05);transform-origin:0;-webkit-transform:scale(1.05);transform:scale(1.05);-webkit-transform-origin:0 0;transform-origin:0 0;"></div>
           <button class="btn btn-primary btn-wide w-full">
             Continue with email
           </button>

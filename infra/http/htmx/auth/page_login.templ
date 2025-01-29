@@ -4,9 +4,9 @@ import (
   "fmt"
 )
 
-templ PageLogin(model VModelFormLogin) {
+templ PageLogin(model VModelFormLogin, redirect string, recaptchaSiteKey string) {
   @pageContainer("Login") {
-    @LoginForm(model, "")
+    @LoginForm(model, "", recaptchaSiteKey)
   }
 }
 
@@ -34,7 +34,7 @@ func loginPostURL(redirect string) string {
   }
 }
 
-templ LoginForm(model VModelFormLogin, redirect string) {
+templ LoginForm(model VModelFormLogin, redirect string, recaptchaSiteKey string) {
   @container() {
     <div id="login-form"  class="card w-96 bg-base-100 shadow-xl">
       <div class="card-body space-y-6">
@@ -73,6 +73,7 @@ templ LoginForm(model VModelFormLogin, redirect string) {
             <p class="text-error">{ model.ServerError }</p>
           }
 
+          <div class="g-recaptcha" data-sitekey={recaptchaSiteKey} style="transform:scale(1.05);transform-origin:0;-webkit-transform:scale(1.05);transform:scale(1.05);-webkit-transform-origin:0 0;transform-origin:0 0;"></div>
           <button class="btn btn-primary btn-wide w-full">
             Continue with email
           </button>

@@ -17,10 +17,10 @@ type IRegisterPayload interface {
 type IAuthService interface {
 	GetMe(ctx context.Context, userUUID uuid.UUID) (*entities.User, error)
 
-	RegisterWithMagicLink(ctx context.Context, email string, redirect *string) error
+	RegisterWithMagicLink(ctx context.Context, recaptchaToken string, email string, redirect *string) error
 	CompleteMagicLinkRegistration(ctx context.Context, email string, token string) (*entities.User, error) // returns redirect url, error
 
-	LoginWithMagicLink(ctx context.Context, email string, redirect *string) error
+	LoginWithMagicLink(ctx context.Context, recaptchaToken string, email string, redirect *string) error
 	CompleteMagicLinkLogin(ctx context.Context, email string, token string) (*entities.User, error) // returns redirect url, error
 
 	LoginWithOAuth(ctx context.Context, email string, loginMethod enums.LOGIN_METHOD) (*entities.User, error)
