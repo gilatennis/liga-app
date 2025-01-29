@@ -1,7 +1,8 @@
 package auth
 
 type VModelFormLogin struct {
-	Email string `form:"email"`
+	Email              string `form:"email"`
+	GRecaptchaResponse string `form:"g-recaptcha-response"`
 
 	FormErrors  LoginFormErrors
 	ServerError string

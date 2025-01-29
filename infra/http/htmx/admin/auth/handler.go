@@ -33,7 +33,7 @@ func NewHandler(
 
 func (h *Handler) GetLoginForm(c *gin.Context) {
 	model := VModelFormLogin{}
-	page := PageLogin(model)
+	page := PageLogin(model, "", h.cfg.Google.RecaptchaSiteKey)
 
 	h.RenderView(c, page)
 }
